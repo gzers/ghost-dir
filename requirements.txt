@@ -2,3 +2,5 @@ PySide6>=6.6.0
 -i https://pypi.org/simple/
 PySide6-Fluent-Widgets[full]
 Pillow>=10.0.0
+psutil>=5.9.0
+pywin32>=306

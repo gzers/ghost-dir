@@ -1,0 +1,50 @@
+[
+  {
+    "id": "steam",
+    "name": "Steam 游戏库",
+    "default_src": "C:\\Program Files (x86)\\Steam\\steamapps",
+    "category": "游戏",
+    "icon": "steam.png",
+    "description": "Steam 游戏安装目录"
+  },
+  {
+    "id": "chrome",
+    "name": "Google Chrome 用户数据",
+    "default_src": "%LOCALAPPDATA%\\Google\\Chrome\\User Data",
+    "category": "浏览器",
+    "icon": "chrome.png",
+    "description": "Chrome 浏览器缓存和用户数据"
+  },
+  {
+    "id": "wechat",
+    "name": "微信文件",
+    "default_src": "%USERPROFILE%\\Documents\\WeChat Files",
+    "category": "社交",
+    "icon": "wechat.png",
+    "description": "微信聊天记录和文件"
+  },
+  {
+    "id": "qq",
+    "name": "QQ 文件",
+    "default_src": "%USERPROFILE%\\Documents\\Tencent Files",
+    "category": "社交",
+    "icon": "qq.png",
+    "description": "QQ 聊天记录和文件"
+  },
+  {
+    "id": "vscode",
+    "name": "VS Code 扩展",
+    "default_src": "%USERPROFILE%\\.vscode\\extensions",
+    "category": "开发工具",
+    "icon": "vscode.png",
+    "description": "Visual Studio Code 扩展目录"
+  },
+  {
+    "id": "onedrive",
+    "name": "OneDrive",
+    "default_src": "%USERPROFILE%\\OneDrive",
+    "category": "云存储",
+    "icon": "onedrive.png",
+    "description": "OneDrive 同步文件夹"
+  }
+]
