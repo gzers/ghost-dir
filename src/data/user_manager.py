@@ -19,11 +19,13 @@ class UserManager:
         self.data_file = DATA_DIR / "user_data.json"
         self.links: List[UserLink] = []
         self.categories: List[Category] = []
-        
+
         # v7.4 新增字段
         self.custom_templates: List[Template] = []      # 用户自定义模版
         self.ignored_ids: List[str] = []                # 扫描忽略名单
         self.default_target_root: str = "D:\\Ghost_Library"  # 默认仓库路径
+        self.theme: str = "system"                        # 主题：light/dark/system
+        self.startup_page: str = "wizard"                 # 首次打开：wizard/console/library
         
         self._ensure_data_dir()
         self._load_data()
@@ -65,6 +67,8 @@ class UserManager:
             ]
             self.ignored_ids = data.get('ignored_ids', [])
             self.default_target_root = data.get('default_target_root', "D:\\Ghost_Library")
+            self.theme = data.get('theme', 'system')      # 主题
+            self.startup_page = data.get('startup_page', 'wizard')  # 首次打开
             
             # 确保有默认分类
             if not any(c.name == DEFAULT_CATEGORY for c in self.categories):
@@ -89,7 +93,11 @@ class UserManager:
             data['ignored_ids'] = []
         if 'default_target_root' not in data:
             data['default_target_root'] = "D:\\Ghost_Library"
-        
+        if 'theme' not in data:
+            data['theme'] = 'system'
+        if 'startup_page' not in data:
+            data['startup_page'] = 'wizard'
+
         return data
     
     def _init_default_data(self):
@@ -112,7 +120,9 @@ class UserManager:
                 # v7.4 新增字段
                 'custom_templates': [asdict(tpl) for tpl in self.custom_templates],
                 'ignored_ids': self.ignored_ids,
-                'default_target_root': self.default_target_root
+                'default_target_root': self.default_target_root,
+                'theme': self.theme,
+                'startup_page': self.startup_page
             }
             
             with open(self.data_file, 'w', encoding='utf-8') as f:
@@ -313,7 +323,41 @@ class UserManager:
         return self.default_target_root
     
     # ========== v7.4 新增：辅助方法 ==========
-    
+
     def has_link_for_template(self, template_id: str) -> bool:
         """检查是否已有该模版的连接"""
         return any(link.template_id == template_id for link in self.links)
+
+    # ========== v7.4 新增：主题和首页管理 ==========
+
+    def set_theme(self, theme: str) -> bool:
+        """设置主题：light/dark/system"""
+        if theme not in ['light', 'dark', 'system']:
+            return False
+        try:
+            self.theme = theme
+            self._save_data()
+            return True
+        except Exception as e:
+            print(f"设置主题时出错: {e}")
+            return False
+
+    def get_theme(self) -> str:
+        """获取当前主题"""
+        return self.theme
+
+    def set_startup_page(self, page: str) -> bool:
+        """设置首启动页面：wizard/console/library"""
+        if page not in ['wizard', 'console', 'library']:
+            return False
+        try:
+            self.startup_page = page
+            self._save_data()
+            return True
+        except Exception as e:
+            print(f"设置首启动页面时出错: {e}")
+            return False
+
+    def get_startup_page(self) -> str:
+        """获取首启动页面"""
+        return self.startup_page

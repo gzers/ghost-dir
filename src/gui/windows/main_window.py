@@ -17,18 +17,21 @@ from ...common.config import WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT
 
 class MainWindow(FluentWindow):
     """主窗口"""
-    
-    def __init__(self):
+
+    def __init__(self, user_manager=None):
         """初始化主窗口"""
         super().__init__()
-        
+
+        # 保存用户管理器引用
+        self.user_manager = user_manager
+
         # 创建视图
         self.console_view = ConsoleView(self)
         self.wizard_view = WizardView(self)
         self.library_view = LibraryView(self)
         self.help_view = HelpView(self)
         self.setting_view = SettingView(self)
-        
+
         self._init_window()
         self._init_navigation()
     
@@ -44,7 +47,7 @@ class MainWindow(FluentWindow):
             self.setWindowIcon(QIcon(str(icon_path)))
         except Exception as e:
             print(f"加载图标失败: {e}")
-        
+
         # 启用 Mica/Acrylic 效果
         self.setMicaEffectEnabled(True)
     
@@ -96,8 +99,17 @@ class MainWindow(FluentWindow):
             "设置",
             position=NavigationItemPosition.BOTTOM
         )
-        
-        # 设置默认界面
+
+        # 设置默认启动页面
+        startup_page = self.user_manager.get_startup_page() if self.user_manager else "wizard"
+        page_map = {
+            "wizard": self.wizard_view,
+            "console": self.console_view,
+            "library": self.library_view
+        }
+        self.navigateTo(page_map.get(startup_page, self.wizard_view))
+
+    def _init_window_effect(self):
         """初始化窗口特效（云母/亚克力）"""
         try:
             # FluentWindow 会自动根据系统版本启用 Mica 或 Acrylic

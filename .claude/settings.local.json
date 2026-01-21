@@ -6,7 +6,8 @@
       "Bash(.venv/Scripts/python.exe:*)",
       "Bash(curl:*)",
       "Bash(git status:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }

@@ -10,13 +10,16 @@ APP_NAME = "Ghost-Dir"
 APP_VERSION = "7.4.0"
 APP_AUTHOR = "Ghost-Dir Team"
 
+# 项目根目录（获取脚本所在目录）
+PROJECT_ROOT = Path(__file__).parent.parent.parent
+
 # 数据文件路径
 DATA_DIR = Path.home() / ".ghost-dir"
 TEMPLATES_FILE = "assets/templates.json"
 USER_DATA_FILE = DATA_DIR / "user_data.json"
 LOCK_FILE = DATA_DIR / ".ghost.lock"
 CONFIG_FILE = DATA_DIR / "config.json"
-LOG_DIR = DATA_DIR / "logs"
+LOG_DIR = PROJECT_ROOT / "log"
 
 # 确保数据目录和日志目录存在
 DATA_DIR.mkdir(parents=True, exist_ok=True)

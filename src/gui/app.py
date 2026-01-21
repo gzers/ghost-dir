@@ -12,25 +12,31 @@ from ..common.resource_loader import get_resource_path
 
 class GhostDirApp(QApplication):
     """Ghost-Dir 主应用程序"""
-    
+
     def __init__(self, argv):
         """初始化应用程序"""
         super().__init__(argv)
-        
+
         # 设置应用程序信息
         self.setApplicationName("Ghost-Dir")
         self.setApplicationVersion("1.0.0")
         self.setOrganizationName("Ghost-Dir Team")
-        
+
         # 启用高 DPI 缩放
         self.setAttribute(Qt.ApplicationAttribute.AA_EnableHighDpiScaling)
         self.setAttribute(Qt.ApplicationAttribute.AA_UseHighDpiPixmaps)
-        
-        # 设置 Fluent 主题
-        setTheme(Theme.AUTO)
-        
+
         # 执行启动检查
         self._startup_checks()
+
+    def _apply_theme(self, theme: str):
+        """应用主题设置"""
+        theme_map = {
+            "system": Theme.AUTO,
+            "light": Theme.LIGHT,
+            "dark": Theme.DARK
+        }
+        setTheme(theme_map.get(theme, Theme.AUTO))
     
     def _startup_checks(self):
         """启动时的安全检查"""
@@ -78,10 +84,17 @@ class GhostDirApp(QApplication):
 def run_app():
     """运行应用程序"""
     app = GhostDirApp(sys.argv)
-    
-    # 导入并创建主窗口
+
+    # 加载用户数据并应用设置
+    from ..data.user_manager import UserManager
+    user_manager = UserManager()
+
+    # 应用主题设置
+    app._apply_theme(user_manager.get_theme())
+
+    # 导入并创建主窗口（传入用户管理器）
     from .windows.main_window import MainWindow
-    window = MainWindow()
+    window = MainWindow(user_manager)
     window.show()
-    
+
     sys.exit(app.exec())

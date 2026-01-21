@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Ghost-Dir Logo](assets/icon.png)
+<img src="assets/icon.png" alt="Ghost-Dir" width="128" height="128">
 
 **目录连接管理器 - 安全迁移 C 盘文件**
 
