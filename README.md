@@ -4,7 +4,14 @@
 
 <img src="assets/icon.png" alt="Ghost-Dir" width="128" height="128">
 
-**目录连接管理器 - 安全迁移 C 盘文件**
+# Ghost-Dir
+
+[![Version](https://img.shields.io/badge/version-0.1.0-alpha.svg)](docs/CHANGELOG.md)
+
+Windows 跨磁盘目录迁移与连接管理工具。
+
+支持在任意磁盘间无缝迁移文件夹，保持路径有效。内置原子事务回滚、进程阻断卫士与智能模版引擎。
+
 
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/)
 [![PySide6](https://img.shields.io/badge/PySide6-6.6+-green.svg)](https://pypi.org/project/PySide6/)
