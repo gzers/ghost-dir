@@ -31,7 +31,6 @@ class LibraryView(QWidget):
 
         # 筛选状态
         self.current_category = "全部"
-        self.search_text = ""
 
         # 初始化 UI
         self._init_ui()
@@ -136,7 +135,7 @@ class LibraryView(QWidget):
         """应用搜索和筛选"""
         category_filter = self.category_combo.currentText()
         type_filter = self.type_combo.currentText()
-        search_text = self.search_text.text().lower()
+        search_text = self.search_edit.text().lower()
 
         self.filtered_templates = [
             (template, is_custom)
