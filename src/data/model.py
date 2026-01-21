@@ -18,12 +18,13 @@ class LinkStatus(Enum):
 
 @dataclass
 class Template:
-    """模版数据类（只读）"""
-    id: str                        # 唯一标识符
-    name: str                      # 显示名称
-    default_src: str               # 默认源路径（支持环境变量）
-    category: str                  # 分类
-    icon: Optional[str] = None     # 图标文件名
+    """软件模版"""
+    id: str                    # 唯一标识
+    name: str                  # 软件名称
+    default_src: str           # 默认源路径（支持环境变量）
+    category: str              # 分类
+    icon: Optional[str] = None # 图标路径
+    is_custom: bool = False    # 是否为用户自定义模版
     description: Optional[str] = None  # 描述
 
 

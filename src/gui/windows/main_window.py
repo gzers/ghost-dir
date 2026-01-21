@@ -1,12 +1,15 @@
 """
 主窗口
-使用 FluentWindow 实现云母/亚克力效果
+使用 FluentWindow 实现 Mica/Acrylic 效果
 """
 from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
 from qfluentwidgets import FluentWindow, NavigationItemPosition, FluentIcon
 from ..views.console import ConsoleView
+from ..views.wizard import WizardView
+from ..views.library import LibraryView
+from ..views.help import HelpView
 from ..views.settings import SettingView
 from ...common.resource_loader import get_resource_path
 from ...common.config import WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT
@@ -19,47 +22,82 @@ class MainWindow(FluentWindow):
         """初始化主窗口"""
         super().__init__()
         
-        # 设置窗口属性
-        self.setWindowTitle("Ghost-Dir - 目录连接管理器")
-        self.setMinimumSize(WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT)
-        self.resize(1200, 800)
+        # 创建视图
+        self.console_view = ConsoleView(self)
+        self.wizard_view = WizardView(self)
+        self.library_view = LibraryView(self)
+        self.help_view = HelpView(self)
+        self.setting_view = SettingView(self)
         
-        # 设置窗口图标
-        icon_path = get_resource_path("assets/icon.ico")
-        self.setWindowIcon(QIcon(str(icon_path)))
-        
-        # 初始化界面
+        self._init_window()
         self._init_navigation()
-        self._init_window_effect()
+    
+    def _init_window(self):
+        """初始化窗口"""
+        self.setWindowTitle("Ghost-Dir")
+        self.resize(1200, 800)
+        self.setMinimumSize(WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT)
+        
+        # 设置图标
+        try:
+            icon_path = get_resource_path("assets/icon.png")
+            self.setWindowIcon(QIcon(str(icon_path)))
+        except Exception as e:
+            print(f"加载图标失败: {e}")
+        
+        # 启用 Mica/Acrylic 效果
+        self.setMicaEffectEnabled(True)
     
     def _init_navigation(self):
         """初始化导航栏"""
-        # 创建视图
-        self.console_view = ConsoleView(self)
+        # 设置 objectName
         self.console_view.setObjectName("consoleView")
-        
-        self.setting_view = SettingView(self)
+        self.wizard_view.setObjectName("wizardView")
+        self.library_view.setObjectName("libraryView")
+        self.help_view.setObjectName("helpView")
         self.setting_view.setObjectName("settingView")
         
-        # 添加子界面到导航栏
+        # 顶部业务区
+        # 1. 智能向导（第一位）
+        self.addSubInterface(
+            self.wizard_view,
+            FluentIcon.ROBOT,
+            "智能向导",
+            position=NavigationItemPosition.TOP
+        )
+        
+        # 2. 我的连接
         self.addSubInterface(
             self.console_view,
             FluentIcon.HOME,
-            "主控制台",
-            NavigationItemPosition.TOP
+            "我的连接",
+            position=NavigationItemPosition.TOP
+        )
+        
+        # 3. 模版库
+        self.addSubInterface(
+            self.library_view,
+            FluentIcon.BOOK_SHELF,
+            "模版库",
+            position=NavigationItemPosition.TOP
+        )
+        
+        # 底部功能区
+        self.addSubInterface(
+            self.help_view,
+            FluentIcon.INFO,
+            "帮助",
+            position=NavigationItemPosition.BOTTOM
         )
         
         self.addSubInterface(
             self.setting_view,
             FluentIcon.SETTING,
             "设置",
-            NavigationItemPosition.BOTTOM
+            position=NavigationItemPosition.BOTTOM
         )
         
         # 设置默认界面
-        self.stackedWidget.setCurrentWidget(self.console_view)
-    
-    def _init_window_effect(self):
         """初始化窗口特效（云母/亚克力）"""
         try:
             # FluentWindow 会自动根据系统版本启用 Mica 或 Acrylic

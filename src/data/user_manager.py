@@ -6,8 +6,9 @@ import json
 import uuid
 from typing import List, Optional
 from datetime import datetime
-from ..data.model import UserLink, Category
-from ..common.config import USER_DATA_FILE, DEFAULT_CATEGORY
+from dataclasses import asdict
+from ..data.model import UserLink, Category, Template
+from ..common.config import USER_DATA_FILE, DEFAULT_CATEGORY, DATA_DIR
 
 
 class UserManager:
@@ -15,26 +16,55 @@ class UserManager:
     
     def __init__(self):
         """初始化用户数据管理器"""
+        self.data_file = DATA_DIR / "user_data.json"
         self.links: List[UserLink] = []
         self.categories: List[Category] = []
-        self.load_data()
+        
+        # v7.4 新增字段
+        self.custom_templates: List[Template] = []      # 用户自定义模版
+        self.ignored_ids: List[str] = []                # 扫描忽略名单
+        self.default_target_root: str = "D:\\Ghost_Library"  # 默认仓库路径
+        
+        self._ensure_data_dir()
+        self._load_data()
     
-    def load_data(self):
-        """从 JSON 文件加载用户数据"""
+    def _ensure_data_dir(self):
+        """确保数据目录存在"""
+        # Assuming USER_DATA_FILE is a Path object and its parent directory needs to exist
+        self.data_file.parent.mkdir(parents=True, exist_ok=True)
+
+    def _load_data(self):
+        """加载用户数据"""
+        if not self.data_file.exists():
+            self._init_default_data()
+            return
+        
         try:
-            if not USER_DATA_FILE.exists():
-                # 创建默认数据
-                self._create_default_data()
-                return
-            
-            with open(USER_DATA_FILE, 'r', encoding='utf-8') as f:
+            with open(self.data_file, 'r', encoding='utf-8') as f:
                 data = json.load(f)
             
+            # v7.4 数据迁移
+            data = self._migrate_data(data)
+            
             # 加载连接
-            self.links = [UserLink(**item) for item in data.get('links', [])]
+            self.links = [
+                UserLink(**link_data) 
+                for link_data in data.get('links', [])
+            ]
             
             # 加载分类
-            self.categories = [Category(**item) for item in data.get('categories', [])]
+            self.categories = [
+                Category(**cat_data) 
+                for cat_data in data.get('categories', [])
+            ]
+            
+            # v7.4 新增字段
+            self.custom_templates = [
+                Template(**tpl_data)
+                for tpl_data in data.get('custom_templates', [])
+            ]
+            self.ignored_ids = data.get('ignored_ids', [])
+            self.default_target_root = data.get('default_target_root', "D:\\Ghost_Library")
             
             # 确保有默认分类
             if not any(c.name == DEFAULT_CATEGORY for c in self.categories):
@@ -44,12 +74,25 @@ class UserManager:
                 ))
             
             print(f"已加载 {len(self.links)} 个连接，{len(self.categories)} 个分类")
+            print(f"已加载 {len(self.custom_templates)} 个自定义模版")
             
         except Exception as e:
             print(f"加载用户数据时出错: {e}")
-            self._create_default_data()
+            self._init_default_data()
     
-    def _create_default_data(self):
+    def _migrate_data(self, data: dict) -> dict:
+        """数据迁移：v1.0 → v7.4"""
+        # 添加新字段（如果不存在）
+        if 'custom_templates' not in data:
+            data['custom_templates'] = []
+        if 'ignored_ids' not in data:
+            data['ignored_ids'] = []
+        if 'default_target_root' not in data:
+            data['default_target_root'] = "D:\\Ghost_Library"
+        
+        return data
+    
+    def _init_default_data(self):
         """创建默认数据"""
         self.links = []
         self.categories = [
@@ -58,21 +101,25 @@ class UserManager:
             Category(id=str(uuid.uuid4()), name="社交"),
             Category(id=str(uuid.uuid4()), name=DEFAULT_CATEGORY),
         ]
-        self.save_data()
+        self._save_data()
     
-    def save_data(self):
-        """保存用户数据到 JSON 文件"""
+    def _save_data(self):
+        """保存用户数据"""
         try:
             data = {
-                'links': [vars(link) for link in self.links],
-                'categories': [vars(cat) for cat in self.categories]
+                'links': [asdict(link) for link in self.links],
+                'categories': [asdict(cat) for cat in self.categories],
+                # v7.4 新增字段
+                'custom_templates': [asdict(tpl) for tpl in self.custom_templates],
+                'ignored_ids': self.ignored_ids,
+                'default_target_root': self.default_target_root
             }
             
-            with open(USER_DATA_FILE, 'w', encoding='utf-8') as f:
+            with open(self.data_file, 'w', encoding='utf-8') as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
-            
+                
         except Exception as e:
-            print(f"保存用户数据时出错: {e}")
+            print(f"保存用户数据失败: {e}")
     
     # ========== 连接管理 ==========
     
@@ -193,3 +240,80 @@ class UserManager:
     def get_all_categories(self) -> List[Category]:
         """获取所有分类"""
         return self.categories
+    
+    # ========== v7.4 新增：自定义模版管理 ==========
+    
+    def add_custom_template(self, template: Template) -> bool:
+        """添加自定义模版"""
+        try:
+            template.is_custom = True  # 标记为自定义
+            self.custom_templates.append(template)
+            self._save_data()
+            return True
+        except Exception as e:
+            print(f"添加自定义模版时出错: {e}")
+            return False
+    
+    def get_custom_templates(self) -> List[Template]:
+        """获取所有自定义模版"""
+        return self.custom_templates
+    
+    def remove_custom_template(self, template_id: str) -> bool:
+        """删除自定义模版"""
+        try:
+            self.custom_templates = [t for t in self.custom_templates if t.id != template_id]
+            self._save_data()
+            return True
+        except Exception as e:
+            print(f"删除自定义模版时出错: {e}")
+            return False
+    
+    # ========== v7.4 新增：忽略名单管理 ==========
+    
+    def add_to_ignore_list(self, template_id: str) -> bool:
+        """添加到忽略名单"""
+        try:
+            if template_id not in self.ignored_ids:
+                self.ignored_ids.append(template_id)
+                self._save_data()
+            return True
+        except Exception as e:
+            print(f"添加到忽略名单时出错: {e}")
+            return False
+    
+    def remove_from_ignore_list(self, template_id: str) -> bool:
+        """从忽略名单移除"""
+        try:
+            if template_id in self.ignored_ids:
+                self.ignored_ids.remove(template_id)
+                self._save_data()
+            return True
+        except Exception as e:
+            print(f"从忽略名单移除时出错: {e}")
+            return False
+    
+    def is_ignored(self, template_id: str) -> bool:
+        """检查是否在忽略名单中"""
+        return template_id in self.ignored_ids
+    
+    # ========== v7.4 新增：默认仓库路径管理 ==========
+    
+    def set_default_target_root(self, path: str) -> bool:
+        """设置默认仓库路径"""
+        try:
+            self.default_target_root = path
+            self._save_data()
+            return True
+        except Exception as e:
+            print(f"设置默认仓库路径时出错: {e}")
+            return False
+    
+    def get_default_target_root(self) -> str:
+        """获取默认仓库路径"""
+        return self.default_target_root
+    
+    # ========== v7.4 新增：辅助方法 ==========
+    
+    def has_link_for_template(self, template_id: str) -> bool:
+        """检查是否已有该模版的连接"""
+        return any(link.template_id == template_id for link in self.links)

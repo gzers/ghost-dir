@@ -31,20 +31,56 @@ class TemplateManager:
                 data = json.load(f)
             
             self.templates = [Template(**item) for item in data]
+            # Store templates in a dictionary keyed by ID
+            self.templates = {item['id']: Template(**item) for item in data}
             print(f"已加载 {len(self.templates)} 个模版")
             
         except Exception as e:
             print(f"加载模版时出错: {e}")
     
     def get_all_templates(self) -> List[Template]:
-        """获取所有模版"""
-        return self.templates
+        """
+        获取所有模版（官方 + 自定义）
+        v7.4: 合并用户自定义模版
+        """
+        # 官方模版
+        official_templates = list(self.templates.values())
+        
+        # 自定义模版（从 UserManager 获取）
+        try:
+            from .user_manager import UserManager
+            user_manager = UserManager()
+            custom_templates = user_manager.get_custom_templates()
+            
+            # 合并并返回
+            return official_templates + custom_templates
+        except Exception as e:
+            print(f"获取自定义模版时出错: {e}")
+            return official_templates
+    
+    def get_official_templates(self) -> List[Template]:
+        """仅获取官方模版"""
+        return list(self.templates.values())
     
     def get_template_by_id(self, template_id: str) -> Optional[Template]:
-        """根据 ID 获取模版"""
-        for template in self.templates:
-            if template.id == template_id:
-                return template
+        """
+        根据 ID 获取模版（官方或自定义）
+        v7.4: 支持查找自定义模版
+        """
+        # 先查找官方模版
+        if template_id in self.templates:
+            return self.templates[template_id]
+        
+        # 再查找自定义模版
+        try:
+            from .user_manager import UserManager
+            user_manager = UserManager()
+            for template in user_manager.get_custom_templates():
+                if template.id == template_id:
+                    return template
+        except Exception as e:
+            print(f"查找自定义模版时出错: {e}")
+        
         return None
     
     def search_templates(self, keyword: str) -> List[Template]:
