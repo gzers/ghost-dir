@@ -5,7 +5,8 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout
 from qfluentwidgets import (
     TitleLabel, SettingCardGroup, PushSettingCard, OptionsSettingCard,
-    FluentIcon, ScrollArea, ExpandLayout, InfoBar, InfoBarPosition
+    FluentIcon, ScrollArea, ExpandLayout, InfoBar, InfoBarPosition,
+    OptionsConfigItem, OptionsValidator, qconfig
 )
 from ....data.user_manager import UserManager
 from ....common.config import LOG_DIR, CONFIG_FILE
@@ -66,20 +67,22 @@ class SettingView(ScrollArea):
         self.appearanceGroup = SettingCardGroup("外观设置", self.scrollWidget)
 
         # 主题设置
+        # 创建主题配置项
+        theme_config = OptionsConfigItem(
+            "Appearance", "Theme", "system", 
+            OptionsValidator(["system", "light", "dark"])
+        )
         self.themeCard = OptionsSettingCard(
-            "主题",
+            theme_config,
             FluentIcon.BRUSH,
             "应用主题",
+            "选择应用的主题模式",
             texts=["跟随系统", "亮色", "暗色"],
             parent=self.appearanceGroup
         )
         current_theme = self.user_manager.get_theme()
-        if current_theme == "system":
-            self.themeCard.setSelectedIndex(0)
-        elif current_theme == "light":
-            self.themeCard.setSelectedIndex(1)
-        else:
-            self.themeCard.setSelectedIndex(2)
+        # 设置当前主题值
+        self.themeCard.setValue(current_theme)
         self.themeCard.optionChanged.connect(self._on_theme_changed)
         self.appearanceGroup.addSettingCard(self.themeCard)
 
@@ -89,20 +92,22 @@ class SettingView(ScrollArea):
         self.startupGroup = SettingCardGroup("启动设置", self.scrollWidget)
 
         # 首次打开功能
+        # 创建启动页面配置项
+        startup_config = OptionsConfigItem(
+            "Startup", "Page", "wizard",
+            OptionsValidator(["wizard", "console", "library"])
+        )
         self.startupCard = OptionsSettingCard(
-            "首启动页面",
+            startup_config,
             FluentIcon.GAME,
+            "启动页面",
             "设置程序启动时显示的页面",
             texts=["智能向导", "我的连接", "模版库"],
             parent=self.startupGroup
         )
         current_page = self.user_manager.get_startup_page()
-        if current_page == "wizard":
-            self.startupCard.setSelectedIndex(0)
-        elif current_page == "console":
-            self.startupCard.setSelectedIndex(1)
-        else:
-            self.startupCard.setSelectedIndex(2)
+        # 设置当前启动页面值
+        self.startupCard.setValue(current_page)
         self.startupCard.optionChanged.connect(self._on_startup_changed)
         self.startupGroup.addSettingCard(self.startupCard)
 

@@ -107,7 +107,7 @@ class MainWindow(FluentWindow):
             "console": self.console_view,
             "library": self.library_view
         }
-        self.navigateTo(page_map.get(startup_page, self.wizard_view))
+        self.switchTo(page_map.get(startup_page, self.wizard_view))
 
     def _init_window_effect(self):
         """初始化窗口特效（云母/亚克力）"""

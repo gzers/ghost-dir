@@ -13,29 +13,19 @@ APP_AUTHOR = "Ghost-Dir Team"
 # 项目根目录（获取脚本所在目录）
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 
-# 开发模式检测（检查是否在开发环境运行）
-IS_DEV_MODE = PROJECT_ROOT / "run.py" in Path(__file__).resolve().parents
-
-# 数据文件路径
-DATA_DIR = Path.home() / ".ghost-dir"
+# 数据文件路径（统一使用项目根目录下的 .ghost-dir）
+DATA_DIR = PROJECT_ROOT / ".ghost-dir"
 TEMPLATES_FILE = "assets/templates.json"
 USER_DATA_FILE = DATA_DIR / "user_data.json"
 LOCK_FILE = DATA_DIR / ".ghost.lock"
 
-# 配置和日志目录（开发模式使用 .debug 目录）
-if IS_DEV_MODE:
-    DEBUG_DIR = PROJECT_ROOT / ".debug"
-    CONFIG_FILE = DEBUG_DIR / "config.json"
-    LOG_DIR = DEBUG_DIR / "log"
-else:
-    CONFIG_FILE = DATA_DIR / "config.json"
-    LOG_DIR = DATA_DIR / "logs"
+# 配置和日志目录
+CONFIG_FILE = DATA_DIR / "config.json"
+LOG_DIR = DATA_DIR / "logs"
 
 # 确保数据目录和日志目录存在
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 LOG_DIR.mkdir(parents=True, exist_ok=True)
-if IS_DEV_MODE:
-    DEBUG_DIR.mkdir(parents=True, exist_ok=True)
 
 # 默认设置
 DEFAULT_TARGET_DRIVE = "D:\\"

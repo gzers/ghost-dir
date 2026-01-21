@@ -45,6 +45,6 @@ desktop.ini
 # Logs
 *.log
 
-# Debug directory (development mode)
-.debug/
+# Data directory (user data, config, logs)
+.ghost-dir/
 
