@@ -8,7 +8,7 @@ from qfluentwidgets import (
     FluentIcon, ScrollArea, ExpandLayout, InfoBar, InfoBarPosition
 )
 from ....data.user_manager import UserManager
-from ....common.config import LOG_DIR
+from ....common.config import LOG_DIR, CONFIG_FILE
 import os
 import subprocess
 

@@ -8,7 +8,7 @@ from typing import List, Optional
 from datetime import datetime
 from dataclasses import asdict
 from ..data.model import UserLink, Category, Template
-from ..common.config import USER_DATA_FILE, DEFAULT_CATEGORY, DATA_DIR
+from ..common.config import USER_DATA_FILE, DEFAULT_CATEGORY
 
 
 class UserManager:
@@ -32,34 +32,35 @@ class UserManager:
     
     def _ensure_data_dir(self):
         """确保数据目录存在"""
-        # Assuming USER_DATA_FILE is a Path object and its parent directory needs to exist
-        self.data_file.parent.mkdir(parents=True, exist_ok=True)
+        from ..common.config import CONFIG_FILE
+        CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
 
     def _load_data(self):
         """加载用户数据"""
-        if not self.data_file.exists():
+        from ..common.config import CONFIG_FILE
+        if not CONFIG_FILE.exists():
             self._init_default_data()
             return
-        
+
         try:
-            with open(self.data_file, 'r', encoding='utf-8') as f:
+            with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
                 data = json.load(f)
-            
+
             # v7.4 数据迁移
             data = self._migrate_data(data)
-            
+
             # 加载连接
             self.links = [
-                UserLink(**link_data) 
+                UserLink(**link_data)
                 for link_data in data.get('links', [])
             ]
-            
+
             # 加载分类
             self.categories = [
-                Category(**cat_data) 
+                Category(**cat_data)
                 for cat_data in data.get('categories', [])
             ]
-            
+
             # v7.4 新增字段
             self.custom_templates = [
                 Template(**tpl_data)
@@ -113,6 +114,7 @@ class UserManager:
     
     def _save_data(self):
         """保存用户数据"""
+        from ..common.config import CONFIG_FILE
         try:
             data = {
                 'links': [asdict(link) for link in self.links],
@@ -124,8 +126,8 @@ class UserManager:
                 'theme': self.theme,
                 'startup_page': self.startup_page
             }
-            
-            with open(self.data_file, 'w', encoding='utf-8') as f:
+
+            with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
                 
         except Exception as e:
