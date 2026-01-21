@@ -16,7 +16,7 @@ class UserManager:
     
     def __init__(self):
         """初始化用户数据管理器"""
-        self.data_file = DATA_DIR / "user_data.json"
+        self.data_file = USER_DATA_FILE
         self.links: List[UserLink] = []
         self.categories: List[Category] = []
 
