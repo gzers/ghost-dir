@@ -5,8 +5,8 @@ from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout, QLabel
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
 from qfluentwidgets import CardWidget, TitleLabel, BodyLabel, HyperlinkButton
-from ....common.config import APP_NAME, APP_VERSION
-from ....common.resource_loader import get_resource_path
+from .....common.config import APP_NAME, APP_VERSION
+from .....common.resource_loader import get_resource_path
 
 
 class AboutCard(CardWidget):
@@ -45,7 +45,7 @@ class AboutCard(CardWidget):
         
         # 导入版本信息
         try:
-            from .... import __version__, __author__, __github_url__
+            from ..... import __version__, __author__, __github_url__
         except:
             __version__ = APP_VERSION
             __author__ = "EZIO T"

@@ -34,10 +34,18 @@ class SmartScanner:
         existing_paths = {link.source_path for link in self.user_manager.get_all_links()}
         
         for template in self.template_manager.get_all_templates():
+            # 🆕 v7.4: 过滤已忽略的模版
+            if self.user_manager.is_ignored(template.id):
+                continue
+                
+            # 🆕 v7.4: 过滤已手动添加的模版（基于 template_id）
+            if self.user_manager.has_link_for_template(template.id):
+                continue
+
             # 展开环境变量
             expanded_path = self.template_manager.expand_path(template.default_src)
             
-            # 检查路径是否存在且未被管理
+            # 检查路径是否存在且源路径未被管理（双重检查）
             if (self.template_manager.validate_template_path(template) and 
                 expanded_path not in existing_paths):
                 discovered.append(template)

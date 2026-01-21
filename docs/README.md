@@ -9,9 +9,8 @@ docs/
 ├── progress/           # 进度文档
 │   ├── v7.4-task-checklist.md
 │   ├── development-walkthrough.md
-│   └── refactoring-summary.md
-└── testing/            # 测试文档
-    └── phase1-test-report.md
+│   ├── refactoring-summary.md  # 包含 View/Widgets 分层规范 ⭐
+│   └── CURRENT_STATUS.md
 ```
 
 ---

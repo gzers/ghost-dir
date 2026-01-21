@@ -3,7 +3,7 @@
 """
 from PySide6.QtWidgets import QWidget, QVBoxLayout
 from qfluentwidgets import TitleLabel
-from ..settings.about_card import AboutCard
+from ..settings.widgets.about_card import AboutCard
 
 class HelpView(QWidget):
     """帮助/关于视图"""

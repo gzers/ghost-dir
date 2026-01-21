@@ -147,6 +147,11 @@ class AddLinkDialog(MessageBoxBase):
         layout.addWidget(BodyLabel("分类:"))
         layout.addLayout(custom_category_layout)
         
+        # 🆕 v7.4: 保存为模版选项
+        from qfluentwidgets import CheckBox
+        self.saveAsTemplateBtn = CheckBox("保存为自定义模版")
+        layout.addWidget(self.saveAsTemplateBtn)
+        
         layout.addStretch()
         
         return widget
@@ -268,6 +273,17 @@ class AddLinkDialog(MessageBoxBase):
         
         # 添加到用户数据
         if self.user_manager.add_link(link):
+            # 🆕 v7.4: 处理保存为模版
+            if self.tabWidget.currentIndex() == 1 and self.saveAsTemplateBtn.isChecked():
+                new_template = Template(
+                    id=str(uuid.uuid4()),
+                    name=name,
+                    default_src=source,
+                    category=category,
+                    is_custom=True
+                )
+                self.user_manager.add_custom_template(new_template)
+            
             self.link_added.emit()
             return True
         

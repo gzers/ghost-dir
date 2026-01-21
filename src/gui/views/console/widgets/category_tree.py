@@ -4,7 +4,7 @@
 """
 from PySide6.QtWidgets import QTreeWidgetItem
 from qfluentwidgets import TreeWidget
-from ....data.user_manager import UserManager
+from .....data.user_manager import UserManager
 
 
 class CategoryTree(TreeWidget):

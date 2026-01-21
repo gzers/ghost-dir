@@ -7,7 +7,7 @@ from pathlib import Path
 
 # 应用信息
 APP_NAME = "Ghost-Dir"
-APP_VERSION = "1.0.0"
+APP_VERSION = "7.4.0"
 APP_AUTHOR = "Ghost-Dir Team"
 
 # 数据文件路径
@@ -16,9 +16,11 @@ TEMPLATES_FILE = "assets/templates.json"
 USER_DATA_FILE = DATA_DIR / "user_data.json"
 LOCK_FILE = DATA_DIR / ".ghost.lock"
 CONFIG_FILE = DATA_DIR / "config.json"
+LOG_DIR = DATA_DIR / "logs"
 
-# 确保数据目录存在
+# 确保数据目录和日志目录存在
 DATA_DIR.mkdir(parents=True, exist_ok=True)
+LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 # 默认设置
 DEFAULT_TARGET_DRIVE = "D:\\"

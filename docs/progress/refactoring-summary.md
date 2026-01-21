@@ -1,21 +1,25 @@
 # 项目重构总结 - Views 模块化
 
-## 📁 新的目录结构
+## 📁 新的目录结构 (v7.4 规范)
 
-重构后的 `src/gui/views/` 目录结构：
+重构后的 `src/gui/views/` 目录结构，采用 View/Widgets 分层模式：
 
 ```
 src/gui/views/
-├── console/                    # 主控制台页面（模块化）
-│   ├── __init__.py            # 模块导出
-│   ├── console_view.py        # 页面主体（布局和协调）
-│   ├── category_tree.py       # 左侧分类树组件
-│   └── batch_toolbar.py       # 批量操作工具栏组件
-├── settings/                   # 设置页面（模块化）
-│   ├── __init__.py            # 模块导出
-│   ├── setting_view.py        # 页面主体（布局和协调）
-│   └── about_card.py          # 关于信息卡片组件
-└── __init__.py
+├── console/                    # 主控制台页面
+│   ├── widgets/                # 页面专用子组件
+│   │   ├── category_tree.py
+│   │   └── batch_toolbar.py
+│   ├── console_view.py        # 页面主体
+│   └── __init__.py            # 模块导出
+├── settings/                   # 设置页面
+│   ├── widgets/
+│   │   └── about_card.py       # 关于卡片
+│   ├── setting_view.py        # 页面主体
+│   └── __init__.py
+└── wizard/                     # 智能向导
+    ├── widgets/
+    └── wizard_view.py
 ```
 
 ## 🎯 重构原则
@@ -28,10 +32,10 @@ src/gui/views/
 - **特点**：轻量级，主要负责组合和连接
 - **示例**：`console_view.py`, `setting_view.py`
 
-### 3. **板块组件 (Components)**
-- **职责**：独立的 UI 模块，可复用
-- **特点**：自包含，通过信号与外部通信
-- **示例**：`category_tree.py`, `batch_toolbar.py`, `about_card.py`
+### 3. **板块组件 (Widgets)**
+- **职责**：独立的 UI 模块，位于 `widgets/` 子目录下
+- **特点**：自包含，通过信号与外部通信，不直接依赖 View
+- **示例**：`widgets/category_tree.py`, `widgets/about_card.py`
 
 ---
 
@@ -239,23 +243,18 @@ class NewPageView(QWidget):
         self.component2 = Component2()
 ```
 
-3. **创建独立组件**
+3. **创建子组件**
 ```python
-# new_page/component1.py
+# new_page/widgets/component1.py
 class Component1(QWidget):
-    # 信号
-    data_changed = Signal(str)
-    
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self._init_ui()
+    # ...
 ```
 
 4. **导出模块**
 ```python
 # new_page/__init__.py
 from .new_page_view import NewPageView
-from .component1 import Component1
+from .widgets.component1 import Component1
 
 __all__ = ['NewPageView', 'Component1']
 ```

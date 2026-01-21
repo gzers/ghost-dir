@@ -17,8 +17,8 @@ from ....core.scanner import SmartScanner
 from ....core.transaction import TransactionManager
 from ....core.safety import ProcessGuard
 from ....common.signals import signal_bus
-from .category_tree import CategoryTree
-from .batch_toolbar import BatchToolbar
+from .widgets.category_tree import CategoryTree
+from .widgets.batch_toolbar import BatchToolbar
 
 
 class ConsoleView(QWidget):
