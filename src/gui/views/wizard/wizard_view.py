@@ -67,6 +67,24 @@ class WizardView(QWidget):
         # 初始隐藏结果区域
         self.result_scroll.setVisible(False)
 
+        # 设置背景色（亮色主题下需要）
+        self._update_theme_style()
+        from ....common.signals import signal_bus
+        signal_bus.theme_changed.connect(self._on_theme_changed)
+
+    def _update_theme_style(self):
+        """更新主题样式"""
+        from qfluentwidgets import isDarkTheme
+        if isDarkTheme():
+            bg_color = "#202020"
+        else:
+            bg_color = "#F9F9F9"
+        self.result_container.setStyleSheet(f"background-color: {bg_color};")
+
+    def _on_theme_changed(self, theme):
+        """主题变更"""
+        self._update_theme_style()
+
     def _connect_signals(self):
         """连接信号"""
         self.scan_progress.scan_clicked.connect(self._on_scan_clicked)

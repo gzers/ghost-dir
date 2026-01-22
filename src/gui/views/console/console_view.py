@@ -42,6 +42,11 @@ class ConsoleView(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(20, 20, 20, 20)
         layout.setSpacing(16)
+
+        # 设置背景色（亮色主题下需要）
+        self._update_theme_style()
+        from ....common.signals import signal_bus
+        signal_bus.theme_changed.connect(self._on_theme_changed)
         
         # 标题栏
         title_layout = QHBoxLayout()
@@ -82,6 +87,19 @@ class ConsoleView(QWidget):
         self.batch_toolbar = BatchToolbar()
         layout.addWidget(self.batch_toolbar)
         self.batch_toolbar.hide()
+
+    def _update_theme_style(self):
+        """更新主题样式"""
+        from qfluentwidgets import isDarkTheme
+        if isDarkTheme():
+            bg_color = "#202020"
+        else:
+            bg_color = "#F9F9F9"
+        self.setStyleSheet(f"background-color: {bg_color};")
+
+    def _on_theme_changed(self, theme):
+        """主题变更"""
+        self._update_theme_style()
     
     def _connect_signals(self):
         """连接信号"""
@@ -163,6 +181,23 @@ class ConsoleView(QWidget):
     
     def _disconnect_link(self, link):
         """断开连接"""
+        # 进程卫士检查（检查目标路径占用）
+        guard = ProcessGuard()
+        processes = guard.scan_handles(link.target_path)
+
+        if processes:
+            msg = "检测到以下进程正在占用目标文件：\n\n"
+            for pid, name in processes:
+                msg += f"• {name} (PID: {pid})\n"
+            msg += "\n是否结束这些进程并继续？"
+
+            reply = MessageBox("文件占用警告", msg, self).exec()
+            if reply:
+                guard.kill_processes(processes)
+            else:
+                return
+
+        # 执行事务
         manager = TransactionManager(link.source_path, link.target_path, link.id)
         if manager.disconnect_link():
             MessageBox("成功", f"已成功断开连接：{link.name}", self).exec()
@@ -267,12 +302,21 @@ class ConsoleView(QWidget):
         
         if not reply:
             return
-        
+
         # 执行批量操作
         success_count = 0
         failed_items = []
-        
+
         for link in links_to_disconnect:
+            # 进程卫士检查（检查目标路径占用）
+            guard = ProcessGuard()
+            processes = guard.scan_handles(link.target_path)
+
+            if processes:
+                # 自动结束进程
+                guard.kill_processes(processes)
+
+            # 执行事务
             manager = TransactionManager(link.source_path, link.target_path, link.id)
             if manager.disconnect_link():
                 success_count += 1

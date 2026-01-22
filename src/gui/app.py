@@ -5,6 +5,7 @@ import sys
 from PySide6.QtWidgets import QApplication, QMessageBox
 from PySide6.QtCore import Qt
 from qfluentwidgets import setTheme, Theme
+from ..common.signals import signal_bus
 from ..utils.admin import ensure_admin
 from ..core.transaction import check_crash_recovery, recover_from_crash
 from ..common.resource_loader import get_resource_path
@@ -28,6 +29,9 @@ class GhostDirApp(QApplication):
 
         # 执行启动检查
         self._startup_checks()
+
+        # 连接主题变更信号
+        signal_bus.theme_changed.connect(self._apply_theme)
 
     def _apply_theme(self, theme: str):
         """应用主题设置"""

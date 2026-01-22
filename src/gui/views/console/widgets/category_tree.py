@@ -19,6 +19,23 @@ class CategoryTree(TreeWidget):
         """初始化 UI"""
         self.setHeaderHidden(True)
         self.setMaximumWidth(250)
+        # 设置背景色和移除边框
+        self._update_theme_style()
+        from .....common.signals import signal_bus
+        signal_bus.theme_changed.connect(self._on_theme_changed)
+
+    def _update_theme_style(self):
+        """更新主题样式"""
+        from qfluentwidgets import isDarkTheme
+        if isDarkTheme():
+            bg_color = "#202020"
+        else:
+            bg_color = "#F9F9F9"
+        self.setStyleSheet(f"QTreeWidget {{ background-color: {bg_color}; border-right: none; }}")
+
+    def _on_theme_changed(self, theme):
+        """主题变更"""
+        self._update_theme_style()
     
     def load_categories(self):
         """加载分类列表"""

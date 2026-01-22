@@ -7,7 +7,9 @@
       "Bash(curl:*)",
       "Bash(git status:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(.venvScriptspython.exe:*)",
+      "Bash(D:/Users/15119/WorkSpace/Code/tool/ghost-dir/.venv/Scripts/python.exe:*)"
     ]
   }
 }

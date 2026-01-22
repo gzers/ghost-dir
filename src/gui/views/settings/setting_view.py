@@ -2,13 +2,14 @@
 设置视图（重构版）
 页面主体 - 负责布局和协调
 """
-from PySide6.QtWidgets import QWidget, QVBoxLayout
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QFrame
 from qfluentwidgets import (
     TitleLabel, SettingCardGroup, PushSettingCard, OptionsSettingCard,
     FluentIcon, ScrollArea, ExpandLayout, InfoBar, InfoBarPosition,
     OptionsConfigItem, OptionsValidator, qconfig
 )
 from ....data.user_manager import UserManager
+from ....common.signals import signal_bus
 from ....common.config import LOG_DIR, CONFIG_FILE
 import os
 import subprocess
@@ -29,6 +30,18 @@ class SettingView(ScrollArea):
         self._init_ui()
         self.setWidget(self.scrollWidget)
         self.setWidgetResizable(True)
+
+        # 设置滚动区域背景透明
+        self.setFrameShape(QFrame.Shape.NoFrame)
+        self.setStyleSheet("QScrollArea { border: none; background: transparent; }")
+
+        # 设置背景色并监听主题变更
+        self._update_theme_style()
+        signal_bus.theme_changed.connect(self._handle_theme_change)
+
+    def _handle_theme_change(self, theme):
+        """处理全局主题变更信号"""
+        self._update_theme_style()
 
     def _init_ui(self):
         """初始化 UI"""
@@ -113,6 +126,15 @@ class SettingView(ScrollArea):
 
         self.expandLayout.addWidget(self.startupGroup)
 
+    def _update_theme_style(self):
+        """更新主题样式"""
+        from qfluentwidgets import isDarkTheme
+        if isDarkTheme():
+            bg_color = "#202020"
+        else:
+            bg_color = "#F9F9F9"
+        self.scrollWidget.setStyleSheet(f"background-color: {bg_color};")
+
     def _on_select_target_root(self):
         """选择默认仓库路径"""
         from PySide6.QtWidgets import QFileDialog
@@ -134,35 +156,31 @@ class SettingView(ScrollArea):
             os.makedirs(LOG_DIR, exist_ok=True)
             os.startfile(LOG_DIR)
 
-    def _on_theme_changed(self, index):
+    def _on_theme_changed(self, config):
         """主题改变"""
-        theme_map = {
-            0: "system",
-            1: "light",
-            2: "dark"
-        }
-        theme = theme_map.get(index, "system")
+        theme = config.value  # 直接获取选中的值，如 "system", "light", "dark"
+        theme_names = {"system": "跟随系统", "light": "亮色", "dark": "暗色"}
+
         if self.user_manager.set_theme(theme):
+            # 发送主题变更信号
+            signal_bus.theme_changed.emit(theme)
             InfoBar.success(
                 title="主题已更新",
-                content=f"已切换到 {['跟随系统', '亮色', '暗色'][index]} 主题",
+                content=f"已切换到 {theme_names.get(theme, theme)} 主题",
                 parent=self,
                 position=InfoBarPosition.TOP,
                 duration=2000
             )
 
-    def _on_startup_changed(self, index):
+    def _on_startup_changed(self, config):
         """首启动页面改变"""
-        page_map = {
-            0: "wizard",
-            1: "console",
-            2: "library"
-        }
-        page = page_map.get(index, "wizard")
+        page = config.value  # 直接获取选中的值，如 "wizard", "console", "library"
+        page_names = {"wizard": "智能向导", "console": "我的连接", "library": "模版库"}
+
         if self.user_manager.set_startup_page(page):
             InfoBar.success(
                 title="设置已更新",
-                content=f"首启动页面已设置为 {['智能向导', '我的连接', '模版库'][index]}",
+                content=f"首启动页面已设置为 {page_names.get(page, page)}",
                 parent=self,
                 position=InfoBarPosition.TOP,
                 duration=2000

@@ -29,6 +29,38 @@ class LinkTable(TableWidget):
         # 设置列
         self.setColumnCount(5)
         self.setHorizontalHeaderLabels(["", "软件信息", "状态", "占用空间", "操作"])
+
+        # 设置主题样式
+        self._update_theme_style()
+        from ...common.signals import signal_bus
+        signal_bus.theme_changed.connect(self._on_theme_changed)
+
+    def _update_theme_style(self):
+        """更新主题样式"""
+        from qfluentwidgets import isDarkTheme
+        if isDarkTheme():
+            bg_color = "#202020"
+            alternate_bg = "#2A2A2A"
+        else:
+            bg_color = "#FFFFFF"
+            alternate_bg = "#F5F5F5"
+        self.setStyleSheet(f"""
+            QTableWidget {{
+                background-color: {bg_color};
+                alternate-background-color: {alternate_bg};
+                gridline-color: transparent;
+                border: none;
+            }}
+            QHeaderView::section {{
+                background-color: {bg_color};
+                border: none;
+                border-bottom: 1px solid #E0E0E0;
+            }}
+        """)
+
+    def _on_theme_changed(self, theme):
+        """主题变更"""
+        self._update_theme_style()
         
         # 设置列宽
         header = self.horizontalHeader()
@@ -46,6 +78,7 @@ class LinkTable(TableWidget):
         # 设置表格属性
         self.setWordWrap(False)
         self.setRowCount(0)
+        self.setAlternatingRowColors(True)  # 启用交替行背景色
         
         # 启用排序
         self.setSortingEnabled(True)
