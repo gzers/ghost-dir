@@ -36,6 +36,7 @@ class ScanProgressCard(CardWidget):
     scan_clicked = Signal()
     import_clicked = Signal()
     refresh_clicked = Signal()
+    cancel_clicked = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -88,6 +89,7 @@ class ScanProgressCard(CardWidget):
         self.result_label.setVisible(False)
         layout.addWidget(self.result_label)
 
+
         # 按钮区域
         button_layout = QHBoxLayout()
         button_layout.addStretch()
@@ -108,7 +110,13 @@ class ScanProgressCard(CardWidget):
         self.refresh_button.clicked.connect(self._on_refresh_clicked)
         button_layout.addWidget(self.refresh_button)
 
+        self.cancel_button = PushButton(FluentIcon.CLOSE, "取消")
+        self.cancel_button.setVisible(False)
+        self.cancel_button.clicked.connect(self._on_cancel_clicked)
+        button_layout.addWidget(self.cancel_button)
+
         layout.addLayout(button_layout)
+
 
     def _on_scan_clicked(self):
         """扫描按钮点击"""
@@ -123,6 +131,10 @@ class ScanProgressCard(CardWidget):
     def _on_refresh_clicked(self):
         """刷新按钮点击"""
         self.refresh_clicked.emit()
+
+    def _on_cancel_clicked(self):
+        """取消按钮点击"""
+        self.cancel_clicked.emit()
 
     def start_scanning(self):
         """开始扫描状态"""
@@ -159,10 +171,12 @@ class ScanProgressCard(CardWidget):
             self.import_button.setEnabled(selected_count > 0)
             self.refresh_button.setVisible(True)
             self.refresh_button.setEnabled(True)
+            self.cancel_button.setVisible(True)
         else:
             self.detail_label.setText("未发现可管理的软件")
             self.scan_button.setEnabled(True)
             self.refresh_button.setVisible(False)
+            self.cancel_button.setVisible(False)
 
         self.progress_bar.setVisible(False)
 
@@ -186,6 +200,7 @@ class ScanProgressCard(CardWidget):
         self.import_button.setEnabled(False)
         self.refresh_button.setVisible(False)
         self.refresh_button.setEnabled(False)
+        self.cancel_button.setVisible(False)
 
     def set_import_enabled(self, enabled):
         """设置导入按钮状态"""

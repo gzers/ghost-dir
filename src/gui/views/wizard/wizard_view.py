@@ -56,6 +56,7 @@ class WizardView(BasePageView):
         self.scan_progress.scan_clicked.connect(self._on_scan_clicked)
         self.scan_progress.import_clicked.connect(self._on_import_clicked)
         self.scan_progress.refresh_clicked.connect(self._on_refresh_clicked)
+        self.scan_progress.cancel_clicked.connect(self._on_cancel_clicked)
 
     def _on_scan_clicked(self):
         """开始扫描"""
@@ -67,7 +68,7 @@ class WizardView(BasePageView):
             card.deleteLater()
         self.scan_result_cards.clear()
 
-        # 开始扫描
+        # 开始扫描（在后台线程中进行，不会阻塞 UI）
         self.worker = ScanWorker(self.scanner)
         self.worker.finished.connect(self._on_scan_finished)
         self.worker.error.connect(self._on_scan_error)
@@ -179,6 +180,20 @@ class WizardView(BasePageView):
     def _on_refresh_clicked(self):
         """重新扫描"""
         self._on_scan_clicked()
+
+    def _on_cancel_clicked(self):
+        """取消扫描结果，返回初始状态"""
+        # 清空所有结果卡片
+        self.discovered_templates.clear()
+        for card in self.scan_result_cards.values():
+            card.deleteLater()
+        self.scan_result_cards.clear()
+
+        # 隐藏滚动区域
+        self.get_scroll_area().setVisible(False)
+
+        # 重置扫描进度卡片
+        self.scan_progress.reset()
 
     def _show_import_success(self, count):
         """显示导入成功"""
