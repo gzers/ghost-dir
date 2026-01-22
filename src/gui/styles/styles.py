@@ -193,6 +193,32 @@ class StyleManager:
         }
     
     @staticmethod
+    def get_font_family() -> str:
+        """获取默认字体族"""
+        return '"Segoe UI", "Microsoft YaHei", sans-serif'
+
+    @staticmethod
+    def get_font_weights() -> Dict[str, int]:
+        """获取字体粗细规范"""
+        return {
+            "light": 300,
+            "regular": 400,
+            "normal": 400,
+            "medium": 500,
+            "semibold": 600,
+            "bold": 700,
+        }
+
+    @staticmethod
+    def get_line_heights() -> Dict[str, float]:
+        """获取行高规范（相对于字体大小的倍数）"""
+        return {
+            "tight": 1.2,
+            "normal": 1.4,
+            "relaxed": 1.6,
+        }
+
+    @staticmethod
     def get_font_sizes() -> Dict[str, int]:
         """获取字体大小规范"""
         return {
@@ -204,6 +230,106 @@ class StyleManager:
             "xxl": 20,
             "title": 24,
             "display": 32,
+        }
+
+    @staticmethod
+    def get_typography_scale() -> Dict[str, Dict[str, int]]:
+        """
+        获取完整排版规范（字体大小、行高）
+        返回包含 size 和 line_height 的字典
+        """
+        font_sizes = StyleManager.get_font_sizes()
+        line_heights = StyleManager.get_line_heights()
+        return {
+            "caption": {"size": font_sizes["xs"], "line_height": line_heights["tight"]},
+            "body-small": {"size": font_sizes["sm"], "line_height": line_heights["normal"]},
+            "body": {"size": font_sizes["md"], "line_height": line_heights["normal"]},
+            "body-large": {"size": font_sizes["lg"], "line_height": line_heights["normal"]},
+            "subtitle": {"size": font_sizes["xl"], "line_height": line_heights["relaxed"]},
+            "title": {"size": font_sizes["title"], "line_height": line_heights["relaxed"]},
+            "display": {"size": font_sizes["display"], "line_height": line_heights["tight"]},
+        }
+    
+    @staticmethod
+    def get_text_hierarchy() -> Dict[str, Dict[str, Any]]:
+        """
+        获取文字层级规范（Windows 11 Fluent Design）
+        定义页面中各类文字的统一样式
+        
+        Returns:
+            包含各层级文字样式的字典，每个层级包含：
+            - widget: 推荐使用的 QFluentWidgets 组件
+            - size: 字体大小（px）
+            - weight: 字体粗细
+            - color: 文本颜色类型（primary/secondary/tertiary）
+            - usage: 使用场景说明
+        """
+        font_sizes = StyleManager.get_font_sizes()
+        font_weights = StyleManager.get_font_weights()
+        
+        return {
+            # 页面主标题 - 用于页面顶部的主要标题
+            "page_title": {
+                "widget": "TitleLabel",
+                "size": font_sizes["title"],  # 24px
+                "weight": font_weights["semibold"],  # 600
+                "color": "primary",
+                "usage": "页面顶部主标题，如「控制台」「设置」「帮助」"
+            },
+            
+            # 区块标题 - 用于页面内的主要区块标题
+            "section_title": {
+                "widget": "SubtitleLabel",
+                "size": font_sizes["xl"],  # 18px
+                "weight": font_weights["semibold"],  # 600
+                "color": "primary",
+                "usage": "页面内区块标题，如设置组标题"
+            },
+            
+            # 卡片标题 - 用于卡片组件的标题
+            "card_title": {
+                "widget": "StrongBodyLabel",
+                "size": font_sizes["lg"],  # 16px
+                "weight": font_weights["semibold"],  # 600
+                "color": "primary",
+                "usage": "卡片、对话框标题"
+            },
+            
+            # 正文 - 用于主要内容文本
+            "body": {
+                "widget": "BodyLabel",
+                "size": font_sizes["md"],  # 14px
+                "weight": font_weights["normal"],  # 400
+                "color": "primary",
+                "usage": "正文、描述文本"
+            },
+            
+            # 次要文本 - 用于辅助说明
+            "body_secondary": {
+                "widget": "CaptionLabel",
+                "size": font_sizes["md"],  # 14px
+                "weight": font_weights["normal"],  # 400
+                "color": "secondary",
+                "usage": "次要说明文本"
+            },
+            
+            # 小字说明 - 用于提示、标签等
+            "caption": {
+                "widget": "CaptionLabel",
+                "size": font_sizes["sm"],  # 12px
+                "weight": font_weights["normal"],  # 400
+                "color": "secondary",
+                "usage": "小字说明、提示文本、标签"
+            },
+            
+            # 按钮文字
+            "button": {
+                "widget": "PushButton",
+                "size": font_sizes["md"],  # 14px
+                "weight": font_weights["normal"],  # 400
+                "color": "primary",
+                "usage": "按钮文字"
+            },
         }
     
     # ========== 组件样式生成器 ==========
@@ -417,11 +543,119 @@ def get_spacing(size: str = "md") -> int:
 def get_radius(size: str = "md") -> int:
     """
     获取圆角值的快捷函数
-    
+
     Args:
         size: 圆角大小 (sm, md, lg, xl, xxl)
-    
+
     Returns:
         圆角像素值
     """
     return StyleManager.get_border_radius().get(size, 6)
+
+
+# ========== 字体工具函数 ==========
+
+def get_font_size(size: str = "md") -> int:
+    """
+    获取字体大小的快捷函数
+
+    Args:
+        size: 字体大小 (xs, sm, md, lg, xl, xxl, title, display)
+
+    Returns:
+        字体大小像素值
+    """
+    return StyleManager.get_font_sizes().get(size, 14)
+
+
+def get_font_weight(weight: str = "normal") -> int:
+    """
+    获取字体粗细的快捷函数
+
+    Args:
+        weight: 字体粗细 (light, regular/normal, medium, semibold, bold)
+
+    Returns:
+        字体粗细数值
+    """
+    return StyleManager.get_font_weights().get(weight, 400)
+
+
+def apply_font_style(
+    widget,
+    size: str = "md",
+    weight: str = "normal",
+    color: str = None
+) -> None:
+    """
+    应用字体样式到 widget
+
+    Args:
+        widget: 要应用样式的 widget
+        size: 字体大小 (xs, sm, md, lg, xl, xxl, title, display)
+        weight: 字体粗细 (light, regular/normal, medium, semibold, bold)
+        color: 文本颜色（可选）
+    """
+    font_family = StyleManager.get_font_family()
+    font_size = get_font_size(size)
+    font_weight = get_font_weight(weight)
+    text_color = color or StyleManager.get_text_primary()
+
+    widget.setStyleSheet(
+        f"font-family: {font_family}; "
+        f"font-size: {font_size}px; "
+        f"font-weight: {font_weight}; "
+        f"color: {text_color};"
+    )
+
+
+def apply_typography_style(widget, typography: str = "body", color: str = None) -> None:
+    """
+    应用排版规范样式到 widget
+
+    Args:
+        widget: 要应用样式的 widget
+        typography: 排版类型 (caption, body-small, body, body-large, subtitle, title, display)
+        color: 文本颜色（可选）
+    """
+    scale = StyleManager.get_typography_scale()
+    typo_data = scale.get(typography, scale["body"])
+
+    font_family = StyleManager.get_font_family()
+    text_color = color or StyleManager.get_text_primary()
+
+    widget.setStyleSheet(
+        f"font-family: {font_family}; "
+        f"font-size: {typo_data['size']}px; "
+        f"line-height: {typo_data['line_height']}; "
+        f"color: {text_color};"
+    )
+
+
+def get_font_style(
+    size: str = "md",
+    weight: str = "normal",
+    color: str = None
+) -> str:
+    """
+    获取字体样式字符串（用于内联样式）
+
+    Args:
+        size: 字体大小 (xs, sm, md, lg, xl, xxl, title, display)
+        weight: 字体粗细 (light, regular/normal, medium, semibold, bold)
+        color: 文本颜色（可选）
+
+    Returns:
+        CSS 样式字符串
+    """
+    font_family = StyleManager.get_font_family()
+    font_size = get_font_size(size)
+    font_weight = get_font_weight(weight)
+    text_color = color or StyleManager.get_text_primary()
+
+    return (
+        f"font-family: {font_family}; "
+        f"font-size: {font_size}px; "
+        f"font-weight: {font_weight}; "
+        f"color: {text_color};"
+    )

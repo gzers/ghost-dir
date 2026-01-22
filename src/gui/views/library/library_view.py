@@ -5,7 +5,7 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QScrollArea
 from PySide6.QtCore import Qt
 from qfluentwidgets import (
-    SubtitleLabel, SearchLineEdit, ComboBox, PushButton,
+    SearchLineEdit, ComboBox, PushButton,
     ScrollArea, FluentIcon, InfoBar, InfoBarPosition
 )
 from ...i18n import t
@@ -54,8 +54,8 @@ class LibraryView(QWidget):
         from ...styles import apply_page_layout
         apply_page_layout(title_layout, spacing="section")
         title_layout.setContentsMargins(24, 24, 24, 8)  # 顶部 24px, 底部 8px 以贴合内容
-        from qfluentwidgets import SubtitleLabel
-        self.title_label = SubtitleLabel(t("library.title"))
+        from qfluentwidgets import TitleLabel
+        self.title_label = TitleLabel(t("library.title"))
         title_layout.addWidget(self.title_label)
         title_layout.addStretch()
 
@@ -213,9 +213,10 @@ class LibraryView(QWidget):
     def _show_empty_state(self):
         """显示空状态"""
         from qfluentwidgets import BodyLabel
+        from ..styles import StyleManager, apply_font_style
 
         empty_label = BodyLabel("没有找到匹配的模版")
-        empty_label.setStyleSheet("color: #999; font-size: 14px;")
+        apply_font_style(empty_label, size="md", color=StyleManager.get_text_disabled())
         empty_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.grid_layout.addWidget(empty_label, 0, 0)
 

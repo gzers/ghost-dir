@@ -64,31 +64,31 @@ class TemplateCard(CardWidget):
         name_layout = QVBoxLayout()
         name_layout.setSpacing(4)
 
+        from ....styles import apply_font_style
         self.name_label = BodyLabel(self.template.name)
-        self.name_label.setStyleSheet("font-weight: bold; font-size: 14px;")
+        apply_font_style(self.name_label, size="md", weight="semibold")
         self.name_label.setWordWrap(True)
         name_layout.addWidget(self.name_label)
 
-        # 类型标签
+        # 类型标签 - 使用统一样式
         type_label = BodyLabel()
+        from ....styles import StyleManager, get_font_style, get_radius, get_spacing
         if self.is_custom:
             type_label.setText("🎨 自定义")
-            type_label.setStyleSheet("""
-                background-color: #FFF1F0;
-                color: #FF4D4F;
-                padding: 2px 8px;
-                border-radius: 4px;
-                font-size: 11px;
-            """)
+            bg = "#FFF1F0"
+            color = "#FF4D4F"
         else:
             type_label.setText("⭐ 官方")
-            type_label.setStyleSheet("""
-                background-color: #E6F7FF;
-                color: #1890FF;
-                padding: 2px 8px;
-                border-radius: 4px;
-                font-size: 11px;
-            """)
+            bg = "#E6F7FF"
+            color = "#1890FF"
+
+        type_label.setStyleSheet(
+            f"background-color: {bg}; "
+            f"color: {color}; "
+            f"padding: 2px 8px; "
+            f"border-radius: {get_radius('sm')}px; "
+            f"{get_font_style(size='xs')}"
+        )
         name_layout.addWidget(type_label)
 
         header_layout.addLayout(name_layout, stretch=1)
@@ -101,13 +101,10 @@ class TemplateCard(CardWidget):
         apply_muted_text_style(self.category_label, size=14)
         layout.addWidget(self.category_label)
 
-        # 路径
+        # 路径 - 使用统一样式
+        from ....styles import StyleManager, apply_font_style
         self.path_label = BodyLabel(self.template.default_src)
-        from ....styles import StyleManager
-        self.path_label.setStyleSheet(StyleManager.get_label_style(
-            color=StyleManager.get_text_disabled(),
-            size=11
-        ))
+        apply_font_style(self.path_label, size="xs", color=StyleManager.get_text_disabled())
         self.path_label.setWordWrap(True)
         layout.addWidget(self.path_label)
 

@@ -49,26 +49,28 @@ class ScanResultCard(CardWidget):
         info_layout = QVBoxLayout()
         info_layout.setSpacing(4)
 
+        from ....styles import apply_font_style
         self.name_label = BodyLabel(self.template.name)
-        self.name_label.setStyleSheet("font-weight: bold;")
+        apply_font_style(self.name_label, weight="semibold")
         info_layout.addWidget(self.name_label)
 
         self.path_label = BodyLabel(self.template.default_src)
-        from ....styles import apply_muted_text_style
-        apply_muted_text_style(self.path_label, size=12)
+        apply_font_style(self.path_label, size="sm", color=StyleManager.get_text_muted())
         self.path_label.setWordWrap(True)
         info_layout.addWidget(self.path_label)
 
         layout.addLayout(info_layout, stretch=1)
 
-        # 分类标签
+        # 分类标签 - 使用统一样式
+        from ....styles import get_radius, get_font_style
         category = BodyLabel(self.template.category)
-        category.setStyleSheet("""
-            background-color: #E6F7FF;
-            color: #1890FF;
-            padding: 4px 12px;
-            border-radius: 4px;
-        """)
+        category.setStyleSheet(
+            "background-color: #E6F7FF; "
+            "color: #1890FF; "
+            "padding: 4px 12px; "
+            f"border-radius: {get_radius('sm')}px; "
+            f"{get_font_style(size='sm')}"
+        )
         layout.addWidget(category)
 
         # 操作按钮

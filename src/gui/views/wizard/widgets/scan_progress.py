@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout
 from PySide6.QtCore import Qt, Signal, QThread
 from qfluentwidgets import (
     ProgressBar, BodyLabel, PrimaryPushButton, PushButton,
-    SubtitleLabel, FluentIcon, CardWidget
+    StrongBodyLabel, FluentIcon, CardWidget
 )
 
 
@@ -61,7 +61,7 @@ class ScanProgressCard(CardWidget):
         title_layout.addSpacing(12)
 
         title_text = QVBoxLayout()
-        self.title_label = SubtitleLabel("智能扫描")
+        self.title_label = StrongBodyLabel("智能扫描")
         title_text.addWidget(self.title_label)
         self.status_label = BodyLabel("自动发现本机可管理的软件")
         self.status_label.setWordWrap(True)

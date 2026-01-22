@@ -4,7 +4,7 @@
 """
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QScrollArea, QHBoxLayout
 from PySide6.QtCore import Qt
-from qfluentwidgets import ScrollArea, SubtitleLabel, MessageBox
+from qfluentwidgets import ScrollArea, MessageBox
 from ...i18n import t
 from ....data.user_manager import UserManager
 from ....data.template_manager import TemplateManager
@@ -44,7 +44,8 @@ class WizardView(QWidget):
         from ...styles import apply_page_layout
         apply_page_layout(title_layout, spacing="section")
         title_layout.setContentsMargins(24, 24, 24, 8)
-        self.title_label = SubtitleLabel(t("wizard.title"))
+        from qfluentwidgets import TitleLabel
+        self.title_label = TitleLabel(t("wizard.title"))
         title_layout.addWidget(self.title_label)
         title_layout.addStretch()
         layout.addLayout(title_layout)

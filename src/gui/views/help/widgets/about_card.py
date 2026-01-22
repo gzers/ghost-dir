@@ -4,7 +4,7 @@
 from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout, QLabel
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
-from qfluentwidgets import CardWidget, TitleLabel, BodyLabel, HyperlinkButton
+from qfluentwidgets import CardWidget, StrongBodyLabel, BodyLabel, HyperlinkButton
 from .....common.config import APP_NAME, APP_VERSION
 from .....common.resource_loader import get_resource_path
 
@@ -51,7 +51,7 @@ class AboutCard(CardWidget):
             __author__ = "EZIO T"
             __github_url__ = "https://github.com/gzers/ghost-dir"
         
-        app_title = TitleLabel(APP_NAME)
+        app_title = StrongBodyLabel(APP_NAME)
         version_label = BodyLabel(f"版本 {__version__}")
         version_label.setTextColor(Qt.GlobalColor.gray, Qt.GlobalColor.gray)
         

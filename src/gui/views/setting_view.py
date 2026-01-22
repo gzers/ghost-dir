@@ -4,7 +4,7 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QHBoxLayout
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QDesktopServices, QPixmap
-from qfluentwidgets import TitleLabel, BodyLabel, CardWidget, HyperlinkButton, PushButton
+from qfluentwidgets import TitleLabel, StrongBodyLabel, BodyLabel, CardWidget, HyperlinkButton, PushButton
 from ...common.config import APP_NAME, APP_VERSION
 from ...common.resource_loader import get_resource_path
 
@@ -58,7 +58,7 @@ class SettingView(QWidget):
             __author__ = "EZIO T"
             __github_url__ = "https://github.com/gzers/ghost-dir"
         
-        app_title = TitleLabel(f"{APP_NAME}")
+        app_title = StrongBodyLabel(f"{APP_NAME}")
         version_label = BodyLabel(f"版本 {__version__}")
         version_label.setTextColor(Qt.GlobalColor.gray, Qt.GlobalColor.gray)
         
