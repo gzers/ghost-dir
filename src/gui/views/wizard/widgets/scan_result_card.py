@@ -38,9 +38,9 @@ class ScanResultCard(CardWidget):
         layout.addWidget(self.checkbox)
 
         # 图标
-        icon = BodyLabel()
-        icon.setText("📁")
-        icon.setStyleSheet("font-size: 24px;")
+        icon = BodyLabel("💾")
+        from ....theme import StyleManager
+        icon.setStyleSheet(StyleManager.get_icon_style("md"))
         icon.setFixedSize(32, 32)
         icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(icon)
@@ -54,7 +54,8 @@ class ScanResultCard(CardWidget):
         info_layout.addWidget(self.name_label)
 
         self.path_label = BodyLabel(self.template.default_src)
-        self.path_label.setStyleSheet("color: #888; font-size: 12px;")
+        from ....theme import apply_muted_text_style
+        apply_muted_text_style(self.path_label, size=12)
         self.path_label.setWordWrap(True)
         info_layout.addWidget(self.path_label)
 

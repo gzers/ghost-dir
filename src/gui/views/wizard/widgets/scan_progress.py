@@ -52,9 +52,10 @@ class ScanProgressCard(CardWidget):
 
         # 标题
         title_layout = QHBoxLayout()
-        self.icon_label = BodyLabel()
-        self.icon_label.setText("🔍")
-        self.icon_label.setStyleSheet("font-size: 32px;")
+        # 图标
+        self.icon_label = BodyLabel("🔍")
+        from ....theme import StyleManager
+        self.icon_label.setStyleSheet(StyleManager.get_icon_style("lg"))
         title_layout.addWidget(self.icon_label)
 
         title_layout.addSpacing(12)

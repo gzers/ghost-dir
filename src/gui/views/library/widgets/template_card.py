@@ -53,7 +53,8 @@ class TemplateCard(CardWidget):
             emoji = "📦" if not self.is_custom else "🎨"
             icon = BodyLabel()
             icon.setText(emoji)
-            icon.setStyleSheet("font-size: 32px;")
+            from ....theme import StyleManager
+            icon.setStyleSheet(StyleManager.get_icon_style("lg"))
             icon.setFixedSize(48, 48)
             icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
             header_layout.addWidget(icon)
@@ -96,15 +97,17 @@ class TemplateCard(CardWidget):
 
         # 分类
         self.category_label = BodyLabel(f"分类: {self.template.category}")
-        self.category_label.setStyleSheet("color: #666;")
+        from ....theme import apply_muted_text_style
+        apply_muted_text_style(self.category_label, size=14)
         layout.addWidget(self.category_label)
 
         # 路径
         self.path_label = BodyLabel(self.template.default_src)
-        self.path_label.setStyleSheet("""
-            color: #999;
-            font-size: 11px;
-        """)
+        from ....theme import StyleManager
+        self.path_label.setStyleSheet(StyleManager.get_label_style(
+            color=StyleManager.get_text_disabled(),
+            size=11
+        ))
         self.path_label.setWordWrap(True)
         layout.addWidget(self.path_label)
 

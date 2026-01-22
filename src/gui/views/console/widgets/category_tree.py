@@ -26,11 +26,8 @@ class CategoryTree(TreeWidget):
 
     def _update_theme_style(self):
         """更新主题样式"""
-        from qfluentwidgets import isDarkTheme
-        if isDarkTheme():
-            bg_color = "#202020"
-        else:
-            bg_color = "#F9F9F9"
+        from ....theme import StyleManager
+        bg_color = StyleManager.get_container_background()
         self.setStyleSheet(f"QTreeWidget {{ background-color: {bg_color}; border-right: none; }}")
 
     def _on_theme_changed(self, theme):

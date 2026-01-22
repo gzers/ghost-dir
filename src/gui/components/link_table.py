@@ -37,13 +37,11 @@ class LinkTable(TableWidget):
 
     def _update_theme_style(self):
         """更新主题样式"""
-        from qfluentwidgets import isDarkTheme
-        if isDarkTheme():
-            bg_color = "#202020"
-            alternate_bg = "#2A2A2A"
-        else:
-            bg_color = "#FFFFFF"
-            alternate_bg = "#F5F5F5"
+        from ..theme import StyleManager
+        bg_color = StyleManager.get_container_background()
+        alternate_bg = StyleManager.get_hover_background()
+        border_color = StyleManager.get_border_color()
+        
         self.setStyleSheet(f"""
             QTableWidget {{
                 background-color: {bg_color};
@@ -54,7 +52,7 @@ class LinkTable(TableWidget):
             QHeaderView::section {{
                 background-color: {bg_color};
                 border: none;
-                border-bottom: 1px solid #E0E0E0;
+                border-bottom: 1px solid {border_color};
             }}
         """)
 

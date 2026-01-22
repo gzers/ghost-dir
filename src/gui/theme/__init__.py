@@ -5,6 +5,8 @@
 from .styles import (
     StyleManager,
     apply_page_style,
+    apply_container_style,
+    apply_muted_text_style,
     get_spacing,
     get_radius,
     WINDOW_MIN_WIDTH,
@@ -12,11 +14,15 @@ from .styles import (
     TABLE_ROW_HEIGHT,
     TABLE_HEADER_HEIGHT,
     ANIMATION_DURATION,
+    SHADOW_BLUR,
+    SHADOW_OFFSET,
 )
 
 __all__ = [
     "StyleManager",
     "apply_page_style",
+    "apply_container_style",
+    "apply_muted_text_style",
     "get_spacing",
     "get_radius",
     "WINDOW_MIN_WIDTH",

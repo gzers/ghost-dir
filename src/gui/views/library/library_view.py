@@ -44,6 +44,10 @@ class LibraryView(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
+        
+        # 设置页面背景为透明
+        from ...theme import apply_page_style
+        apply_page_style(self)
 
         # 标题
         title_layout = QHBoxLayout()
@@ -112,12 +116,8 @@ class LibraryView(QWidget):
 
     def _update_theme_style(self):
         """更新主题样式"""
-        from qfluentwidgets import isDarkTheme
-        if isDarkTheme():
-            bg_color = "#202020"
-        else:
-            bg_color = "#F9F9F9"
-        self.scroll_widget.setStyleSheet(f"background-color: {bg_color};")
+        from ...theme import apply_container_style
+        apply_container_style(self.scroll_widget)
 
     def _on_theme_changed(self, theme):
         """主题变更"""

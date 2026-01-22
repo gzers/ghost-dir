@@ -35,14 +35,30 @@ class StyleManager:
     # ========== 颜色系统 ==========
     
     @staticmethod
+    def get_page_background() -> str:
+        """获取页面背景色 - 透明以显示 Mica 材质"""
+        return "transparent"
+    
+    @staticmethod
     def get_background_color() -> str:
-        """获取页面背景色"""
-        return "#202020" if isDarkTheme() else "#F9F9F9"
+        """获取页面背景色（已废弃，使用 get_page_background）"""
+        return StyleManager.get_page_background()
+    
+    @staticmethod
+    def get_container_background() -> str:
+        """获取容器背景色 - 半透明用于滚动区域"""
+        if isDarkTheme():
+            return "rgba(0, 0, 0, 0.3)"
+        else:
+            return "rgba(255, 255, 255, 0.5)"
     
     @staticmethod
     def get_card_background() -> str:
-        """获取卡片背景色"""
-        return "#2B2B2B" if isDarkTheme() else "#FFFFFF"
+        """获取卡片背景色 - 半透明白色"""
+        if isDarkTheme():
+            return "rgba(255, 255, 255, 0.05)"
+        else:
+            return "rgba(255, 255, 255, 0.7)"
     
     @staticmethod
     def get_hover_background() -> str:
@@ -68,6 +84,16 @@ class StyleManager:
     def get_text_tertiary() -> str:
         """获取三级文本颜色"""
         return "#808080" if isDarkTheme() else "#909090"
+    
+    @staticmethod
+    def get_text_muted() -> str:
+        """获取弱化文本颜色（用于次要信息）"""
+        return "#888888" if isDarkTheme() else "#666666"
+    
+    @staticmethod
+    def get_text_disabled() -> str:
+        """获取禁用文本颜色"""
+        return "#999999"
     
     # ========== 状态颜色 ==========
     
@@ -114,6 +140,16 @@ class StyleManager:
     # ========== 尺寸规范 ==========
     
     @staticmethod
+    def get_icon_sizes() -> Dict[str, int]:
+        """获取图标尺寸规范"""
+        return {
+            "sm": 16,
+            "md": 24,
+            "lg": 32,
+            "xl": 48,
+        }
+    
+    @staticmethod
     def get_spacing() -> Dict[str, int]:
         """获取间距规范"""
         return {
@@ -151,7 +187,68 @@ class StyleManager:
             "display": 32,
         }
     
-    # ========== 组件样式 ==========
+    # ========== 组件样式生成器 ==========
+    
+    @staticmethod
+    def get_badge_style(
+        bg_color: str = None,
+        text_color: str = None,
+        size: str = "sm"
+    ) -> str:
+        """
+        生成徽章样式
+        
+        Args:
+            bg_color: 背景颜色（可选）
+            text_color: 文本颜色（可选）
+            size: 尺寸（sm/md/lg）
+        """
+        radius = StyleManager.get_border_radius()
+        spacing = StyleManager.get_spacing()
+        
+        bg = bg_color or "rgba(100, 100, 100, 0.2)"
+        color = text_color or StyleManager.get_text_secondary()
+        
+        return f"""
+            background-color: {bg};
+            color: {color};
+            border-radius: {radius['sm']}px;
+            padding: {spacing['xs']}px {spacing['sm']}px;
+            font-size: 12px;
+        """
+    
+    @staticmethod
+    def get_label_style(
+        color: str = None,
+        size: int = 14,
+        weight: str = "normal"
+    ) -> str:
+        """
+        生成标签样式
+        
+        Args:
+            color: 文本颜色（可选）
+            size: 字体大小
+            weight: 字体粗细
+        """
+        text_color = color or StyleManager.get_text_primary()
+        return f"""
+            color: {text_color};
+            font-size: {size}px;
+            font-weight: {weight};
+        """
+    
+    @staticmethod
+    def get_icon_style(size: str = "md") -> str:
+        """
+        生成图标样式
+        
+        Args:
+            size: 图标尺寸（sm/md/lg/xl）
+        """
+        sizes = StyleManager.get_icon_sizes()
+        icon_size = sizes.get(size, sizes["md"])
+        return f"font-size: {icon_size}px;"
     
     @staticmethod
     def get_button_style(variant: str = "primary") -> str:
@@ -243,8 +340,31 @@ def apply_page_style(widget) -> None:
     Args:
         widget: 要应用样式的 widget
     """
-    bg_color = StyleManager.get_background_color()
+    bg_color = StyleManager.get_page_background()
     widget.setStyleSheet(f"background-color: {bg_color};")
+
+
+def apply_container_style(widget) -> None:
+    """
+    应用容器样式（半透明背景）
+    
+    Args:
+        widget: 要应用样式的 widget
+    """
+    bg_color = StyleManager.get_container_background()
+    widget.setStyleSheet(f"background-color: {bg_color};")
+
+
+def apply_muted_text_style(widget, size: int = 12) -> None:
+    """
+    应用弱化文本样式
+    
+    Args:
+        widget: 要应用样式的 widget
+        size: 字体大小
+    """
+    color = StyleManager.get_text_muted()
+    widget.setStyleSheet(f"color: {color}; font-size: {size}px;")
 
 
 def get_spacing(size: str = "md") -> int:
