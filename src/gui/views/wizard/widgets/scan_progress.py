@@ -54,7 +54,7 @@ class ScanProgressCard(CardWidget):
         title_layout = QHBoxLayout()
         # 图标
         self.icon_label = BodyLabel("🔍")
-        from ....theme import StyleManager
+        from ....styles import StyleManager
         self.icon_label.setStyleSheet(StyleManager.get_icon_style("lg"))
         title_layout.addWidget(self.icon_label)
 

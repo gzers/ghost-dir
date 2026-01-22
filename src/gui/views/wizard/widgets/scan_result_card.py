@@ -39,7 +39,7 @@ class ScanResultCard(CardWidget):
 
         # 图标
         icon = BodyLabel("💾")
-        from ....theme import StyleManager
+        from ....styles import StyleManager
         icon.setStyleSheet(StyleManager.get_icon_style("md"))
         icon.setFixedSize(32, 32)
         icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -54,7 +54,7 @@ class ScanResultCard(CardWidget):
         info_layout.addWidget(self.name_label)
 
         self.path_label = BodyLabel(self.template.default_src)
-        from ....theme import apply_muted_text_style
+        from ....styles import apply_muted_text_style
         apply_muted_text_style(self.path_label, size=12)
         self.path_label.setWordWrap(True)
         info_layout.addWidget(self.path_label)

@@ -4,7 +4,7 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout
 from qfluentwidgets import TitleLabel
 from ...i18n import t
-from ..settings.widgets.about_card import AboutCard
+from .widgets.about_card import AboutCard
 
 class HelpView(QWidget):
     """帮助/关于视图"""
@@ -15,8 +15,8 @@ class HelpView(QWidget):
     
     def _init_ui(self):
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(16)
+        from ...styles import apply_page_layout
+        apply_page_layout(layout, spacing="section")
         
         title = TitleLabel(t("help.title"))
         layout.addWidget(title)

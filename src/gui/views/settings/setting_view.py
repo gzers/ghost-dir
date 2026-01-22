@@ -11,7 +11,7 @@ from qfluentwidgets import (
 from ....data.user_manager import UserManager
 from ....common.signals import signal_bus
 from ....common.config import LOG_DIR, CONFIG_FILE
-from ...theme import apply_page_style
+from ...styles import apply_page_style
 from ...i18n import t
 import os
 import subprocess
@@ -28,6 +28,10 @@ class SettingView(ScrollArea):
         # 使用会滚动的容器
         self.scrollWidget = QWidget()
         self.expandLayout = ExpandLayout(self.scrollWidget)
+        
+        # 应用统一页面布局规范
+        from ...styles import apply_page_layout
+        apply_page_layout(self.expandLayout)
 
         self._init_ui()
         self.setWidget(self.scrollWidget)

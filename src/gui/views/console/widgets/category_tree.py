@@ -26,7 +26,7 @@ class CategoryTree(TreeWidget):
 
     def _update_theme_style(self):
         """更新主题样式"""
-        from ....theme import StyleManager
+        from ....styles import StyleManager
         bg_color = StyleManager.get_container_background()
         self.setStyleSheet(f"QTreeWidget {{ background-color: {bg_color}; border-right: none; }}")
 

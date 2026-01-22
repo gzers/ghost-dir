@@ -41,7 +41,9 @@ class WizardView(QWidget):
 
         # 标题
         title_layout = QHBoxLayout()
-        title_layout.setContentsMargins(24, 20, 24, 10)
+        from ...styles import apply_page_layout
+        apply_page_layout(title_layout, spacing="section")
+        title_layout.setContentsMargins(24, 24, 24, 8)
         self.title_label = SubtitleLabel(t("wizard.title"))
         title_layout.addWidget(self.title_label)
         title_layout.addStretch()
@@ -58,8 +60,8 @@ class WizardView(QWidget):
 
         self.result_container = QWidget()
         self.result_layout = QVBoxLayout(self.result_container)
-        self.result_layout.setContentsMargins(20, 10, 20, 20)
-        self.result_layout.setSpacing(12)
+        apply_page_layout(self.result_layout, spacing="group")  # 列表项间距 20px
+        self.result_layout.setContentsMargins(24, 12, 24, 24)
         self.result_layout.addStretch()
 
         self.result_scroll.setWidget(self.result_container)
@@ -75,7 +77,7 @@ class WizardView(QWidget):
 
     def _update_theme_style(self):
         """更新主题样式"""
-        from ...theme import apply_container_style
+        from ...styles import apply_container_style
         apply_container_style(self.result_container)
 
 

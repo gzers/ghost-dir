@@ -10,7 +10,7 @@ from qfluentwidgets import (
     TitleLabel, MessageBox
 )
 from ...components.link_table import LinkTable
-from ...theme import apply_page_style
+from ...styles import apply_page_style
 from ...i18n import t
 from ....data.user_manager import UserManager
 from ....data.template_manager import TemplateManager
@@ -42,8 +42,8 @@ class ConsoleView(QWidget):
     def _init_ui(self):
         """初始化 UI"""
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(16)
+        from ...styles import apply_page_layout
+        apply_page_layout(layout, spacing="section")  # 使用区块间距 (16px)
 
         # 设置背景色（亮色主题下需要）
         self._update_theme_style()

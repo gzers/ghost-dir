@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel
 from PySide6.QtCore import Qt
 from qfluentwidgets import BodyLabel
 from ...data.model import LinkStatus
-from ..theme import StyleManager, get_spacing, get_radius
+from ..styles import StyleManager, get_spacing, get_radius
 from ..i18n import get_status_text
 
 

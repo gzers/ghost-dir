@@ -163,6 +163,25 @@ class StyleManager:
         }
     
     @staticmethod
+    def get_layout_margins() -> Dict[str, int]:
+        """获取布局边距规范（Windows 11 Fluent Design）"""
+        return {
+            "page": 24,          # 页面边距
+            "section": 20,       # 区块边距
+            "card": 16,          # 卡片内边距
+            "compact": 12,       # 紧凑边距
+        }
+    
+    @staticmethod
+    def get_list_spacing() -> Dict[str, int]:
+        """获取列表间距规范（Windows 11 Fluent Design）"""
+        return {
+            "group": 20,         # 设置组/列表组之间的间距
+            "item": 4,           # 同组内列表项之间的间距
+            "section": 16,       # 列表区块之间的间距
+        }
+    
+    @staticmethod
     def get_border_radius() -> Dict[str, int]:
         """获取圆角规范"""
         return {
@@ -353,6 +372,21 @@ def apply_container_style(widget) -> None:
     """
     bg_color = StyleManager.get_container_background()
     widget.setStyleSheet(f"background-color: {bg_color};")
+
+
+def apply_page_layout(layout, spacing: str = "group"):
+    """
+    统一应用页面布局规范
+    
+    Args:
+        layout: 布局对象 (QVBoxLayout, ExpandLayout 等)
+        spacing: 间距类型 (group/section/item)
+    """
+    margins = StyleManager.get_layout_margins()
+    spacing_val = StyleManager.get_list_spacing().get(spacing, 20)
+    
+    layout.setContentsMargins(margins["page"], margins["page"], margins["page"], margins["page"])
+    layout.setSpacing(spacing_val)
 
 
 def apply_muted_text_style(widget, size: int = 12) -> None:

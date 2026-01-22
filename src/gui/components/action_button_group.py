@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QWidget, QHBoxLayout
 from PySide6.QtCore import Signal
 from qfluentwidgets import PushButton, FluentIcon
 from ...data.model import LinkStatus
-from ..theme import get_spacing
+from ..styles import get_spacing
 from ..i18n import t
 
 

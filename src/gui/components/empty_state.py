@@ -5,7 +5,7 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel
 from PySide6.QtCore import Qt, Signal
 from qfluentwidgets import PushButton, BodyLabel, TitleLabel, FluentIcon
-from ..theme import StyleManager, get_spacing
+from ..styles import StyleManager, get_spacing
 
 
 class EmptyState(QWidget):

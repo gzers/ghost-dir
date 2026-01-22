@@ -37,7 +37,7 @@ class LinkTable(TableWidget):
 
     def _update_theme_style(self):
         """更新主题样式"""
-        from ..theme import StyleManager
+        from ..styles import StyleManager
         bg_color = StyleManager.get_container_background()
         alternate_bg = StyleManager.get_hover_background()
         border_color = StyleManager.get_border_color()

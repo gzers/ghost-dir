@@ -46,12 +46,15 @@ class LibraryView(QWidget):
         layout.setSpacing(0)
         
         # 设置页面背景为透明
-        from ...theme import apply_page_style
+        from ...styles import apply_page_style
         apply_page_style(self)
 
         # 标题
         title_layout = QHBoxLayout()
-        title_layout.setContentsMargins(24, 20, 24, 10)
+        from ...styles import apply_page_layout
+        apply_page_layout(title_layout, spacing="section")
+        title_layout.setContentsMargins(24, 24, 24, 8)  # 顶部 24px, 底部 8px 以贴合内容
+        from qfluentwidgets import SubtitleLabel
         self.title_label = SubtitleLabel(t("library.title"))
         title_layout.addWidget(self.title_label)
         title_layout.addStretch()
@@ -103,8 +106,8 @@ class LibraryView(QWidget):
 
         self.scroll_widget = QWidget()
         self.grid_layout = QGridLayout(self.scroll_widget)
-        self.grid_layout.setContentsMargins(20, 10, 20, 20)
-        self.grid_layout.setSpacing(16)
+        apply_page_layout(self.grid_layout, spacing="section")  # 网格项间距 16px
+        self.grid_layout.setContentsMargins(24, 12, 24, 24)  # 侧边 24px
 
         self.scroll_area.setWidget(self.scroll_widget)
         layout.addWidget(self.scroll_area)
@@ -116,7 +119,7 @@ class LibraryView(QWidget):
 
     def _update_theme_style(self):
         """更新主题样式"""
-        from ...theme import apply_container_style
+        from ...styles import apply_container_style
         apply_container_style(self.scroll_widget)
 
     def _on_theme_changed(self, theme):
