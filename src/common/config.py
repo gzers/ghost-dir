@@ -15,9 +15,13 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent
 
 # 数据文件路径（统一使用项目根目录下的 .ghost-dir）
 DATA_DIR = PROJECT_ROOT / ".ghost-dir"
-TEMPLATES_FILE = "assets/templates.json"
+TEMPLATES_FILE = "assets/templates.json"  # 已废弃，保留用于兼容性
 USER_DATA_FILE = DATA_DIR / "user_data.json"
 LOCK_FILE = DATA_DIR / ".ghost.lock"
+
+# 模板配置文件
+DEFAULT_TEMPLATES_CONFIG = PROJECT_ROOT / "config" / "default_templates.json"  # 内置默认模板（进版本控制）
+TEMPLATE_CACHE_FILE = DATA_DIR / "template_cache.json"  # API 模板缓存（运行时数据）
 
 # 配置和日志目录
 CONFIG_FILE = DATA_DIR / "config.json"

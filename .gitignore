@@ -35,6 +35,7 @@ wheels/
 # Project specific
 config/user_settings.json
 config/history.json
+config/template_cache.json  # API 模板缓存（运行时数据）
 *.backup
 
 # OS

@@ -11,6 +11,7 @@ from qfluentwidgets import (
 )
 from ...components.link_table import LinkTable
 from ...theme import apply_page_style
+from ...i18n import t
 from ....data.user_manager import UserManager
 from ....data.template_manager import TemplateManager
 from ....data.model import LinkStatus
@@ -51,14 +52,14 @@ class ConsoleView(QWidget):
         
         # 标题栏
         title_layout = QHBoxLayout()
-        title = TitleLabel("主控制台")
+        title = TitleLabel(t("console.title"))
         title_layout.addWidget(title)
         title_layout.addStretch()
         
         # 工具栏按钮
-        self.add_btn = PushButton(FluentIcon.ADD, "新增连接")
-        self.scan_btn = PushButton(FluentIcon.SEARCH, "扫描本机应用")
-        self.refresh_size_btn = PushButton(FluentIcon.SYNC, "刷新统计")
+        self.add_btn = PushButton(FluentIcon.ADD, t("console.add_link"))
+        self.scan_btn = PushButton(FluentIcon.SEARCH, t("console.scan_apps"))
+        self.refresh_size_btn = PushButton(FluentIcon.SYNC, t("console.refresh_size"))
         self.refresh_btn = ToolButton(FluentIcon.SYNC)
         
         title_layout.addWidget(self.add_btn)

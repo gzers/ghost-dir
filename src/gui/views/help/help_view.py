@@ -3,6 +3,7 @@
 """
 from PySide6.QtWidgets import QWidget, QVBoxLayout
 from qfluentwidgets import TitleLabel
+from ...i18n import t
 from ..settings.widgets.about_card import AboutCard
 
 class HelpView(QWidget):
@@ -17,7 +18,7 @@ class HelpView(QWidget):
         layout.setContentsMargins(20, 20, 20, 20)
         layout.setSpacing(16)
         
-        title = TitleLabel("帮助")
+        title = TitleLabel(t("help.title"))
         layout.addWidget(title)
         
         # 关于卡片

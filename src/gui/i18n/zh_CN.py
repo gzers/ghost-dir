@@ -90,7 +90,7 @@ TEXTS = {
     
     # ========== 主控制台 ==========
     "console": {
-        "title": "主控制台",
+        "title": "我的连接",
         "add_link": "新增连接",
         "scan_apps": "扫描本机应用",
         "refresh_size": "刷新统计",

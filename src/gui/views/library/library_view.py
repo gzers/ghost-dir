@@ -8,6 +8,7 @@ from qfluentwidgets import (
     SubtitleLabel, SearchLineEdit, ComboBox, PushButton,
     ScrollArea, FluentIcon, InfoBar, InfoBarPosition
 )
+from ...i18n import t
 from ....data.user_manager import UserManager
 from ....data.template_manager import TemplateManager
 from ....data.model import Template
@@ -47,7 +48,7 @@ class LibraryView(QWidget):
         # 标题
         title_layout = QHBoxLayout()
         title_layout.setContentsMargins(24, 20, 24, 10)
-        self.title_label = SubtitleLabel("模版库")
+        self.title_label = SubtitleLabel(t("library.title"))
         title_layout.addWidget(self.title_label)
         title_layout.addStretch()
 
@@ -66,7 +67,7 @@ class LibraryView(QWidget):
 
         # 搜索框
         self.search_edit = SearchLineEdit()
-        self.search_edit.setPlaceholderText("搜索模版...")
+        self.search_edit.setPlaceholderText(t("library.search_placeholder"))
         self.search_edit.setFixedWidth(300)
         self.search_edit.textChanged.connect(self._on_search_changed)
         filter_layout.addWidget(self.search_edit)

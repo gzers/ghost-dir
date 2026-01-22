@@ -5,6 +5,7 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QScrollArea, QHBoxLayout
 from PySide6.QtCore import Qt
 from qfluentwidgets import ScrollArea, SubtitleLabel, MessageBox
+from ...i18n import t
 from ....data.user_manager import UserManager
 from ....data.template_manager import TemplateManager
 from ....core.scanner import SmartScanner
@@ -41,7 +42,7 @@ class WizardView(QWidget):
         # 标题
         title_layout = QHBoxLayout()
         title_layout.setContentsMargins(24, 20, 24, 10)
-        self.title_label = SubtitleLabel("智能向导")
+        self.title_label = SubtitleLabel(t("wizard.title"))
         title_layout.addWidget(self.title_label)
         title_layout.addStretch()
         layout.addLayout(title_layout)
