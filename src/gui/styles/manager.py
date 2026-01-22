@@ -23,9 +23,13 @@ class StyleManager:
             return
         self._initialized = True
         
-        # 监听主题变更
-        signal_bus.theme_changed.connect(self._on_theme_changed)
-    
+        # 监听主题变更信号
+        try:
+            from ...common.signals import signal_bus
+            signal_bus.theme_changed.connect(self._on_theme_changed)
+        except (ImportError, AttributeError):
+            pass
+            
     def _on_theme_changed(self, theme: str):
         """主题变更回调"""
         pass

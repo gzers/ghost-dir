@@ -12,7 +12,7 @@ from ..styles import (
 from ...common.signals import signal_bus
 
 
-class BasePageView(QWidget):
+class BasePageView(QFrame):
     """
     页面视图基类
 
@@ -48,6 +48,8 @@ class BasePageView(QWidget):
             use_expand_layout: 是否使用 ExpandLayout（用于设置页面）
         """
         super().__init__(parent)
+        # 确保 QFrame 不绘制默认边框，但绘制背景
+        self.setFrameShape(QFrame.Shape.NoFrame)
 
         self._title_text = title
         self._show_toolbar = show_toolbar
@@ -160,8 +162,9 @@ class BasePageView(QWidget):
             self._scroll_area.setFrameShape(QFrame.Shape.NoFrame)
             self._scroll_area.setStyleSheet("QScrollArea { border: none; background: transparent; }")
 
-            # 容器
-            self._content_container = QWidget()
+            # 容器 - 使用 QFrame 确保样式渲染
+            self._content_container = QFrame()
+            self._content_container.setFrameShape(QFrame.Shape.NoFrame)
 
             # 根据布局类型选择
             if self._use_expand_layout:
@@ -204,6 +207,7 @@ class BasePageView(QWidget):
         Args:
             theme: 主题名称
         """
+        apply_page_style(self)
         self._update_container_style()
         self.theme_changed.emit(theme)
 

@@ -12,7 +12,8 @@ from ....common.signals import signal_bus
 from ....common.config import LOG_DIR
 from ...i18n import t
 from ...components import BasePageView
-import os
+from ...styles import get_content_width, get_spacing, apply_font_style
+from PySide6.QtCore import Qt
 
 
 class SettingView(BasePageView):
@@ -36,11 +37,13 @@ class SettingView(BasePageView):
         """设置页面内容"""
         # 获取 ExpandLayout
         expand_layout = self.get_content_layout()
+        expand_layout.setSpacing(get_spacing("lg"))
 
         # 页面标题
         self.titleLabel = TitleLabel(t("settings.title"), self.get_content_container())
+        apply_font_style(self.titleLabel, size="xxl", weight="semibold")
         expand_layout.addWidget(self.titleLabel)
-
+        
         # --- 目录配置组 ---
         self.dirGroup = SettingCardGroup(t("settings.group_path"), self.get_content_container())
 

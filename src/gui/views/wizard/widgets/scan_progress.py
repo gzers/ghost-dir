@@ -29,7 +29,13 @@ class ScanWorker(QThread):
             self.error.emit(str(e))
 
 
-class ScanProgressCard(CardWidget):
+from ....components import Card
+from ....styles import (
+    apply_font_style, apply_muted_text_style,
+    get_spacing, get_radius, get_content_width
+)
+
+class ScanProgressCard(Card):
     """扫描进度卡片组件"""
 
     # 信号定义
@@ -44,19 +50,30 @@ class ScanProgressCard(CardWidget):
         self.discovered_count = 0
         self.selected_count = 0
         self._init_ui()
+        self.update_style()
+
+    def update_style(self, theme=None):
+        """更新样式"""
+        super().update_style(theme)
+        if hasattr(self, 'title_label'):
+            self._refresh_content_styles()
 
     def _init_ui(self):
         """初始化 UI"""
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(16)
+        # 限制卡片宽度为窄（560px），使其在向导页居中且不铺满
+        self.setFixedWidth(get_content_width("narrow"))
+        
+        self.main_layout = QVBoxLayout(self)
+        self.main_layout.setContentsMargins(24, 24, 24, 24)
+        self.main_layout.setSpacing(16)
 
-        # 标题
+        # 标题区域
         title_layout = QHBoxLayout()
         # 图标
         self.icon_label = BodyLabel("🔍")
-        from ....styles import StyleManager
-        self.icon_label.setStyleSheet(StyleManager.get_icon_style("lg"))
+        self.icon_label.setFixedSize(40, 40)
+        self.icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.icon_label.setStyleSheet(f"background: rgba(0,0,0,0.05); border-radius: {get_radius('md')}px; font-size: 20px;")
         title_layout.addWidget(self.icon_label)
 
         title_layout.addSpacing(12)
@@ -70,25 +87,24 @@ class ScanProgressCard(CardWidget):
         title_layout.addLayout(title_text)
         title_layout.addStretch()
 
-        layout.addLayout(title_layout)
+        self.main_layout.addLayout(title_layout)
 
         # 进度条
         self.progress_bar = ProgressBar()
-        self.progress_bar.setRange(0, 0)  # 不确定进度
+        self.progress_bar.setRange(0, 0)
         self.progress_bar.setVisible(False)
-        layout.addWidget(self.progress_bar)
+        self.main_layout.addWidget(self.progress_bar)
 
         # 详细状态
         self.detail_label = BodyLabel("点击扫描开始")
         self.detail_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(self.detail_label)
+        self.main_layout.addWidget(self.detail_label)
 
         # 结果统计
         self.result_label = BodyLabel("")
         self.result_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.result_label.setVisible(False)
-        layout.addWidget(self.result_label)
-
+        self.main_layout.addWidget(self.result_label)
 
         # 按钮区域
         button_layout = QHBoxLayout()
@@ -115,7 +131,13 @@ class ScanProgressCard(CardWidget):
         self.cancel_button.clicked.connect(self._on_cancel_clicked)
         button_layout.addWidget(self.cancel_button)
 
-        layout.addLayout(button_layout)
+        self.main_layout.addLayout(button_layout)
+
+    def _refresh_content_styles(self):
+        """刷新文字样式"""
+        apply_font_style(self.title_label, size="lg", weight="semibold")
+        apply_muted_text_style(self.status_label, size="sm")
+        apply_font_style(self.detail_label, weight="medium")
 
 
     def _on_scan_clicked(self):

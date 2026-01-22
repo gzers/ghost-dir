@@ -18,7 +18,11 @@ class Card(QWidget):
         super().__init__(parent)
         self.update_style()
         
-    def update_style(self):
+        # 监听主题变更
+        from ...common.signals import signal_bus
+        signal_bus.theme_changed.connect(self.update_style)
+        
+    def update_style(self, theme=None):
         """更新并应用卡片样式"""
         apply_card_style(self)
         self.update()

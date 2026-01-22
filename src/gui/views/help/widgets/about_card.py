@@ -12,7 +12,7 @@ from qfluentwidgets import (
 from ....i18n import t
 from ....components import Card
 from ....styles import (
-    apply_font_style, get_spacing, apply_badge_style, 
+    apply_font_style, get_spacing, apply_badge_style, get_radius,
     get_text_secondary, get_text_disabled,
     get_content_width, apply_layout_margins
 )
@@ -52,33 +52,54 @@ class AboutCard(Card):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._init_ui()
+        # 初始化应用一次所有子组件样式
+        self.update_style()
     
+    def update_style(self, theme=None):
+        """更新卡片及其子组件样式"""
+        # 1. 更新卡片本体样式 (亚克力背景、跨度等)
+        super().update_style(theme)
+        
+        # 2. 如果 UI 已创建，更新各个子板块的样式
+        if hasattr(self, 'main_layout'):
+            self._update_all_labels()
+
     def _init_ui(self):
         """初始化 UI"""
         # 选取预设的内容容器宽度级别
         self.setFixedWidth(get_content_width("narrow")) # 560px
         
         # 主布局 - 纵向排列
-        main_layout = QVBoxLayout(self)
+        self.main_layout = QVBoxLayout(self)
         # 选取预设的卡片布局边距规范
-        apply_layout_margins(main_layout, preset="card")
-        main_layout.setSpacing(0)
-        main_layout.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
+        apply_layout_margins(self.main_layout, preset="card")
+        self.main_layout.setSpacing(0)
+        self.main_layout.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
         
         # ========== Header 区（顶部信息）==========
-        self._init_header(main_layout)
+        self._init_header(self.main_layout)
         
         # Header 与 Body 间距
-        main_layout.addSpacing(get_spacing("xl"))
+        self.main_layout.addSpacing(get_spacing("xl"))
         
         # ========== Body 区（正文说明）==========
-        self._init_body(main_layout)
+        self._init_body(self.main_layout)
         
         # Body 与 Footer 间距
-        main_layout.addSpacing(get_spacing("xl"))
+        self.main_layout.addSpacing(get_spacing("xl"))
         
         # ========== Footer 区（底部信息与链接）==========
-        self._init_footer(main_layout)
+        self._init_footer(self.main_layout)
+
+    def _update_all_labels(self):
+        """更新所有内部标签的样式（用于适配主题）"""
+        # 由于子组件较多，在各自的创建方法中其实已经引用了实时颜色
+        # 只要在主题变更时重新触发这些控件的 apply_font_style 即可
+        # 实际上可以通过递归重绘或在 update_style 中重新调用初始化里的样式逻辑
+        # 为了高效，我们在这里手动更新关键部分
+        self._refresh_header_styles()
+        self._refresh_body_styles()
+        self._refresh_footer_styles()
     
     def _init_header(self, parent_layout: QVBoxLayout):
         """初始化 Header 区"""
@@ -95,61 +116,58 @@ class AboutCard(Card):
         info_layout.setSpacing(get_spacing("xs"))
         
         # 应用标题
-        title_label = StrongBodyLabel(t("app.name"))
-        apply_font_style(
-            title_label,
-            size="xl",
-            weight="semibold"
-        )
-        info_layout.addWidget(title_label)
+        self.title_label = StrongBodyLabel(t("app.name"))
+        info_layout.addWidget(self.title_label)
         
         # 版本号和副标题的水平布局
         version_subtitle_layout = QHBoxLayout()
         version_subtitle_layout.setSpacing(get_spacing("md"))
         
         # 版本号徽章
-        version_badge = VersionBadge(t("app.version"))
-        version_subtitle_layout.addWidget(version_badge, 0, Qt.AlignmentFlag.AlignVCenter)
+        self.version_badge = VersionBadge(t("app.version"))
+        version_subtitle_layout.addWidget(self.version_badge, 0, Qt.AlignmentFlag.AlignVCenter)
         
         # 副标题
-        subtitle_label = CaptionLabel(t("app.subtitle"))
-        apply_font_style(
-            subtitle_label,
-            size="sm",
-            color="secondary"
-        )
-        version_subtitle_layout.addWidget(subtitle_label, 0, Qt.AlignmentFlag.AlignVCenter)
+        self.subtitle_label = CaptionLabel(t("app.subtitle"))
+        version_subtitle_layout.addWidget(self.subtitle_label, 0, Qt.AlignmentFlag.AlignVCenter)
         version_subtitle_layout.addStretch()
         
         info_layout.addLayout(version_subtitle_layout)
         
         header_layout.addLayout(info_layout, 1)
         parent_layout.addLayout(header_layout)
+
+    def _refresh_header_styles(self):
+        """刷新头部样式"""
+        if hasattr(self, 'title_label'):
+            apply_font_style(self.title_label, size="xl", weight="semibold")
+        if hasattr(self, 'subtitle_label'):
+            apply_font_style(self.subtitle_label, size="sm", color="secondary")
+        # 版本号徽章内部也有 QWidget，它也是通过 QSS 设置的，也会在 StyleManager 驱动下更新
     
     def _init_body(self, parent_layout: QVBoxLayout):
         """初始化 Body 区"""
         body_layout = QVBoxLayout()
         body_layout.setSpacing(get_spacing("md"))
         
-        # 描述段落 1
-        desc1 = BodyLabel(t("app.description_line1"))
-        desc1.setWordWrap(True)
-        apply_font_style(desc1, size="md")
-        body_layout.addWidget(desc1)
+        # 描述段落
+        self.desc_labels = [
+            BodyLabel(t("app.description_line1")),
+            BodyLabel(t("app.description_line2")),
+            BodyLabel(t("app.description_line3"))
+        ]
         
-        # 描述段落 2
-        desc2 = BodyLabel(t("app.description_line2"))
-        desc2.setWordWrap(True)
-        apply_font_style(desc2, size="md")
-        body_layout.addWidget(desc2)
-        
-        # 描述段落 3
-        desc3 = BodyLabel(t("app.description_line3"))
-        desc3.setWordWrap(True)
-        apply_font_style(desc3, size="md")
-        body_layout.addWidget(desc3)
+        for label in self.desc_labels:
+            label.setWordWrap(True)
+            body_layout.addWidget(label)
         
         parent_layout.addLayout(body_layout)
+
+    def _refresh_body_styles(self):
+        """刷新正文样式"""
+        if hasattr(self, 'desc_labels'):
+            for label in self.desc_labels:
+                apply_font_style(label, size="md")
     
     def _init_footer(self, parent_layout: QVBoxLayout):
         """初始化 Footer 区"""
@@ -157,27 +175,28 @@ class AboutCard(Card):
         footer_layout.setSpacing(get_spacing("lg"))
         
         # 作者信息
-        author_label = CaptionLabel(f"作者：{t('app.author')}")
-        apply_font_style(
-            author_label,
-            size="sm",
-            color="disabled"
-        )
-        footer_layout.addWidget(author_label)
+        self.author_label = CaptionLabel(f"作者：{t('app.author')}")
+        footer_layout.addWidget(self.author_label)
         
-        # GitHub 链接按钮（不使用图标，避免颜色突兀）
+        # GitHub 链接按钮
         github_layout = QHBoxLayout()
-        github_btn = HyperlinkButton(
+        self.github_btn = HyperlinkButton(
             t("app.github_url"),
             t("app.github"),
             self
         )
-        apply_font_style(github_btn, size="md")
-        github_layout.addWidget(github_btn)
+        github_layout.addWidget(self.github_btn)
         github_layout.addStretch()
         
         footer_layout.addLayout(github_layout)
         parent_layout.addLayout(footer_layout)
+
+    def _refresh_footer_styles(self):
+        """刷新底部样式"""
+        if hasattr(self, 'author_label'):
+            apply_font_style(self.author_label, size="sm", color="disabled")
+        if hasattr(self, 'github_btn'):
+            apply_font_style(self.github_btn, size="md")
     
     def _create_app_icon(self) -> QLabel:
         """创建应用图标"""
@@ -187,20 +206,26 @@ class AboutCard(Card):
             pixmap = QPixmap(str(icon_path))
             
             if not pixmap.isNull():
-                # 图标大小 56x56，圆角处理
+                # 使用系统规范的尺寸与圆角
+                size = 56 # 保持原设计尺寸，但可以考虑后续纳入 ICON_SIZES
+                radius = get_radius("md")
+                
                 scaled_pixmap = pixmap.scaled(
-                    56, 56,
+                    size, size,
                     Qt.AspectRatioMode.KeepAspectRatio,
                     Qt.TransformationMode.SmoothTransformation
                 )
                 icon_label.setPixmap(scaled_pixmap)
-                icon_label.setFixedSize(56, 56)
+                icon_label.setFixedSize(size, size)
                 
-                # 添加圆角样式
-                icon_label.setStyleSheet("""
-                    QLabel {
-                        border-radius: 8px;
-                    }
+                # 应用圆角 (通过 QSS 适配)
+                if not icon_label.objectName():
+                    icon_label.setObjectName("app_icon")
+                
+                icon_label.setStyleSheet(f"""
+                    #app_icon {{
+                        border-radius: {radius}px;
+                    }}
                 """)
                 
                 return icon_label
