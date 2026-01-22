@@ -289,8 +289,8 @@ class BasePageView(QWidget):
             if self._use_expand_layout:
                 # ExpandLayout 直接添加
                 self._content_layout.addWidget(widget)
-            elif before_stretch and self._enable_scroll:
-                # 插入到 stretch 之前
+            elif before_stretch:
+                # 插入到 stretch 之前（对滚动和非滚动区域都生效）
                 self._content_layout.insertWidget(
                     self._content_layout.count() - 1,
                     widget

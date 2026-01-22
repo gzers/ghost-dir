@@ -24,4 +24,4 @@ class HelpView(BasePageView):
         """设置页面内容"""
         # 关于卡片
         about_card = AboutCard(self)
-        self.add_to_content(about_card, before_stretch=False)
+        self.add_to_content(about_card, before_stretch=True)
