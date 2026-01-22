@@ -10,6 +10,7 @@ from qfluentwidgets import (
     TitleLabel, MessageBox
 )
 from ...components.link_table import LinkTable
+from ...theme import apply_page_style
 from ....data.user_manager import UserManager
 from ....data.template_manager import TemplateManager
 from ....data.model import LinkStatus
@@ -90,12 +91,7 @@ class ConsoleView(QWidget):
 
     def _update_theme_style(self):
         """更新主题样式"""
-        from qfluentwidgets import isDarkTheme
-        if isDarkTheme():
-            bg_color = "#202020"
-        else:
-            bg_color = "#F9F9F9"
-        self.setStyleSheet(f"background-color: {bg_color};")
+        apply_page_style(self)
 
     def _on_theme_changed(self, theme):
         """主题变更"""

@@ -1,6 +1,17 @@
+# Ghost-Dir 项目依赖
+
+# Qt 框架
 PySide6>=6.6.0
+
+# Fluent UI 组件库 (必须使用 full 版本以启用特效)
 -i https://pypi.org/simple/
 PySide6-Fluent-Widgets[full]
+
+# 图像处理
 Pillow>=10.0.0
+
+# 进程管理
 psutil>=5.9.0
+
+# Windows API 支持
 pywin32>=306

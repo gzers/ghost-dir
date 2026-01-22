@@ -6,7 +6,8 @@ from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel
 from PySide6.QtCore import Qt
 from qfluentwidgets import BodyLabel
 from ...data.model import LinkStatus
-from ...common.config import STATUS_COLORS, STATUS_ICONS
+from ..theme import StyleManager, get_spacing, get_radius
+from ..i18n import get_status_text
 
 
 class StatusBadge(QWidget):
@@ -27,35 +28,28 @@ class StatusBadge(QWidget):
     def _init_ui(self):
         """初始化 UI"""
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(8, 4, 8, 4)
-        layout.setSpacing(4)
+        spacing = get_spacing()
+        layout.setContentsMargins(spacing["sm"], spacing["xs"], spacing["sm"], spacing["xs"])
+        layout.setSpacing(spacing["xs"])
+        
+        # 获取样式
+        status_colors = StyleManager.get_status_colors()
+        status_icons = StyleManager.get_status_icons()
         
         # 状态图标
-        icon_label = QLabel(STATUS_ICONS[self.status.value])
+        icon_label = QLabel(status_icons[self.status.value])
         icon_label.setStyleSheet("font-size: 14px;")
         
-        # 状态文本
-        status_text = {
-            LinkStatus.DISCONNECTED: "未连接",
-            LinkStatus.CONNECTED: "已连接",
-            LinkStatus.READY: "就绪",
-            LinkStatus.INVALID: "失效"
-        }
-        
-        text_label = BodyLabel(status_text[self.status])
-        text_label.setStyleSheet(f"color: {STATUS_COLORS[self.status.value]};")
+        # 状态文本 - 使用 i18n
+        text_label = BodyLabel(get_status_text(self.status.value))
+        text_label.setStyleSheet(f"color: {status_colors[self.status.value]};")
         
         layout.addWidget(icon_label)
         layout.addWidget(text_label)
         layout.addStretch()
         
-        # 设置背景颜色
-        self.setStyleSheet(f"""
-            StatusBadge {{
-                background-color: {STATUS_COLORS[self.status.value]}20;
-                border-radius: 4px;
-            }}
-        """)
+        # 设置背景颜色 - 使用统一样式
+        self.setStyleSheet(StyleManager.get_badge_style(self.status.value))
     
     def update_status(self, status: LinkStatus):
         """更新状态"""
