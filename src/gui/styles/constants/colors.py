@@ -7,9 +7,8 @@ from qfluentwidgets import isDarkTheme
 # ========== 基础颜色 ==========
 # 页面主背景色
 def get_page_background():
-    # 亮色模式下使用略深的底色以凸显卡片
-    # 暗色模式下设为完全透明，让窗口底层的 Mica/Acrylic 效果透出来
-    return "transparent" if isDarkTheme() else "#F3F3F3"
+    # 设为完全透明，让窗口底层的 Mica/Acrylic 效果透出来
+    return "transparent"
 
 def get_container_background():
     """内容区域背景 - 默认全透明"""

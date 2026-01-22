@@ -51,7 +51,7 @@ class BasePageView(QFrame):
         """
         super().__init__(parent)
         # 确保 QFrame 不绘制默认边框，但绘制背景
-        self.setFrameShape(QFrame.Shape.NoFrame)
+        self.setFrameShape(QFrame.NoFrame)
 
         self._title_text = title
         self._show_toolbar = show_toolbar
@@ -118,6 +118,7 @@ class BasePageView(QFrame):
         title_container = QWidget()
         from PySide6.QtWidgets import QSizePolicy
         title_container.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
+        title_container.setStyleSheet("background: transparent;")
         
         self._title_layout = QHBoxLayout(title_container)
         # 使用统一布局规范 (与 ExpandLayout 统一)
@@ -149,6 +150,7 @@ class BasePageView(QFrame):
             parent_layout: 父布局
         """
         self._toolbar_widget = QWidget()
+        self._toolbar_widget.setStyleSheet("background: transparent;")
         self._toolbar_layout = QHBoxLayout(self._toolbar_widget)
         self._toolbar_layout.setContentsMargins(36, 12, 36, 12)
         self._toolbar_layout.setSpacing(get_spacing("md"))
@@ -176,7 +178,7 @@ class BasePageView(QFrame):
 
             # 容器 - 使用 QFrame 确保样式渲染
             self._content_container = QFrame()
-            self._content_container.setFrameShape(QFrame.Shape.NoFrame)
+            self._content_container.setFrameShape(QFrame.NoFrame)
 
             # 根据布局类型选择
             if self._use_expand_layout:

@@ -2,7 +2,7 @@
 模版库视图
 浏览所有官方和自定义模版
 """
-from PySide6.QtWidgets import QGridLayout
+from PySide6.QtWidgets import QGridLayout, QWidget
 from PySide6.QtCore import Qt
 from qfluentwidgets import (
     SearchLineEdit, ComboBox, PushButton,
@@ -84,12 +84,16 @@ class LibraryView(BasePageView):
 
     def _setup_content(self):
         """设置内容区域"""
-        # 获取内容容器并设置网格布局
-        self.scroll_widget = self.get_content_container()
-        self.grid_layout = QGridLayout(self.scroll_widget)
+        # 最好在 content_layout 中添加一个 QWidget 容器，而不是直接给 content_container 设置新布局
+        container = QWidget()
+        container.setStyleSheet("background: transparent;")
+        self.grid_layout = QGridLayout(container)
         from ...styles import apply_page_layout
         apply_page_layout(self.grid_layout, spacing="section")
         self.grid_layout.setContentsMargins(0, 0, 0, 0)
+        
+        # 将容器添加到 BasePageView 的内容区域
+        self.add_to_content(container)
 
     def _load_templates(self):
         """加载所有模版"""
