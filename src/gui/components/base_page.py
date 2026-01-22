@@ -4,9 +4,9 @@
 """
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QFrame
 from PySide6.QtCore import Qt, Signal
-from qfluentwidgets import TitleLabel, ScrollArea
-from ..styles import apply_page_layout, apply_container_style
-from ....common.signals import signal_bus
+from qfluentwidgets import TitleLabel, ScrollArea, ExpandLayout
+from ..styles import apply_page_layout, apply_container_style, apply_page_style
+from ...common.signals import signal_bus
 
 
 class BasePageView(QWidget):
@@ -18,6 +18,8 @@ class BasePageView(QWidget):
     - 标题栏（标题 + 可选右侧工具栏）
     - 可选的工具栏区域
     - 可选的滚动内容区域
+    - 支持在滚动区域外添加固定内容
+    - 支持 ExpandLayout（用于设置页面）
     - 自动主题样式处理
     """
 
@@ -29,7 +31,8 @@ class BasePageView(QWidget):
         parent=None,
         title: str = "",
         show_toolbar: bool = False,
-        enable_scroll: bool = True
+        enable_scroll: bool = True,
+        use_expand_layout: bool = False
     ):
         """
         初始化页面视图基类
@@ -39,12 +42,14 @@ class BasePageView(QWidget):
             title: 页面标题
             show_toolbar: 是否显示工具栏区域
             enable_scroll: 是否启用滚动区域
+            use_expand_layout: 是否使用 ExpandLayout（用于设置页面）
         """
         super().__init__(parent)
 
         self._title_text = title
         self._show_toolbar = show_toolbar
         self._enable_scroll = enable_scroll
+        self._use_expand_layout = use_expand_layout
 
         # 标题栏引用
         self._title_label = None
@@ -54,6 +59,9 @@ class BasePageView(QWidget):
         # 工具栏引用
         self._toolbar_widget = None
         self._toolbar_layout = None
+
+        # 主布局引用（用于在滚动区域外添加固定内容）
+        self._main_layout = None
 
         # 滚动区域引用
         self._scroll_area = None
@@ -71,9 +79,11 @@ class BasePageView(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
+        self._main_layout = layout
 
         # 标题栏
-        self._init_title_bar(layout)
+        if not self._use_expand_layout:
+            self._init_title_bar(layout)
 
         # 工具栏（可选）
         if self._show_toolbar:
@@ -83,7 +93,6 @@ class BasePageView(QWidget):
         self._init_content_area(layout)
 
         # 应用页面背景样式
-        from ..styles import apply_page_style
         apply_page_style(self)
 
     def _init_title_bar(self, parent_layout: QVBoxLayout):
@@ -143,12 +152,21 @@ class BasePageView(QWidget):
                 Qt.ScrollBarPolicy.ScrollBarAlwaysOff
             )
 
+            # 设置滚动区域背景透明
+            self._scroll_area.setFrameShape(QFrame.Shape.NoFrame)
+            self._scroll_area.setStyleSheet("QScrollArea { border: none; background: transparent; }")
+
             # 容器
             self._content_container = QWidget()
-            self._content_layout = QVBoxLayout(self._content_container)
-            apply_page_layout(self._content_layout, spacing="group")
-            self._content_layout.setContentsMargins(24, 12, 24, 24)
-            self._content_layout.addStretch()
+
+            # 根据布局类型选择
+            if self._use_expand_layout:
+                self._content_layout = ExpandLayout(self._content_container)
+            else:
+                self._content_layout = QVBoxLayout(self._content_container)
+                apply_page_layout(self._content_layout, spacing="group")
+                self._content_layout.setContentsMargins(24, 12, 24, 24)
+                self._content_layout.addStretch()
 
             self._scroll_area.setWidget(self._content_container)
             parent_layout.addWidget(self._scroll_area)
@@ -157,15 +175,23 @@ class BasePageView(QWidget):
             self._update_container_style()
         else:
             # 非滚动区域
-            self._content_layout = QVBoxLayout()
-            self._content_layout.setContentsMargins(24, 12, 24, 24)
-            self._content_layout.addStretch()
-            parent_layout.addLayout(self._content_layout)
+            if self._use_expand_layout:
+                self._content_layout = ExpandLayout(self)
+            else:
+                self._content_layout = QVBoxLayout()
+                self._content_layout.setContentsMargins(24, 12, 24, 24)
+                self._content_layout.addStretch()
+                parent_layout.addLayout(self._content_layout)
 
     def _update_container_style(self):
         """更新容器背景样式"""
         if self._content_container:
-            apply_container_style(self._content_container)
+            if self._use_expand_layout:
+                # ExpandLayout 使用 apply_page_style
+                apply_page_style(self._content_container)
+            else:
+                # 普通布局使用 apply_container_style
+                apply_container_style(self._content_container)
 
     def _on_theme_changed(self, theme: str):
         """
@@ -224,14 +250,12 @@ class BasePageView(QWidget):
             return self._toolbar_layout
         return None
 
-    def get_content_layout(self) -> QVBoxLayout:
+    def get_content_layout(self):
         """
         获取内容区域布局
 
-        用于添加页面主要内容
-
         Returns:
-            内容区域布局
+            内容区域布局 (QVBoxLayout 或 ExpandLayout)
         """
         return self._content_layout
 
@@ -259,10 +283,13 @@ class BasePageView(QWidget):
 
         Args:
             widget: 要添加的控件
-            before_stretch: 是否在 stretch 之前添加
+            before_stretch: 是否在 stretch 之前添加（仅 QVBoxLayout 有效）
         """
         if self._content_layout:
-            if before_stretch and self._enable_scroll:
+            if self._use_expand_layout:
+                # ExpandLayout 直接添加
+                self._content_layout.addWidget(widget)
+            elif before_stretch and self._enable_scroll:
                 # 插入到 stretch 之前
                 self._content_layout.insertWidget(
                     self._content_layout.count() - 1,
@@ -270,6 +297,27 @@ class BasePageView(QWidget):
                 )
             else:
                 self._content_layout.addWidget(widget)
+
+    def add_fixed_content(self, widget: QWidget, before_scroll: bool = True):
+        """
+        添加固定内容（在滚动区域外）
+
+        适用于始终可见的控件，如扫描进度卡片、工具栏等
+
+        Args:
+            widget: 要添加的控件
+            before_scroll: 是否在滚动区域之前添加（默认 True）
+        """
+        if not self._main_layout or not self._scroll_area:
+            return
+
+        if before_scroll:
+            # 插入到滚动区域之前
+            index = self._main_layout.indexOf(self._scroll_area)
+            self._main_layout.insertWidget(index, widget)
+        else:
+            # 添加到滚动区域之后
+            self._main_layout.addWidget(widget)
 
     def clear_content(self):
         """清空内容区域"""

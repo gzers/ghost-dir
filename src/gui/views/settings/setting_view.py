@@ -1,62 +1,48 @@
 """
-设置视图（重构版）
+设置视图
 页面主体 - 负责布局和协调
 """
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QFrame
 from qfluentwidgets import (
     TitleLabel, SettingCardGroup, PushSettingCard, OptionsSettingCard,
-    FluentIcon, ScrollArea, ExpandLayout, InfoBar, InfoBarPosition,
-    OptionsConfigItem, OptionsValidator, qconfig
+    FluentIcon, InfoBar, InfoBarPosition,
+    OptionsConfigItem, OptionsValidator
 )
 from ....data.user_manager import UserManager
 from ....common.signals import signal_bus
-from ....common.config import LOG_DIR, CONFIG_FILE
-from ...styles import apply_page_style
+from ....common.config import LOG_DIR
 from ...i18n import t
+from ...components import BasePageView
 import os
-import subprocess
 
 
-class SettingView(ScrollArea):
+class SettingView(BasePageView):
     """设置视图"""
 
     def __init__(self, parent=None):
         """初始化设置视图"""
-        super().__init__(parent)
+        super().__init__(
+            parent=parent,
+            title="",
+            show_toolbar=False,
+            enable_scroll=True,
+            use_expand_layout=True
+        )
         self.user_manager = UserManager()
 
-        # 使用会滚动的容器
-        self.scrollWidget = QWidget()
-        self.expandLayout = ExpandLayout(self.scrollWidget)
-        
-        # 应用统一页面布局规范
-        from ...styles import apply_page_layout
-        apply_page_layout(self.expandLayout)
+        # 设置页面内容
+        self._setup_content()
 
-        self._init_ui()
-        self.setWidget(self.scrollWidget)
-        self.setWidgetResizable(True)
+    def _setup_content(self):
+        """设置页面内容"""
+        # 获取 ExpandLayout
+        expand_layout = self.get_content_layout()
 
-        # 设置滚动区域背景透明
-        self.setFrameShape(QFrame.Shape.NoFrame)
-        self.setStyleSheet("QScrollArea { border: none; background: transparent; }")
-
-        # 设置背景色并监听主题变更
-        self._update_theme_style()
-        signal_bus.theme_changed.connect(self._handle_theme_change)
-
-    def _handle_theme_change(self, theme):
-        """处理全局主题变更信号"""
-        self._update_theme_style()
-
-    def _init_ui(self):
-        """初始化 UI"""
         # 页面标题
-        self.titleLabel = TitleLabel(t("settings.title"), self.scrollWidget)
-        self.expandLayout.addWidget(self.titleLabel)
+        self.titleLabel = TitleLabel(t("settings.title"), self.get_content_container())
+        expand_layout.addWidget(self.titleLabel)
 
         # --- 目录配置组 ---
-        self.dirGroup = SettingCardGroup(t("settings.group_path"), self.scrollWidget)
+        self.dirGroup = SettingCardGroup(t("settings.group_path"), self.get_content_container())
 
         # 默认仓库路径
         self.targetRootCard = PushSettingCard(
@@ -80,15 +66,14 @@ class SettingView(ScrollArea):
         self.logFolderCard.clicked.connect(self._on_open_log_folder)
         self.dirGroup.addSettingCard(self.logFolderCard)
 
-        self.expandLayout.addWidget(self.dirGroup)
+        expand_layout.addWidget(self.dirGroup)
 
         # --- 外观设置组 ---
-        self.appearanceGroup = SettingCardGroup(t("settings.group_appearance"), self.scrollWidget)
+        self.appearanceGroup = SettingCardGroup(t("settings.group_appearance"), self.get_content_container())
 
         # 主题设置
-        # 创建主题配置项
         theme_config = OptionsConfigItem(
-            "Appearance", "Theme", "system", 
+            "Appearance", "Theme", "system",
             OptionsValidator(["system", "light", "dark"])
         )
         self.themeCard = OptionsSettingCard(
@@ -100,18 +85,16 @@ class SettingView(ScrollArea):
             parent=self.appearanceGroup
         )
         current_theme = self.user_manager.get_theme()
-        # 设置当前主题值
         self.themeCard.setValue(current_theme)
         self.themeCard.optionChanged.connect(self._on_theme_changed)
         self.appearanceGroup.addSettingCard(self.themeCard)
 
-        self.expandLayout.addWidget(self.appearanceGroup)
+        expand_layout.addWidget(self.appearanceGroup)
 
         # --- 启动设置组 ---
-        self.startupGroup = SettingCardGroup(t("settings.group_startup"), self.scrollWidget)
+        self.startupGroup = SettingCardGroup(t("settings.group_startup"), self.get_content_container())
 
         # 首次打开功能
-        # 创建启动页面配置项
         startup_config = OptionsConfigItem(
             "Startup", "Page", "wizard",
             OptionsValidator(["wizard", "console", "library"])
@@ -125,16 +108,11 @@ class SettingView(ScrollArea):
             parent=self.startupGroup
         )
         current_page = self.user_manager.get_startup_page()
-        # 设置当前启动页面值
         self.startupCard.setValue(current_page)
         self.startupCard.optionChanged.connect(self._on_startup_changed)
         self.startupGroup.addSettingCard(self.startupCard)
 
-        self.expandLayout.addWidget(self.startupGroup)
-
-    def _update_theme_style(self):
-        """更新主题样式"""
-        apply_page_style(self.scrollWidget)
+        expand_layout.addWidget(self.startupGroup)
 
     def _on_select_target_root(self):
         """选择默认仓库路径"""

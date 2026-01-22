@@ -40,9 +40,9 @@ class WizardView(BasePageView):
 
     def _setup_content(self):
         """设置页面内容"""
-        # 扫描进度卡片
+        # 扫描进度卡片（固定内容，始终可见）
         self.scan_progress = ScanProgressCard()
-        self.add_to_content(self.scan_progress, 0)
+        self.add_fixed_content(self.scan_progress, before_scroll=True)
 
         # 结果滚动区域初始隐藏
         self.get_scroll_area().setVisible(False)
