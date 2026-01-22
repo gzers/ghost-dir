@@ -35,7 +35,8 @@ class BasePageView(QFrame):
         title: str = "",
         show_toolbar: bool = False,
         enable_scroll: bool = True,
-        use_expand_layout: bool = False
+        use_expand_layout: bool = False,
+        content_padding: bool = True
     ):
         """
         初始化页面视图基类
@@ -46,6 +47,7 @@ class BasePageView(QFrame):
             show_toolbar: 是否显示工具栏区域
             enable_scroll: 是否启用滚动区域
             use_expand_layout: 是否使用 ExpandLayout（用于设置页面）
+            content_padding: 是否启用默认的内容区域内边距
         """
         super().__init__(parent)
         # 确保 QFrame 不绘制默认边框，但绘制背景
@@ -55,6 +57,7 @@ class BasePageView(QFrame):
         self._show_toolbar = show_toolbar
         self._enable_scroll = enable_scroll
         self._use_expand_layout = use_expand_layout
+        self._content_padding = content_padding
 
         # 标题栏引用
         self._title_label = None
@@ -84,6 +87,7 @@ class BasePageView(QFrame):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
+        layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self._main_layout = layout
 
         # 标题栏
@@ -97,6 +101,9 @@ class BasePageView(QFrame):
         # 内容区域
         self._init_content_area(layout)
 
+        # 在主布局底部添加弹簧，确保所有内容靠顶对齐
+        layout.addStretch(1)
+
         # 应用页面背景样式
         apply_page_style(self)
 
@@ -107,9 +114,14 @@ class BasePageView(QFrame):
         Args:
             parent_layout: 父布局
         """
-        self._title_layout = QHBoxLayout()
-        # 使用统一布局规范
-        self._title_layout.setContentsMargins(24, 24, 24, 8)
+        # 创建标题容器以更好地控制布局
+        title_container = QWidget()
+        from PySide6.QtWidgets import QSizePolicy
+        title_container.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
+        
+        self._title_layout = QHBoxLayout(title_container)
+        # 使用统一布局规范 (与 ExpandLayout 统一)
+        self._title_layout.setContentsMargins(36, 36, 36, 12)
         self._title_layout.setSpacing(get_spacing("lg"))
 
         # 标题
@@ -127,7 +139,7 @@ class BasePageView(QFrame):
         self._title_layout.addWidget(self._right_toolbar, 0, Qt.AlignmentFlag.AlignTop)
         self._right_toolbar.hide()  # 默认隐藏
 
-        parent_layout.addLayout(self._title_layout, 0)
+        parent_layout.addWidget(title_container)
 
     def _init_toolbar(self, parent_layout: QVBoxLayout):
         """
@@ -138,7 +150,7 @@ class BasePageView(QFrame):
         """
         self._toolbar_widget = QWidget()
         self._toolbar_layout = QHBoxLayout(self._toolbar_widget)
-        self._toolbar_layout.setContentsMargins(24, 10, 24, 10)
+        self._toolbar_layout.setContentsMargins(36, 12, 36, 12)
         self._toolbar_layout.setSpacing(get_spacing("md"))
 
         parent_layout.addWidget(self._toolbar_widget)
@@ -169,14 +181,27 @@ class BasePageView(QFrame):
             # 根据布局类型选择
             if self._use_expand_layout:
                 self._content_layout = ExpandLayout(self._content_container)
+                # 显式应用统一边距，防止 ExpandLayout 使用默认的小边距
+                if self._content_padding:
+                    self._content_layout.setContentsMargins(36, 12, 36, 36)
             else:
                 self._content_layout = QVBoxLayout(self._content_container)
-                apply_page_layout(self._content_layout, spacing="group")
-                self._content_layout.setContentsMargins(24, 12, 24, 24)
+                
+                # 设置间距
+                from ..styles.utils import spacing_utils
+                spacing_val = spacing_utils.get_list_spacing().get("group", 20)
+                self._content_layout.setSpacing(spacing_val)
+                
+                # 应用内边距 (统一为 36, 12, 36, 36)
+                if self._content_padding:
+                    self._content_layout.setContentsMargins(36, 12, 36, 36)
+                else:
+                    self._content_layout.setContentsMargins(0, 0, 0, 0)
+                    
                 self._content_layout.addStretch()
 
             self._scroll_area.setWidget(self._content_container)
-            parent_layout.addWidget(self._scroll_area)
+            parent_layout.addWidget(self._scroll_area, 10)
 
             # 应用容器背景样式
             self._update_container_style()
@@ -184,21 +209,26 @@ class BasePageView(QFrame):
             # 非滚动区域
             if self._use_expand_layout:
                 self._content_layout = ExpandLayout(self)
+                # 显式应用统一边距
+                if self._content_padding:
+                    self._content_layout.setContentsMargins(36, 12, 36, 36)
             else:
                 self._content_layout = QVBoxLayout()
-                self._content_layout.setContentsMargins(24, 12, 24, 24)
+                
+                # 应用内边距 (统一为 36, 12, 36, 36)
+                if self._content_padding:
+                    self._content_layout.setContentsMargins(36, 12, 36, 36)
+                else:
+                    self._content_layout.setContentsMargins(0, 0, 0, 0)
+                    
                 self._content_layout.addStretch()
                 parent_layout.addLayout(self._content_layout)
 
     def _update_container_style(self):
         """更新容器背景样式"""
         if self._content_container:
-            if self._use_expand_layout:
-                # ExpandLayout 使用 apply_page_style
-                apply_page_style(self._content_container)
-            else:
-                # 普通布局使用 apply_container_style
-                apply_container_style(self._content_container)
+            # 统一使用容器样式（透明），背景色由 BasePageView 自身统一管理
+            apply_container_style(self._content_container)
 
     def _on_theme_changed(self, theme: str):
         """
@@ -306,7 +336,8 @@ class BasePageView(QFrame):
             else:
                 self._content_layout.addWidget(widget)
 
-    def add_fixed_content(self, widget: QWidget, before_scroll: bool = True):
+    def add_fixed_content(self, widget: QWidget, before_scroll: bool = True, use_padding: bool = False, 
+                          top_margin: int = 0, bottom_margin: int = 0, align_left: bool = False):
         """
         添加固定内容（在滚动区域外）
 
@@ -315,17 +346,45 @@ class BasePageView(QFrame):
         Args:
             widget: 要添加的控件
             before_scroll: 是否在滚动区域之前添加（默认 True）
+            use_padding: 是否应用页面标准水平内边距（默认 False）
+            top_margin: 顶部边距（默认 0）
+            bottom_margin: 底部边距（默认 0）
+            align_left: 是否左对齐（默认 False，居中）
         """
         if not self._main_layout or not self._scroll_area:
             return
 
+        target_widget = widget
+        
+        # 如果需要内边距或对齐，包裹一层容器
+        if use_padding or align_left or top_margin > 0 or bottom_margin > 0:
+            container = QWidget()
+            from PySide6.QtWidgets import QSizePolicy
+            container.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
+            
+            # 使用垂直布局包裹，这样可以精确控制卡片的水平位置和外边距
+            layout = QVBoxLayout(container)
+            left_p = 36 if use_padding else 0
+            right_p = 36 if use_padding else 0
+            layout.setContentsMargins(left_p, top_margin, right_p, bottom_margin)
+            layout.setSpacing(0)
+            
+            if align_left:
+                layout.addWidget(widget, 0, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+            else:
+                layout.addWidget(widget, 0, Qt.AlignmentFlag.AlignTop)
+                
+            target_widget = container
+
         if before_scroll:
             # 插入到滚动区域之前
             index = self._main_layout.indexOf(self._scroll_area)
-            self._main_layout.insertWidget(index, widget)
+            if index == -1: # fallback
+                index = self._main_layout.count() - 1 
+            self._main_layout.insertWidget(index, target_widget)
         else:
             # 添加到滚动区域之后
-            self._main_layout.addWidget(widget)
+            self._main_layout.addWidget(target_widget)
 
     def clear_content(self):
         """清空内容区域"""

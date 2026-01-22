@@ -7,29 +7,32 @@ from qfluentwidgets import isDarkTheme
 # ========== 基础颜色 ==========
 # 页面主背景色
 def get_page_background():
-    # 亮色模式下使用略深的底色 (#F5F5F5)，以便白色卡片能凸显
-    return "#111111" if isDarkTheme() else "#F5F5F5"
+    # 亮色模式下使用略深的底色以凸显卡片
+    # 暗色模式下设为完全透明，让窗口底层的 Mica/Acrylic 效果透出来
+    return "transparent" if isDarkTheme() else "#F3F3F3"
 
 def get_container_background():
     """内容区域背景 - 默认全透明"""
     return "transparent"
 
 def get_card_background():
-    """卡片亚克力背景"""
+    """卡片层背景 - 紧贴 Windows 设置风格"""
     if isDarkTheme():
-        return "rgba(40, 40, 40, 0.85)"
+        # 稍微加深层级感，确保文字清晰。这层会叠加在窗口亚克力之上
+        return "rgba(255, 255, 255, 0.065)"
     else:
-        return "rgba(255, 255, 255, 0.9)"
+        # 亮色模式下接近纯白的磨砂玻璃
+        return "rgba(255, 255, 255, 0.82)"
 
 def get_hover_background():
     return "rgba(255, 255, 255, 0.08)" if isDarkTheme() else "rgba(0, 0, 0, 0.05)"
 
 def get_border_color():
-    """边框颜色 - 适应背景的动态边框"""
+    """卡片边框颜色 - 极其细微的线条"""
     if isDarkTheme():
-        return "rgba(255, 255, 255, 0.15)"
+        return "rgba(255, 255, 255, 0.08)"
     else:
-        return "rgba(0, 0, 0, 0.1)"
+        return "rgba(0, 0, 0, 0.06)"
 
 # ========== 文本颜色 ==========
 def get_text_primary():

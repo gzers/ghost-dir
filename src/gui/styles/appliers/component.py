@@ -15,6 +15,7 @@ def apply_card_style(widget, size: str = "md"):
     """
     spec = COMPONENT_STYLES["card"]
     bg = color_utils.get_card_background()
+    hover_bg = color_utils.get_hover_background()
     border = color_utils.get_border_color()
     radius = spec["border_radius"]
     p = spec["padding"]
@@ -30,6 +31,9 @@ def apply_card_style(widget, size: str = "md"):
             border: {spec['border_width']}px solid {border};
             border-radius: {radius}px;
             padding: {p[0]}px {p[1]}px {p[2]}px {p[3]}px;
+        }}
+        #{obj_name}:hover {{
+            background-color: {hover_bg};
         }}
     """
     widget.setStyleSheet(style)

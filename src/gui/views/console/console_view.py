@@ -29,7 +29,8 @@ class ConsoleView(BasePageView):
             parent=parent,
             title=t("console.title"),
             show_toolbar=False,
-            enable_scroll=True
+            enable_scroll=True,
+            content_padding=False
         )
 
         # 初始化数据管理器
