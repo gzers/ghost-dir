@@ -109,7 +109,7 @@ class BasePageView(QWidget):
         # 标题
         if self._title_text:
             self._title_label = TitleLabel(self._title_text)
-            self._title_layout.addWidget(self._title_label)
+            self._title_layout.addWidget(self._title_label, 0, Qt.AlignmentFlag.AlignTop)
 
         # 右侧工具栏占位
         self._title_layout.addStretch()
@@ -118,10 +118,10 @@ class BasePageView(QWidget):
         right_toolbar_layout = QHBoxLayout(self._right_toolbar)
         right_toolbar_layout.setContentsMargins(0, 0, 0, 0)
         right_toolbar_layout.setSpacing(8)
-        self._title_layout.addWidget(self._right_toolbar)
+        self._title_layout.addWidget(self._right_toolbar, 0, Qt.AlignmentFlag.AlignTop)
         self._right_toolbar.hide()  # 默认隐藏
 
-        parent_layout.addLayout(self._title_layout)
+        parent_layout.addLayout(self._title_layout, 0)
 
     def _init_toolbar(self, parent_layout: QVBoxLayout):
         """
