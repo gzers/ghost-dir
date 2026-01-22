@@ -2,21 +2,26 @@
 智能向导视图
 引导式操作，快速完成常见任务
 """
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QScrollArea, QHBoxLayout
 from PySide6.QtCore import Qt
-from qfluentwidgets import ScrollArea, MessageBox
+from qfluentwidgets import MessageBox
 from ...i18n import t
 from ....data.user_manager import UserManager
 from ....data.template_manager import TemplateManager
 from ....core.scanner import SmartScanner
+from ...components import BasePageView
 from .widgets import ScanProgressCard, ScanWorker, ScanResultCard
 
 
-class WizardView(QWidget):
+class WizardView(BasePageView):
     """智能向导视图"""
 
     def __init__(self, parent=None):
-        super().__init__(parent)
+        super().__init__(
+            parent=parent,
+            title=t("wizard.title"),
+            show_toolbar=False,
+            enable_scroll=True
+        )
 
         # 初始化数据管理器
         self.template_manager = TemplateManager()
@@ -27,64 +32,24 @@ class WizardView(QWidget):
         self.discovered_templates = []
         self.scan_result_cards = {}
 
-        # 初始化 UI
-        self._init_ui()
+        # 添加页面内容
+        self._setup_content()
 
         # 连接信号
         self._connect_signals()
 
-    def _init_ui(self):
-        """初始化 UI"""
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
-
-        # 标题
-        title_layout = QHBoxLayout()
-        from ...styles import apply_page_layout
-        apply_page_layout(title_layout, spacing="section")
-        title_layout.setContentsMargins(24, 24, 24, 8)
-        from qfluentwidgets import TitleLabel
-        self.title_label = TitleLabel(t("wizard.title"))
-        title_layout.addWidget(self.title_label)
-        title_layout.addStretch()
-        layout.addLayout(title_layout)
-
+    def _setup_content(self):
+        """设置页面内容"""
         # 扫描进度卡片
         self.scan_progress = ScanProgressCard()
-        layout.addWidget(self.scan_progress, 0, Qt.AlignmentFlag.AlignTop)
+        self.add_to_content(self.scan_progress, 0)
 
-        # 结果区域
-        self.result_scroll = ScrollArea()
-        self.result_scroll.setWidgetResizable(True)
-        self.result_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        # 结果滚动区域初始隐藏
+        self.get_scroll_area().setVisible(False)
 
-        self.result_container = QWidget()
-        self.result_layout = QVBoxLayout(self.result_container)
-        apply_page_layout(self.result_layout, spacing="group")  # 列表项间距 20px
-        self.result_layout.setContentsMargins(24, 12, 24, 24)
-        self.result_layout.addStretch()
-
-        self.result_scroll.setWidget(self.result_container)
-        layout.addWidget(self.result_scroll)
-
-        # 初始隐藏结果区域
-        self.result_scroll.setVisible(False)
-
-        # 设置背景色（亮色主题下需要）
-        self._update_theme_style()
-        from ....common.signals import signal_bus
-        signal_bus.theme_changed.connect(self._on_theme_changed)
-
-    def _update_theme_style(self):
-        """更新主题样式"""
-        from ...styles import apply_container_style
-        apply_container_style(self.result_container)
-
-
-    def _on_theme_changed(self, theme):
-        """主题变更"""
-        self._update_theme_style()
+    def _on_theme_changed(self, theme: str):
+        """主题变更处理"""
+        super()._on_theme_changed(theme)
 
     def _connect_signals(self):
         """连接信号"""
@@ -116,6 +81,8 @@ class WizardView(QWidget):
         if discovered:
             # 创建结果卡片
             selected_count = 0
+            content_layout = self.get_content_layout()
+
             for template in discovered:
                 card = ScanResultCard(template)
                 card.selected_changed.connect(self._on_selection_changed)
@@ -123,18 +90,18 @@ class WizardView(QWidget):
                 card.ignore_requested.connect(self._on_ignore_template)
 
                 # 插入到 stretch 之前
-                self.result_layout.insertWidget(
-                    self.result_layout.count() - 1,
+                content_layout.insertWidget(
+                    content_layout.count() - 1,
                     card
                 )
                 self.scan_result_cards[template.id] = card
                 if card.is_selected():
                     selected_count += 1
 
-            self.result_scroll.setVisible(True)
+            self.get_scroll_area().setVisible(True)
             self.scan_progress.scan_finished(len(discovered), selected_count)
         else:
-            self.result_scroll.setVisible(False)
+            self.get_scroll_area().setVisible(False)
             self.scan_progress.scan_finished(0, 0)
 
     def _on_scan_error(self, error_msg):
@@ -199,7 +166,7 @@ class WizardView(QWidget):
 
         # 更新统计
         if not self.scan_result_cards:
-            self.result_scroll.setVisible(False)
+            self.get_scroll_area().setVisible(False)
             self.scan_progress.result_label.setVisible(False)
         else:
             selected_count = sum(

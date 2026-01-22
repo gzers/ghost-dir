@@ -2,24 +2,30 @@
 模版库视图
 浏览所有官方和自定义模版
 """
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QScrollArea
+from PySide6.QtWidgets import QGridLayout
 from PySide6.QtCore import Qt
 from qfluentwidgets import (
     SearchLineEdit, ComboBox, PushButton,
-    ScrollArea, FluentIcon, InfoBar, InfoBarPosition
+    FluentIcon, InfoBar, InfoBarPosition
 )
 from ...i18n import t
 from ....data.user_manager import UserManager
 from ....data.template_manager import TemplateManager
 from ....data.model import Template
+from ...components import BasePageView
 from .widgets import TemplateCard
 
 
-class LibraryView(QWidget):
+class LibraryView(BasePageView):
     """模版库视图"""
 
     def __init__(self, parent=None):
-        super().__init__(parent)
+        super().__init__(
+            parent=parent,
+            title=t("library.title"),
+            show_toolbar=True,
+            enable_scroll=True
+        )
 
         # 初始化数据管理器
         self.template_manager = TemplateManager()
@@ -33,98 +39,57 @@ class LibraryView(QWidget):
         # 筛选状态
         self.current_category = "全部"
 
-        # 初始化 UI
-        self._init_ui()
+        # 设置页面内容
+        self._setup_toolbar()
+        self._setup_content()
 
         # 加载数据
         self._load_templates()
 
-    def _init_ui(self):
-        """初始化 UI"""
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
-        
-        # 设置页面背景为透明
-        from ...styles import apply_page_style
-        apply_page_style(self)
-
-        # 标题
-        title_layout = QHBoxLayout()
-        from ...styles import apply_page_layout
-        apply_page_layout(title_layout, spacing="section")
-        title_layout.setContentsMargins(24, 24, 24, 8)  # 顶部 24px, 底部 8px 以贴合内容
-        from qfluentwidgets import TitleLabel
-        self.title_label = TitleLabel(t("library.title"))
-        title_layout.addWidget(self.title_label)
-        title_layout.addStretch()
-
-        # 统计信息
-        self.count_label = PushButton()
-        self.count_label.setEnabled(False)
-        self.count_label.setStyleSheet("border: none; padding: 4px 12px;")
-        title_layout.addWidget(self.count_label)
-
-        layout.addLayout(title_layout)
-
-        # 搜索和筛选栏
-        filter_layout = QHBoxLayout()
-        filter_layout.setContentsMargins(24, 10, 24, 10)
-        filter_layout.setSpacing(12)
+    def _setup_toolbar(self):
+        """设置工具栏"""
+        toolbar = self.get_toolbar_layout()
 
         # 搜索框
         self.search_edit = SearchLineEdit()
         self.search_edit.setPlaceholderText(t("library.search_placeholder"))
         self.search_edit.setFixedWidth(300)
         self.search_edit.textChanged.connect(self._on_search_changed)
-        filter_layout.addWidget(self.search_edit)
+        toolbar.addWidget(self.search_edit)
 
-        filter_layout.addStretch()
+        toolbar.addStretch()
 
         # 分类筛选
-        filter_layout.addWidget(PushButton("分类:"))
+        toolbar.addWidget(PushButton("分类:"))
         self.category_combo = ComboBox()
         self.category_combo.addItems(["全部"])
         self.category_combo.setFixedWidth(150)
         self.category_combo.currentIndexChanged.connect(self._on_category_changed)
-        filter_layout.addWidget(self.category_combo)
+        toolbar.addWidget(self.category_combo)
 
         # 类型筛选
-        filter_layout.addWidget(PushButton("类型:"))
+        toolbar.addWidget(PushButton("类型:"))
         self.type_combo = ComboBox()
         self.type_combo.addItems(["全部", "官方", "自定义"])
         self.type_combo.setFixedWidth(120)
         self.type_combo.currentIndexChanged.connect(self._on_type_changed)
-        filter_layout.addWidget(self.type_combo)
+        toolbar.addWidget(self.type_combo)
 
-        layout.addLayout(filter_layout)
+        # 右侧统计按钮
+        right_toolbar = self.get_right_toolbar_layout()
+        self.count_label = PushButton()
+        self.count_label.setEnabled(False)
+        self.count_label.setStyleSheet("border: none; padding: 4px 12px;")
+        right_toolbar.addWidget(self.count_label)
 
-        # 模版网格区域
-        self.scroll_area = ScrollArea()
-        self.scroll_area.setWidgetResizable(True)
-        self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-
-        self.scroll_widget = QWidget()
+    def _setup_content(self):
+        """设置内容区域"""
+        # 获取内容容器并设置网格布局
+        self.scroll_widget = self.get_content_container()
         self.grid_layout = QGridLayout(self.scroll_widget)
-        apply_page_layout(self.grid_layout, spacing="section")  # 网格项间距 16px
-        self.grid_layout.setContentsMargins(24, 12, 24, 24)  # 侧边 24px
-
-        self.scroll_area.setWidget(self.scroll_widget)
-        layout.addWidget(self.scroll_area)
-
-        # 设置背景色（亮色主题下需要）
-        self._update_theme_style()
-        from ....common.signals import signal_bus
-        signal_bus.theme_changed.connect(self._on_theme_changed)
-
-    def _update_theme_style(self):
-        """更新主题样式"""
-        from ...styles import apply_container_style
-        apply_container_style(self.scroll_widget)
-
-    def _on_theme_changed(self, theme):
-        """主题变更"""
-        self._update_theme_style()
+        from ...styles import apply_page_layout
+        apply_page_layout(self.grid_layout, spacing="section")
+        self.grid_layout.setContentsMargins(0, 0, 0, 0)
 
     def _load_templates(self):
         """加载所有模版"""
