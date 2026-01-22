@@ -51,16 +51,12 @@ class MainWindow(FluentWindow):
         # 启用云母效果 (Windows 11)
         self.setMicaEffectEnabled(True)
         
-        # 统一背景，使导航栏、侧栏面板、内容区和标题栏全部透明
-        # 这样窗口底层的亚克力模糊效果就能统一呈现，实现“一体化”视觉
+        # 统一背景，使导航栏、侧栏面板、内容区透明
+        # 注意：不设置 titleBar 的透明样式，避免覆盖按钮的主题颜色
         self.navigationInterface.setStyleSheet("background: transparent; border: none;")
         self.navigationInterface.panel.setStyleSheet("background: transparent; border: none;")
         self.stackedWidget.setStyleSheet("background: transparent;")
-        
-        # 处理顶部标题栏透明（如果是 FramelessWindow 及其子类）
-        if hasattr(self, 'titleBar'):
-            self.titleBar.setStyleSheet("background: transparent;")
-            
+
         # 强制自身背景透明，确保亚克力效果不被遮挡
         self.setStyleSheet("MainWindow { background: transparent; }")
     
