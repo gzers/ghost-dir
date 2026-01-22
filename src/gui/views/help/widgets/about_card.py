@@ -6,11 +6,16 @@ from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout, QLabel, QWidget
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
 from qfluentwidgets import (
-    CardWidget, StrongBodyLabel, BodyLabel, CaptionLabel,
+    StrongBodyLabel, BodyLabel, CaptionLabel,
     HyperlinkButton
 )
 from ....i18n import t
-from ....styles import StyleManager, apply_font_style
+from ....components import Card
+from ....styles import (
+    apply_font_style, get_spacing, apply_badge_style, 
+    get_text_secondary, get_text_disabled,
+    get_content_width, apply_layout_margins
+)
 from .....common.resource_loader import get_resource_path
 
 
@@ -24,7 +29,8 @@ class VersionBadge(QWidget):
     def _init_ui(self, version: str):
         """初始化 UI"""
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(8, 4, 8, 4)
+        # 选取预设的徽章边距规范
+        apply_layout_margins(layout, preset="badge")
         layout.setSpacing(0)
         
         # 版本号标签
@@ -32,21 +38,15 @@ class VersionBadge(QWidget):
         apply_font_style(
             version_label,
             size="sm",
-            color=StyleManager.get_text_secondary()
+            color="secondary"
         )
         layout.addWidget(version_label)
         
-        # 设置背景样式
-        self.setStyleSheet(f"""
-            QWidget {{
-                background-color: {StyleManager.get_card_background()};
-                border: 1px solid {StyleManager.get_border_color()};
-                border-radius: 4px;
-            }}
-        """)
+        # 应用标准徽章样式
+        apply_badge_style(self, status="invalid") 
 
 
-class AboutCard(CardWidget):
+class AboutCard(Card):
     """关于信息卡片"""
     
     def __init__(self, parent=None):
@@ -55,22 +55,27 @@ class AboutCard(CardWidget):
     
     def _init_ui(self):
         """初始化 UI"""
-        # 主布局
+        # 选取预设的内容容器宽度级别
+        self.setFixedWidth(get_content_width("narrow")) # 560px
+        
+        # 主布局 - 纵向排列
         main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(24, 24, 24, 24)
+        # 选取预设的卡片布局边距规范
+        apply_layout_margins(main_layout, preset="card")
         main_layout.setSpacing(0)
+        main_layout.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
         
         # ========== Header 区（顶部信息）==========
         self._init_header(main_layout)
         
         # Header 与 Body 间距
-        main_layout.addSpacing(20)
+        main_layout.addSpacing(get_spacing("xl"))
         
         # ========== Body 区（正文说明）==========
         self._init_body(main_layout)
         
         # Body 与 Footer 间距
-        main_layout.addSpacing(20)
+        main_layout.addSpacing(get_spacing("xl"))
         
         # ========== Footer 区（底部信息与链接）==========
         self._init_footer(main_layout)
@@ -78,7 +83,7 @@ class AboutCard(CardWidget):
     def _init_header(self, parent_layout: QVBoxLayout):
         """初始化 Header 区"""
         header_layout = QHBoxLayout()
-        header_layout.setSpacing(16)
+        header_layout.setSpacing(get_spacing("lg"))
         
         # 左侧：应用图标
         icon_label = self._create_app_icon()
@@ -87,7 +92,7 @@ class AboutCard(CardWidget):
         
         # 右侧：标题与版本信息
         info_layout = QVBoxLayout()
-        info_layout.setSpacing(4)
+        info_layout.setSpacing(get_spacing("xs"))
         
         # 应用标题
         title_label = StrongBodyLabel(t("app.name"))
@@ -100,7 +105,7 @@ class AboutCard(CardWidget):
         
         # 版本号和副标题的水平布局
         version_subtitle_layout = QHBoxLayout()
-        version_subtitle_layout.setSpacing(12)
+        version_subtitle_layout.setSpacing(get_spacing("md"))
         
         # 版本号徽章
         version_badge = VersionBadge(t("app.version"))
@@ -111,7 +116,7 @@ class AboutCard(CardWidget):
         apply_font_style(
             subtitle_label,
             size="sm",
-            color=StyleManager.get_text_secondary()
+            color="secondary"
         )
         version_subtitle_layout.addWidget(subtitle_label, 0, Qt.AlignmentFlag.AlignVCenter)
         version_subtitle_layout.addStretch()
@@ -124,7 +129,7 @@ class AboutCard(CardWidget):
     def _init_body(self, parent_layout: QVBoxLayout):
         """初始化 Body 区"""
         body_layout = QVBoxLayout()
-        body_layout.setSpacing(12)
+        body_layout.setSpacing(get_spacing("md"))
         
         # 描述段落 1
         desc1 = BodyLabel(t("app.description_line1"))
@@ -149,14 +154,14 @@ class AboutCard(CardWidget):
     def _init_footer(self, parent_layout: QVBoxLayout):
         """初始化 Footer 区"""
         footer_layout = QVBoxLayout()
-        footer_layout.setSpacing(16)
+        footer_layout.setSpacing(get_spacing("lg"))
         
         # 作者信息
         author_label = CaptionLabel(f"作者：{t('app.author')}")
         apply_font_style(
             author_label,
             size="sm",
-            color=StyleManager.get_text_disabled()
+            color="disabled"
         )
         footer_layout.addWidget(author_label)
         

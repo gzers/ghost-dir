@@ -22,6 +22,8 @@ class HelpView(BasePageView):
 
     def _setup_content(self):
         """设置页面内容"""
-        # 关于卡片
+        from PySide6.QtCore import Qt
+        # 关于卡片 - 显式靠左对齐，防止被拉伸
         about_card = AboutCard(self)
         self.add_to_content(about_card, before_stretch=True)
+        self.get_content_layout().setAlignment(about_card, Qt.AlignmentFlag.AlignLeft)

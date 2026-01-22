@@ -5,7 +5,10 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QFrame
 from PySide6.QtCore import Qt, Signal
 from qfluentwidgets import TitleLabel, ScrollArea, ExpandLayout
-from ..styles import apply_page_layout, apply_container_style, apply_page_style
+from ..styles import (
+    apply_page_layout, apply_container_style, apply_page_style,
+    get_spacing, get_text_disabled, apply_font_style
+)
 from ...common.signals import signal_bus
 
 
@@ -103,8 +106,9 @@ class BasePageView(QWidget):
             parent_layout: 父布局
         """
         self._title_layout = QHBoxLayout()
-        apply_page_layout(self._title_layout, spacing="section")
+        # 使用统一布局规范
         self._title_layout.setContentsMargins(24, 24, 24, 8)
+        self._title_layout.setSpacing(get_spacing("lg"))
 
         # 标题
         if self._title_text:
@@ -117,7 +121,7 @@ class BasePageView(QWidget):
         self._right_toolbar.setObjectName("right_toolbar")
         right_toolbar_layout = QHBoxLayout(self._right_toolbar)
         right_toolbar_layout.setContentsMargins(0, 0, 0, 0)
-        right_toolbar_layout.setSpacing(8)
+        right_toolbar_layout.setSpacing(get_spacing("sm"))
         self._title_layout.addWidget(self._right_toolbar, 0, Qt.AlignmentFlag.AlignTop)
         self._right_toolbar.hide()  # 默认隐藏
 
@@ -133,7 +137,7 @@ class BasePageView(QWidget):
         self._toolbar_widget = QWidget()
         self._toolbar_layout = QHBoxLayout(self._toolbar_widget)
         self._toolbar_layout.setContentsMargins(24, 10, 24, 10)
-        self._toolbar_layout.setSpacing(12)
+        self._toolbar_layout.setSpacing(get_spacing("md"))
 
         parent_layout.addWidget(self._toolbar_widget)
 
@@ -341,7 +345,6 @@ class BasePageView(QWidget):
             message: 空状态提示文本
         """
         from qfluentwidgets import BodyLabel
-        from ..styles import StyleManager, apply_font_style
 
         self.clear_content()
 
@@ -349,7 +352,7 @@ class BasePageView(QWidget):
         apply_font_style(
             empty_label,
             size="md",
-            color=StyleManager.get_text_disabled()
+            color="disabled"
         )
         empty_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.add_to_content(empty_label, before_stretch=False)

@@ -7,6 +7,7 @@ from .info_card import InfoCard
 from .empty_state import EmptyState
 from .action_button_group import ActionButtonGroup
 from .status_badge import StatusBadge
+from .card import Card
 
 __all__ = [
     "BasePageView",
@@ -14,4 +15,5 @@ __all__ = [
     "EmptyState",
     "ActionButtonGroup",
     "StatusBadge",
+    "Card",
 ]
