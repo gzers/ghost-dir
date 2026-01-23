@@ -182,7 +182,7 @@ class LibraryView(BasePageView):
     def _show_empty_state(self):
         """显示空状态"""
         from qfluentwidgets import BodyLabel
-        from ..styles import StyleManager, apply_font_style
+        from ...styles import StyleManager, apply_font_style
 
         empty_label = BodyLabel("没有找到匹配的模版")
         apply_font_style(empty_label, size="md", color=StyleManager.get_text_disabled())
