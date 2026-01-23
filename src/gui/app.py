@@ -2,8 +2,10 @@
 主应用程序类
 """
 import sys
+import ctypes
 from PySide6.QtWidgets import QApplication, QMessageBox
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QIcon
 from qfluentwidgets import setTheme, Theme, setThemeColor
 from ..common.signals import signal_bus
 from ..utils.admin import ensure_admin
@@ -18,10 +20,24 @@ class GhostDirApp(QApplication):
         """初始化应用程序"""
         super().__init__(argv)
 
+        # 设置 AppUserModelID 以修复任务栏图标丢失问题
+        try:
+            myappid = 'ghost-dir.app.1.0'  # 任意唯一字符串
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+        except Exception:
+            pass
+
         # 设置应用程序信息
         self.setApplicationName("Ghost-Dir")
         self.setApplicationVersion("1.0.0")
         self.setOrganizationName("Ghost-Dir Team")
+        
+        #设置应用图标
+        try:
+            icon_path = get_resource_path("assets/icon.png")
+            self.setWindowIcon(QIcon(str(icon_path)))
+        except Exception as e:
+            print(f"设置应用图标失败: {e}")
 
         # 启用高 DPI 缩放
         self.setAttribute(Qt.ApplicationAttribute.AA_EnableHighDpiScaling)
@@ -65,17 +81,10 @@ class GhostDirApp(QApplication):
     
     def _startup_checks(self):
         """启动时的安全检查"""
-        # 1. 检查管理员权限（暂时跳过，避免闪退）
-        # ensure_admin()
-        # 改为仅提示
-        from ..utils.admin import is_admin
-        if not is_admin():
-            QMessageBox.warning(
-                None,
-                "权限提示",
-                "建议以管理员身份运行本程序，以确保连接点创建功能正常工作。\n\n"
-                "请右键点击程序，选择'以管理员身份运行'。"
-            )
+        # 1. 强制检查管理员权限
+        # 如果未获得权限，会自动请求提权并重启
+        from ..utils.admin import ensure_admin
+        ensure_admin()
         
         # 2. 检查崩溃恢复
         crash_record = check_crash_recovery()
