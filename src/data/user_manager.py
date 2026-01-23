@@ -25,6 +25,7 @@ class UserManager:
         self.ignored_ids: List[str] = []                # 扫描忽略名单
         self.default_target_root: str = "D:\\Ghost_Library"  # 默认仓库路径
         self.theme: str = "system"                        # 主题：light/dark/system
+        self.theme_color: str = "#009FAA"                 # 主题色
         self.startup_page: str = "wizard"                 # 首次打开：wizard/console/library
         
         self._ensure_data_dir()
@@ -69,6 +70,7 @@ class UserManager:
             self.ignored_ids = data.get('ignored_ids', [])
             self.default_target_root = data.get('default_target_root', "D:\\Ghost_Library")
             self.theme = data.get('theme', 'system')      # 主题
+            self.theme_color = data.get('theme_color', '#009FAA')  # 主题色
             self.startup_page = data.get('startup_page', 'wizard')  # 首次打开
             
             # 确保有默认分类
@@ -96,6 +98,8 @@ class UserManager:
             data['default_target_root'] = "D:\\Ghost_Library"
         if 'theme' not in data:
             data['theme'] = 'system'
+        if 'theme_color' not in data:
+            data['theme_color'] = '#009FAA'
         if 'startup_page' not in data:
             data['startup_page'] = 'wizard'
 
@@ -124,6 +128,7 @@ class UserManager:
                 'ignored_ids': self.ignored_ids,
                 'default_target_root': self.default_target_root,
                 'theme': self.theme,
+                'theme_color': self.theme_color,
                 'startup_page': self.startup_page
             }
 
@@ -363,3 +368,17 @@ class UserManager:
     def get_startup_page(self) -> str:
         """获取首启动页面"""
         return self.startup_page
+
+    def set_theme_color(self, color: str) -> bool:
+        """设置主题色"""
+        try:
+            self.theme_color = color
+            self._save_data()
+            return True
+        except Exception as e:
+            print(f"设置主题色时出错: {e}")
+            return False
+
+    def get_theme_color(self) -> str:
+        """获取主题色"""
+        return self.theme_color

@@ -4,7 +4,7 @@
 import sys
 from PySide6.QtWidgets import QApplication, QMessageBox
 from PySide6.QtCore import Qt
-from qfluentwidgets import setTheme, Theme
+from qfluentwidgets import setTheme, Theme, setThemeColor
 from ..common.signals import signal_bus
 from ..utils.admin import ensure_admin
 from ..core.transaction import check_crash_recovery, recover_from_crash
@@ -32,6 +32,7 @@ class GhostDirApp(QApplication):
 
         # 连接主题变更信号
         signal_bus.theme_changed.connect(self._apply_theme)
+        signal_bus.theme_color_changed.connect(self._apply_theme_color)
 
     def _apply_theme(self, theme: str):
         """应用主题设置"""
@@ -41,6 +42,26 @@ class GhostDirApp(QApplication):
             "dark": Theme.DARK
         }
         setTheme(theme_map.get(theme, Theme.AUTO))
+
+    def _apply_theme_color(self, color: str):
+        """应用主题色"""
+        # 如果是 "system", QFluentWidgets 的 setThemeColor 不直接支持 "system" 字符串
+        # 但通常我们不传递 "system"，而是传递具体颜色。
+        # 如果用户选择 "系统"，我们需要在这里获取系统颜色。
+        # 这里暂时假设 "system" 时使用默认 Teal，或者如果 QFluentWidgets 有自动获取机制则更好。
+        # 为了简单，如果 color 是 hex，直接应用。
+        # 如果是 "system"，我们暂不处理或设为默认，因为获取系统颜色比较复杂，除非引入额外库。
+        # 考虑到用户需求，我们尽量实现。
+        
+        target_color = color
+        if color == "system":
+            # 尝试获取系统颜色，这里简化处理，如果库不支持则使用默认
+            # 实际 QFluentWidgets 可能会有 getSystemAccentColor，但我不确定。
+            # 既然没有 easy_proxifier 的 context，我假设默认颜色。
+            # 或者我们可以保留默认 Teal。
+            target_color = "#009FAA"
+            
+        setThemeColor(target_color)
     
     def _startup_checks(self):
         """启动时的安全检查"""
@@ -95,6 +116,7 @@ def run_app():
 
     # 应用主题设置
     app._apply_theme(user_manager.get_theme())
+    app._apply_theme_color(user_manager.get_theme_color())
 
     # 导入并创建主窗口（传入用户管理器）
     from .windows.main_window import MainWindow

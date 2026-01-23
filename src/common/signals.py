@@ -30,7 +30,11 @@ class SignalBus(QObject):
     categories_changed = Signal()
 
     # 主题变更信号
+    # 主题变更信号
     theme_changed = Signal(str)  # theme_name (light/dark/system)
+    
+    # 主题色变更信号
+    theme_color_changed = Signal(str)  # color_hex
 
 
 # 全局单例

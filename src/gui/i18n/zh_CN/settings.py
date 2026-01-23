@@ -21,6 +21,15 @@ SETTINGS_TEXTS = {
     "theme_dark": "暗色",
     "theme_changed": "主题已更新",
     "theme_changed_msg": "已切换到 {theme} 主题",
+    "theme_color": "主题强调色",
+    "theme_color_desc": "选择应用控件的强调颜色",
+    "theme_color_system": "跟随系统",
+    "theme_color_teal": "默认青",
+    "theme_color_blue": "海蓝",
+    "theme_color_green": "清新绿",
+    "theme_color_orange": "活力橙",
+    "theme_color_red": "热情红",
+    "theme_color_purple": "优雅紫",
     
     # 启动设置
     "group_startup": "启动设置",

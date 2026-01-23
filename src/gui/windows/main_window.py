@@ -32,7 +32,7 @@ class MainWindow(FluentWindow):
         self.wizard_view = WizardView(self)
         self.library_view = LibraryView(self)
         self.help_view = HelpView(self)
-        self.setting_view = SettingView(self)
+        self.setting_view = SettingView(self, self.user_manager)
 
         self._init_window()
         self._init_navigation()
