@@ -15,3 +15,6 @@ psutil>=5.9.0
 
 # Windows API 支持
 pywin32>=306
+
+# Windows 云母效果支持
+winmica>=0.1.0
