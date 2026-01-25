@@ -63,3 +63,22 @@ def get_shadow_color() -> str:
 
 def get_accent_color() -> str:
     return colors.ACCENT_COLOR
+
+def get_icon_background(opacity: float = 0.05) -> str:
+    """
+    获取图标背景色
+
+    Args:
+        opacity: 透明度 (0.0 - 1.0)，默认 0.05
+
+    Returns:
+        RGBA 格式的背景色字符串
+    """
+    from qfluentwidgets import isDarkTheme
+    # 根据主题选择白色或黑色作为基色
+    if isDarkTheme():
+        # 暗色主题使用白色
+        return f"rgba(255,255,255,{opacity})"
+    else:
+        # 亮色主题使用黑色
+        return f"rgba(0,0,0,{opacity})"

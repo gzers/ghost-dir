@@ -4,6 +4,7 @@
 """
 
 from .manager import StyleManager
+from .stylesheet import window_style_sheet, link_table_style_sheet
 from .utils.color_utils import *
 from .utils.spacing_utils import *
 from .utils.typography_utils import *
@@ -11,6 +12,11 @@ from .utils.icon_utils import *
 from .appliers.layout import *
 from .appliers.component import *
 from .appliers.icon import *
+from .appliers.common import (
+    apply_transparent_style,
+    apply_transparent_background_only,
+    apply_no_border
+)
 
 # ========== 预定义常量 (从旧 styles.py 迁移) ==========
 # 窗口尺寸
@@ -37,7 +43,7 @@ __all__ = [
     'get_text_disabled', 'get_status_colors', 'get_success_color',
     'get_warning_color', 'get_error_color', 'get_info_color',
     'get_surface_color', 'get_outline_color', 'get_divider_color',
-    'get_shadow_color', 'get_accent_color',
+    'get_shadow_color', 'get_accent_color', 'get_icon_background',
     # 间距与布局相关
     'get_spacing', 'get_padding', 'get_margin', 'get_radius',
     'get_layout_margins', 'get_list_spacing', 'get_card_padding', 'get_badge_padding',

@@ -32,7 +32,7 @@ class ScanWorker(QThread):
 from ....components import Card
 from ....styles import (
     apply_font_style, apply_muted_text_style,
-    get_spacing, get_radius, get_content_width
+    get_spacing, get_radius, get_content_width, get_icon_background
 )
 
 class ScanProgressCard(Card):
@@ -73,7 +73,7 @@ class ScanProgressCard(Card):
         self.icon_label = BodyLabel("🔍")
         self.icon_label.setFixedSize(40, 40)
         self.icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.icon_label.setStyleSheet(f"background: rgba(0,0,0,0.05); border-radius: {get_radius('md')}px; font-size: 20px;")
+        self.icon_label.setStyleSheet(f"background: {get_icon_background(0.05)}; border-radius: {get_radius('md')}px; font-size: 20px;")
         title_layout.addWidget(self.icon_label)
 
         title_layout.addSpacing(12)

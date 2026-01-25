@@ -7,8 +7,8 @@ from PySide6.QtCore import Qt
 from qfluentwidgets import BodyLabel
 from ...data.model import LinkStatus
 from ..styles import (
-    get_spacing, apply_badge_style, apply_icon_style, 
-    get_status_icon, get_status_colors
+    get_spacing, apply_badge_style, apply_icon_style,
+    get_status_icon, get_status_colors, apply_font_style, apply_transparent_background_only
 )
 from ..i18n import get_status_text
 
@@ -32,7 +32,7 @@ class StatusBadge(QWidget):
         """初始化 UI"""
         # 应用标准徽章样式
         apply_badge_style(self, status=self.status.value)
-        
+
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0) # apply_badge_style 处理内边距
         layout.setSpacing(get_spacing("xs"))
@@ -45,7 +45,9 @@ class StatusBadge(QWidget):
         # 状态文本 - 使用 i18n
         status_colors = get_status_colors()
         text_label = BodyLabel(get_status_text(self.status.value))
-        text_label.setStyleSheet(f"color: {status_colors[self.status.value]}; background: transparent; border: none;")
+        # 使用状态色作为文本颜色
+        apply_font_style(text_label, color=status_colors[self.status.value])
+        apply_transparent_background_only(text_label)
 
         layout.addWidget(icon_label)
         layout.addWidget(text_label)

@@ -14,6 +14,7 @@ from ....data.template_manager import TemplateManager
 from ....data.model import Template
 from ...components import BasePageView
 from .widgets import TemplateCard
+from ...styles import apply_transparent_background_only, apply_no_border
 
 
 class LibraryView(BasePageView):
@@ -79,19 +80,20 @@ class LibraryView(BasePageView):
         right_toolbar = self.get_right_toolbar_layout()
         self.count_label = PushButton()
         self.count_label.setEnabled(False)
-        self.count_label.setStyleSheet("border: none; padding: 4px 12px;")
+        apply_no_border(self.count_label)
+        self.count_label.setStyleSheet(self.count_label.styleSheet() + "padding: 4px 12px;")
         right_toolbar.addWidget(self.count_label)
 
     def _setup_content(self):
         """设置内容区域"""
         # 最好在 content_layout 中添加一个 QWidget 容器，而不是直接给 content_container 设置新布局
         container = QWidget()
-        container.setStyleSheet("background: transparent;")
+        apply_transparent_background_only(container)
         self.grid_layout = QGridLayout(container)
         from ...styles import apply_page_layout
         apply_page_layout(self.grid_layout, spacing="section")
         self.grid_layout.setContentsMargins(0, 0, 0, 0)
-        
+
         # 将容器添加到 BasePageView 的内容区域
         self.add_to_content(container)
 

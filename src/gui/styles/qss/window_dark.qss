@@ -1,0 +1,4 @@
+/* 主窗口样式表 - 暗色主题 */
+MainWindow {
+    background-color: #202020;
+}

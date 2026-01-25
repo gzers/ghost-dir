@@ -1,0 +1,14 @@
+/* 连接表格样式表 - 亮色主题 */
+QTableWidget {
+    background-color: #FFFFFF;
+    alternate-background-color: #F9F9F9;
+    gridline-color: transparent;
+    border: none;
+}
+
+QHeaderView::section {
+    background-color: #FFFFFF;
+    border: none;
+    border-bottom: 1px solid #E5E5E5;
+    padding: 8px;
+}

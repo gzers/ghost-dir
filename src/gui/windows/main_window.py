@@ -5,7 +5,7 @@
 from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
-from qfluentwidgets import FluentWindow, NavigationItemPosition, FluentIcon
+from qfluentwidgets import FluentWindow, NavigationItemPosition, FluentIcon, setCustomStyleSheet, isDarkTheme
 from ..views.console import ConsoleView
 from ..views.wizard import WizardView
 from ..views.library import LibraryView
@@ -14,7 +14,7 @@ from ..views.settings import SettingView
 from ...common.resource_loader import get_resource_path
 from ...common.config import WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT
 from ...utils.win_utils import is_transparency_enabled
-from qfluentwidgets import isDarkTheme
+from ..styles import window_style_sheet, apply_transparent_style, apply_transparent_background_only
 
 
 class MainWindow(FluentWindow):
@@ -56,12 +56,12 @@ class MainWindow(FluentWindow):
 
         # 初始化窗口特效与降级处理
         self._init_window_effect()
-        
+
         # 统一背景，使导航栏、侧栏面板、内容区透明
         # 注意：不设置 titleBar 的透明样式，避免覆盖按钮的主题颜色
-        self.navigationInterface.setStyleSheet("background: transparent; border: none;")
-        self.navigationInterface.panel.setStyleSheet("background: transparent; border: none;")
-        self.stackedWidget.setStyleSheet("background: transparent;")
+        apply_transparent_style(self.navigationInterface)
+        apply_transparent_style(self.navigationInterface.panel)
+        apply_transparent_background_only(self.stackedWidget)
     
     def _init_navigation(self):
         """初始化导航栏"""
@@ -129,16 +129,19 @@ class MainWindow(FluentWindow):
                 # 开启云母/亚克力效果
                 self.setMicaEffectEnabled(True)
                 # 只有开启了系统级透明，主窗体才设为透明以展示底色特显
-                self.setStyleSheet("MainWindow { background: transparent; }")
+                setCustomStyleSheet(
+                    self,
+                    lightQss="MainWindow { background: transparent; }",
+                    darkQss="MainWindow { background: transparent; }"
+                )
             else:
                 # 优雅降级：如果系统关闭了透明效果，禁用特效并使用主题实色背景
                 # 否则会导致窗口呈现纯黑色（hall of mirrors 的另一种表现形式）
                 self.setMicaEffectEnabled(False)
-                
-                # 根据当前主题选择背景色
-                bg_color = "#202020" if isDarkTheme() else "#F3F3F3"
-                self.setStyleSheet(f"MainWindow {{ background: {bg_color}; }}")
-                
+
+                # 使用 StyleSheetBase 管理的样式表设置主题背景色
+                window_style_sheet.apply(self)
+
                 # 针对台式机等可能关闭透明度的情况，确保窗口不使用 WA_TranslucentBackground
                 self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, False)
         except Exception as e:

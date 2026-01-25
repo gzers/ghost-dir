@@ -8,7 +8,7 @@ from qfluentwidgets import BodyLabel, ImageLabel
 from ....components import Card
 from ....styles import (
     apply_font_style, apply_muted_text_style, apply_badge_style,
-    get_spacing, get_radius, get_icon_size
+    get_spacing, get_radius, get_icon_size, get_icon_background
 )
 
 class TemplateCard(Card):
@@ -101,8 +101,8 @@ class TemplateCard(Card):
         icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         # 应用图标圆角背景
         icon_label.setStyleSheet(f"""
-            background: rgba(0,0,0,0.05); 
-            border-radius: {get_radius('sm')}px; 
+            background: {get_icon_background(0.05)};
+            border-radius: {get_radius('sm')}px;
             font-size: 24px;
         """)
         layout.addWidget(icon_label)

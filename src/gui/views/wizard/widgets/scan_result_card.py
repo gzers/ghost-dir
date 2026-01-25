@@ -13,7 +13,7 @@ from qfluentwidgets import (
 from ....components import Card
 from ....styles import (
     apply_font_style, apply_badge_style,
-    get_spacing, get_radius, apply_muted_text_style
+    get_spacing, get_radius, apply_muted_text_style, get_icon_background
 )
 
 class ScanResultCard(Card):
@@ -55,7 +55,7 @@ class ScanResultCard(Card):
         icon_label = BodyLabel("💾")
         icon_label.setFixedSize(32, 32)
         icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        icon_label.setStyleSheet(f"background: rgba(0,0,0,0.05); border-radius: {get_radius('sm')}px; font-size: 16px;")
+        icon_label.setStyleSheet(f"background: {get_icon_background(0.05)}; border-radius: {get_radius('sm')}px; font-size: 16px;")
         self.main_layout.addWidget(icon_label)
 
         # 信息

@@ -8,6 +8,7 @@ from qfluentwidgets import PushButton, TableWidget
 from ...data.model import UserLink, LinkStatus
 from ...common.config import format_size
 from .status_badge import StatusBadge
+from ..styles import link_table_style_sheet
 
 
 class LinkTable(TableWidget):
@@ -37,24 +38,8 @@ class LinkTable(TableWidget):
 
     def _update_theme_style(self):
         """更新主题样式"""
-        from ..styles import StyleManager
-        bg_color = StyleManager.get_container_background()
-        alternate_bg = StyleManager.get_hover_background()
-        border_color = StyleManager.get_border_color()
-        
-        self.setStyleSheet(f"""
-            QTableWidget {{
-                background-color: {bg_color};
-                alternate-background-color: {alternate_bg};
-                gridline-color: transparent;
-                border: none;
-            }}
-            QHeaderView::section {{
-                background-color: {bg_color};
-                border: none;
-                border-bottom: 1px solid {border_color};
-            }}
-        """)
+        # 使用 StyleSheetBase 管理的样式表
+        link_table_style_sheet.apply(self)
 
     def _on_theme_changed(self, theme):
         """主题变更"""

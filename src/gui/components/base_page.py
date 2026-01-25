@@ -7,7 +7,8 @@ from PySide6.QtCore import Qt, Signal
 from qfluentwidgets import TitleLabel, ScrollArea, ExpandLayout
 from ..styles import (
     apply_page_layout, apply_container_style, apply_page_style,
-    get_spacing, get_text_disabled, apply_font_style
+    get_spacing, get_text_disabled, apply_font_style,
+    apply_transparent_style, apply_transparent_background_only, apply_no_border
 )
 from ...common.signals import signal_bus
 
@@ -118,8 +119,8 @@ class BasePageView(QFrame):
         title_container = QWidget()
         from PySide6.QtWidgets import QSizePolicy
         title_container.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
-        title_container.setStyleSheet("background: transparent;")
-        
+        apply_transparent_background_only(title_container)
+
         self._title_layout = QHBoxLayout(title_container)
         # 使用统一布局规范 (与 ExpandLayout 统一)
         self._title_layout.setContentsMargins(36, 36, 36, 12)
@@ -150,7 +151,7 @@ class BasePageView(QFrame):
             parent_layout: 父布局
         """
         self._toolbar_widget = QWidget()
-        self._toolbar_widget.setStyleSheet("background: transparent;")
+        apply_transparent_background_only(self._toolbar_widget)
         self._toolbar_layout = QHBoxLayout(self._toolbar_widget)
         self._toolbar_layout.setContentsMargins(36, 12, 36, 12)
         self._toolbar_layout.setSpacing(get_spacing("md"))
@@ -174,7 +175,7 @@ class BasePageView(QFrame):
 
             # 设置滚动区域背景透明
             self._scroll_area.setFrameShape(QFrame.Shape.NoFrame)
-            self._scroll_area.setStyleSheet("QScrollArea { border: none; background: transparent; }")
+            apply_transparent_style(self._scroll_area)
 
             # 容器 - 使用 QFrame 确保样式渲染
             self._content_container = QFrame()
