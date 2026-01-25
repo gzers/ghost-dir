@@ -4,10 +4,10 @@
 """
 from PySide6.QtWidgets import QTableWidget, QTableWidgetItem, QHeaderView, QCheckBox, QWidget, QHBoxLayout
 from PySide6.QtCore import Qt, Signal
-from qfluentwidgets import PushButton, TableWidget
+from qfluentwidgets import PushButton, TableWidget, BodyLabel
 from ...data.model import UserLink, LinkStatus
 from ...common.config import format_size
-from .status_badge import StatusBadge
+from ..i18n import get_status_text
 from ..styles import link_table_style_sheet
 
 
@@ -94,10 +94,11 @@ class LinkTable(TableWidget):
         name_item = QTableWidgetItem(link.name)
         name_item.setData(Qt.ItemDataRole.UserRole, link.id)
         self.setItem(row, 1, name_item)
-        
-        # 列 2: 状态
-        status_badge = StatusBadge(link.status)
-        self.setCellWidget(row, 2, status_badge)
+
+        # 列 2: 状态（使用 BodyLabel 显示状态文本）
+        status_label = BodyLabel(get_status_text(link.status.value))
+        status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.setCellWidget(row, 2, status_label)
         
         # 列 3: 占用空间
         size_text = format_size(link.last_known_size) if link.last_known_size > 0 else "未计算"

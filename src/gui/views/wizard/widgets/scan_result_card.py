@@ -28,13 +28,7 @@ class ScanResultCard(Card):
         super().__init__(parent)
         self.template = template
         self._init_ui()
-        self.update_style()
-
-    def update_style(self, theme=None):
-        """更新样式"""
-        super().update_style(theme)
-        if hasattr(self, 'name_label'):
-            self._refresh_content_styles()
+        self._refresh_content_styles()
 
     def _init_ui(self):
         """初始化 UI"""
@@ -102,18 +96,6 @@ class ScanResultCard(Card):
             lambda: self.ignore_requested.emit(self.template.id)
         )
         menu.exec(self.ignore_button.mapToGlobal(self.ignore_button.rect().bottomLeft()))
-
-    def set_selected(self, selected):
-        """设置选中状态"""
-        self.checkbox.setChecked(selected)
-
-    def is_selected(self):
-        """获取选中状态"""
-        return self.checkbox.isChecked()
-
-    def get_template(self):
-        """获取关联的模版"""
-        return self.template
 
     def set_selected(self, selected):
         """设置选中状态"""

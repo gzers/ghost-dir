@@ -50,13 +50,7 @@ class ScanProgressCard(Card):
         self.discovered_count = 0
         self.selected_count = 0
         self._init_ui()
-        self.update_style()
-
-    def update_style(self, theme=None):
-        """更新样式"""
-        super().update_style(theme)
-        if hasattr(self, 'title_label'):
-            self._refresh_content_styles()
+        self._refresh_content_styles()
 
     def _init_ui(self):
         """初始化 UI"""

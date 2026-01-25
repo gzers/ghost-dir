@@ -1,27 +1,16 @@
 """
 卡片组件基类
-支持 QSS 样式渲染，实现亚克力和边框效果
+使用 QFluentWidgets 官方 CardWidget
 """
-from PySide6.QtWidgets import QFrame
-from ..styles import apply_card_style
+from qfluentwidgets import CardWidget
 
-class Card(QFrame):
+class Card(CardWidget):
     """
     基础卡片类
-    
-    采用 QFrame 确保样式能够被正确渲染。
+
+    继承自 QFluentWidgets 的 CardWidget，提供一致的样式和主题支持。
+    无需手动样式应用，官方组件已内置主题适配。
     """
-    
+
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setFrameShape(QFrame.NoFrame)
-        self.update_style()
-        
-        # 监听主题变更
-        from ...common.signals import signal_bus
-        signal_bus.theme_changed.connect(self.update_style)
-        
-    def update_style(self, theme=None):
-        """更新并应用卡片样式"""
-        apply_card_style(self)
-        self.update()

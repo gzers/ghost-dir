@@ -23,13 +23,7 @@ class TemplateCard(Card):
         self.is_custom = is_custom
         self._init_ui()
         # 初次应用内部样式
-        self.update_style()
-
-    def update_style(self, theme=None):
-        """更新卡片及内部样式"""
-        super().update_style(theme)
-        if hasattr(self, 'name_label'):
-            self._refresh_content_styles()
+        self._refresh_content_styles()
 
     def _init_ui(self):
         """初始化 UI"""

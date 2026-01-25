@@ -53,16 +53,7 @@ class AboutCard(Card):
         super().__init__(parent)
         self._init_ui()
         # 初始化应用一次所有子组件样式
-        self.update_style()
-    
-    def update_style(self, theme=None):
-        """更新卡片及其子组件样式"""
-        # 1. 更新卡片本体样式 (亚克力背景、跨度等)
-        super().update_style(theme)
-        
-        # 2. 如果 UI 已创建，更新各个子板块的样式
-        if hasattr(self, 'main_layout'):
-            self._update_all_labels()
+        self._update_all_labels()
 
     def _init_ui(self):
         """初始化 UI"""
