@@ -73,7 +73,6 @@ class ScanProgressCard(Card):
         self.icon_label = BodyLabel("🔍")
         self.icon_label.setFixedSize(40, 40)
         self.icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.icon_label.setStyleSheet(f"background: {get_icon_background(0.05)}; border-radius: {get_radius('md')}px; font-size: 20px;")
         title_layout.addWidget(self.icon_label)
 
         title_layout.addSpacing(12)

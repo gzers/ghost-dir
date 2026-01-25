@@ -14,7 +14,7 @@ from ..views.settings import SettingView
 from ...common.resource_loader import get_resource_path
 from ...common.config import WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT
 from ...utils.win_utils import is_transparency_enabled
-from ..styles import window_style_sheet, apply_transparent_style, apply_transparent_background_only
+from ..styles import window_style_sheet
 
 
 class MainWindow(FluentWindow):
@@ -57,12 +57,6 @@ class MainWindow(FluentWindow):
         # 初始化窗口特效与降级处理
         self._init_window_effect()
 
-        # 统一背景，使导航栏、侧栏面板、内容区透明
-        # 注意：不设置 titleBar 的透明样式，避免覆盖按钮的主题颜色
-        apply_transparent_style(self.navigationInterface)
-        apply_transparent_style(self.navigationInterface.panel)
-        apply_transparent_background_only(self.stackedWidget)
-    
     def _init_navigation(self):
         """初始化导航栏"""
         # 设置 objectName

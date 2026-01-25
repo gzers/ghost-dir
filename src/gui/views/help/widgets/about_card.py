@@ -218,16 +218,10 @@ class AboutCard(Card):
                 icon_label.setPixmap(scaled_pixmap)
                 icon_label.setFixedSize(size, size)
                 
-                # 应用圆角 (通过 QSS 适配)
+                # 设置对象名称以便样式定位
                 if not icon_label.objectName():
                     icon_label.setObjectName("app_icon")
-                
-                icon_label.setStyleSheet(f"""
-                    #app_icon {{
-                        border-radius: {radius}px;
-                    }}
-                """)
-                
+
                 return icon_label
         except Exception as e:
             print(f"加载应用图标失败: {e}")

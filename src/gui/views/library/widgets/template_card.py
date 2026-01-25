@@ -87,7 +87,6 @@ class TemplateCard(Card):
                     img_label = ImageLabel()
                     img_label.setFixedSize(icon_size, icon_size)
                     img_label.setImage(self.template.icon)
-                    img_label.setStyleSheet(f"border-radius: {get_radius('sm')}px;")
                     layout.addWidget(img_label)
                     layout.addSpacing(8)
                     return
@@ -99,12 +98,6 @@ class TemplateCard(Card):
         icon_label = BodyLabel(emoji)
         icon_label.setFixedSize(icon_size, icon_size)
         icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        # 应用图标圆角背景
-        icon_label.setStyleSheet(f"""
-            background: {get_icon_background(0.05)};
-            border-radius: {get_radius('sm')}px;
-            font-size: 24px;
-        """)
         layout.addWidget(icon_label)
         layout.addSpacing(8)
 

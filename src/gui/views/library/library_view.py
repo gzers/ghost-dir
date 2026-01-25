@@ -81,7 +81,6 @@ class LibraryView(BasePageView):
         self.count_label = PushButton()
         self.count_label.setEnabled(False)
         apply_no_border(self.count_label)
-        self.count_label.setStyleSheet(self.count_label.styleSheet() + "padding: 4px 12px;")
         right_toolbar.addWidget(self.count_label)
 
     def _setup_content(self):

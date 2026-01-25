@@ -3,10 +3,10 @@
 """
 import sys
 import ctypes
-from PySide6.QtWidgets import QApplication, QMessageBox
+from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
-from qfluentwidgets import setTheme, Theme, setThemeColor, SystemThemeListener
+from qfluentwidgets import setTheme, Theme, setThemeColor, SystemThemeListener, setFontFamilies, MessageBox
 from ..common.signals import signal_bus
 from ..utils.admin import ensure_admin
 from ..core.transaction import check_crash_recovery, recover_from_crash
@@ -31,7 +31,10 @@ class GhostDirApp(QApplication):
         self.setApplicationName("Ghost-Dir")
         self.setApplicationVersion("1.0.0")
         self.setOrganizationName("Ghost-Dir Team")
-        
+
+        # 字体标准化（QFluentWidgets 标准）
+        setFontFamilies(['Segoe UI', 'Microsoft YaHei', 'PingFang SC'])
+
         #设置应用图标
         try:
             icon_path = get_resource_path("assets/icon.png")
@@ -119,30 +122,20 @@ class GhostDirApp(QApplication):
         # 2. 检查崩溃恢复
         crash_record = check_crash_recovery()
         if crash_record:
-            reply = QMessageBox.question(
-                None,
-                "检测到异常中断",
-                f"检测到上次操作异常中断：\n\n"
-                f"操作类型: {crash_record.operation}\n"
-                f"源路径: {crash_record.source_path}\n"
-                f"目标路径: {crash_record.target_path}\n\n"
-                f"是否自动恢复到操作前状态？",
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-            )
-            
-            if reply == QMessageBox.StandardButton.Yes:
+            message = f"检测到上次操作异常中断：\n\n" \
+                     f"操作类型: {crash_record.operation}\n" \
+                     f"源路径: {crash_record.source_path}\n" \
+                     f"目标路径: {crash_record.target_path}\n\n" \
+                     f"是否自动恢复到操作前状态？"
+            dialog = MessageBox("检测到异常中断", message, None)
+            dialog.yesButton.setText("是")
+            dialog.cancelButton.setText("否")
+
+            if dialog.exec():
                 if recover_from_crash(crash_record):
-                    QMessageBox.information(
-                        None,
-                        "恢复成功",
-                        "已成功恢复到操作前状态，数据未丢失。"
-                    )
+                    MessageBox("恢复成功", "已成功恢复到操作前状态，数据未丢失。", None).exec()
                 else:
-                    QMessageBox.warning(
-                        None,
-                        "恢复失败",
-                        "自动恢复失败，请手动检查文件状态。"
-                    )
+                    MessageBox("恢复失败", "自动恢复失败，请手动检查文件状态。", None).exec()
 
 
 def run_app():
