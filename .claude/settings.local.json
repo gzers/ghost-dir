@@ -12,7 +12,9 @@
       "Bash(D:/Users/15119/WorkSpace/Code/tool/ghost-dir/.venv/Scripts/python.exe:*)",
       "Bash(tree:*)",
       "Bash(find:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(dir:*)",
+      "Bash(move:*)"
     ]
   }
 }
