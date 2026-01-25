@@ -3,22 +3,26 @@
 应用页面、容器、布局及间距样式
 """
 from ..utils import color_utils, spacing_utils
+from qfluentwidgets import setCustomStyleSheet
 
 def apply_page_style(widget) -> None:
     """应用页面主背景颜色"""
-    if not widget.objectName():
-        widget.setObjectName(f"page_{id(widget)}")
-    obj_name = widget.objectName()
     bg_color = color_utils.get_page_background()
-    widget.setStyleSheet(f"#{obj_name} {{ background-color: {bg_color}; border: none; }}")
+    # 使用 setCustomStyleSheet 更加鲁棒，自动处理主题切换和对象名称问题
+    setCustomStyleSheet(
+        widget,
+        lightQss=f"background-color: {bg_color}; border: none;",
+        darkQss=f"background-color: {bg_color}; border: none;"
+    )
 
 def apply_container_style(widget) -> None:
     """应用容器背景（半透明）"""
-    if not widget.objectName():
-        widget.setObjectName(f"container_{id(widget)}")
-    obj_name = widget.objectName()
     bg_color = color_utils.get_container_background()
-    widget.setStyleSheet(f"#{obj_name} {{ background-color: {bg_color}; border: none; }}")
+    setCustomStyleSheet(
+        widget,
+        lightQss=f"background-color: {bg_color}; border: none;",
+        darkQss=f"background-color: {bg_color}; border: none;"
+    )
 
 def apply_page_layout(layout, spacing: str = "group"):
     """

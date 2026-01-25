@@ -2,7 +2,7 @@
 主控制台视图
 页面主体 - 负责布局和协调各组件
 """
-from PySide6.QtWidgets import QSplitter
+from PySide6.QtWidgets import QSplitter, QWidget
 from PySide6.QtCore import Qt
 import os
 from qfluentwidgets import PushButton, ToolButton, FluentIcon, MessageBox
@@ -63,6 +63,7 @@ class ConsoleView(BasePageView):
 
         # 主内容区：左树右表
         splitter = QSplitter(Qt.Orientation.Horizontal)
+        splitter.setStyleSheet("QSplitter::handle { background: transparent; } QSplitter { background: transparent; }")
 
         # 左侧：分类树组件
         self.category_tree = CategoryTree()

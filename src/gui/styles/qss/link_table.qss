@@ -1,14 +1,15 @@
 /* 连接表格样式表 - 亮色主题 */
 QTableWidget {
-    background-color: #FFFFFF;
-    alternate-background-color: #F9F9F9;
+    background-color: transparent;
+    alternate-background-color: rgba(0, 0, 0, 0.02);
     gridline-color: transparent;
     border: none;
+    outline: none;
 }
 
 QHeaderView::section {
-    background-color: #FFFFFF;
+    background-color: transparent;
     border: none;
-    border-bottom: 1px solid #E5E5E5;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
     padding: 8px;
 }

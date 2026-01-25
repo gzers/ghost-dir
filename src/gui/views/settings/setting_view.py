@@ -8,7 +8,7 @@ from qfluentwidgets import (
 from ....data.user_manager import UserManager
 from ...i18n import t
 from ...components import BasePageView
-from ...styles import get_spacing, apply_font_style
+from ...styles import get_spacing, apply_font_style, apply_transparent_background_only
 from PySide6.QtCore import Qt
 
 
@@ -49,6 +49,8 @@ class SettingView(BasePageView):
         
         # --- 目录配置组 ---
         self.dirGroup = SettingCardGroup(t("settings.group_path"), self.get_content_container())
+        self.dirGroup.setAutoFillBackground(False)
+        apply_transparent_background_only(self.dirGroup)
 
         # 默认仓库路径
         self.targetRootCard = TargetRootCard(self.user_manager, self.dirGroup)
@@ -62,6 +64,8 @@ class SettingView(BasePageView):
 
         # --- 外观设置组 ---
         self.appearanceGroup = SettingCardGroup(t("settings.group_appearance"), self.get_content_container())
+        self.appearanceGroup.setAutoFillBackground(False)
+        apply_transparent_background_only(self.appearanceGroup)
 
         # 主题设置
         self.themeCard = ThemeCard(self.user_manager, self.appearanceGroup)
@@ -75,9 +79,20 @@ class SettingView(BasePageView):
 
         # --- 启动设置组 ---
         self.startupGroup = SettingCardGroup(t("settings.group_startup"), self.get_content_container())
+        self.startupGroup.setAutoFillBackground(False)
+        apply_transparent_background_only(self.startupGroup)
 
         # 首次打开功能
         self.startupCard = StartupCard(self.user_manager, self.startupGroup)
         self.startupGroup.addSettingCard(self.startupCard)
 
         expand_layout.addWidget(self.startupGroup)
+
+        # 暴力清理：针对 qfluentwidgets 组件内部可能持有的背景进行穿透化透明处理
+        self.setStyleSheet("""
+            SettingCardGroup, 
+            SettingCardGroup > QWidget {
+                background-color: transparent !important;
+                border: none !important;
+            }
+        """)

@@ -26,8 +26,18 @@ class CategoryTree(TreeWidget):
 
     def _update_theme_style(self):
         """更新主题样式"""
-        # FluentWindow 内部 TreeWidget 会自动适配主题，无需手动设置
-        pass
+        self.setStyleSheet("""
+            CategoryTree {
+                background: transparent;
+                border: none;
+                outline: none;
+                padding: 12px 0;
+            }
+            QTreeWidget::item {
+                padding: 8px 12px;
+                background: transparent;
+            }
+        """)
 
     def _on_theme_changed(self, theme):
         """主题变更"""

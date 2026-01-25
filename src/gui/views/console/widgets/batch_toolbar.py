@@ -3,10 +3,11 @@
 """
 from PySide6.QtWidgets import QHBoxLayout
 from PySide6.QtCore import Signal
-from qfluentwidgets import CardWidget, BodyLabel, PushButton, ToolButton, FluentIcon
+from qfluentwidgets import BodyLabel, PushButton, ToolButton, FluentIcon
+from ....components import Card
 
 
-class BatchToolbar(CardWidget):
+class BatchToolbar(Card):
     """批量操作工具栏"""
     
     # 信号

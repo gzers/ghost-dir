@@ -175,11 +175,14 @@ class BasePageView(QFrame):
 
             # 设置滚动区域背景透明
             self._scroll_area.setFrameShape(QFrame.Shape.NoFrame)
+            self._scroll_area.viewport().setAutoFillBackground(False)
             apply_transparent_style(self._scroll_area)
+            apply_transparent_style(self._scroll_area.viewport())
 
             # 容器 - 使用 QFrame 确保样式渲染
             self._content_container = QFrame()
             self._content_container.setFrameShape(QFrame.NoFrame)
+            self._content_container.setAutoFillBackground(False)
 
             # 根据布局类型选择
             if self._use_expand_layout:
@@ -206,8 +209,11 @@ class BasePageView(QFrame):
             self._scroll_area.setWidget(self._content_container)
             parent_layout.addWidget(self._scroll_area, 10)
 
-            # 应用容器背景样式
-            self._update_container_style()
+            # 官方方案：在 setWidget 之后调用此方法启用完全透明背景
+            self._scroll_area.enableTransparentBackground()
+            
+            # 补丁：确保容器也不绘制背景
+            apply_transparent_background_only(self._content_container)
         else:
             # 非滚动区域
             if self._use_expand_layout:
