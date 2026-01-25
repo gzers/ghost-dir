@@ -209,11 +209,8 @@ class BasePageView(QFrame):
             self._scroll_area.setWidget(self._content_container)
             parent_layout.addWidget(self._scroll_area, 10)
 
-            # 官方方案：在 setWidget 之后调用此方法启用完全透明背景
+            # 官方方案：在 setWidget 之后调用
             self._scroll_area.enableTransparentBackground()
-            
-            # 补丁：确保容器也不绘制背景
-            apply_transparent_background_only(self._content_container)
         else:
             # 非滚动区域
             if self._use_expand_layout:

@@ -63,7 +63,6 @@ class ConsoleView(BasePageView):
 
         # 主内容区：左树右表
         splitter = QSplitter(Qt.Orientation.Horizontal)
-        splitter.setStyleSheet("QSplitter::handle { background: transparent; } QSplitter { background: transparent; }")
 
         # 左侧：分类树组件
         self.category_tree = CategoryTree()

@@ -125,24 +125,6 @@ class MainWindow(FluentWindow):
             if is_transparency_enabled():
                 # 开启云母/亚克力效果
                 self.setMicaEffectEnabled(True)
-                
-                # 官方方法：在透明启用时，将主窗体背景设为透明色
-                self.setCustomBackgroundColor(Qt.GlobalColor.transparent, Qt.GlobalColor.transparent)
-                
-                # 暴力穿透：确保所有核心容器都是透明的
-                qss = """
-                    MainWindow, #stackedWidget, #navigationInterface, #titleBar { 
-                        background: transparent !important; 
-                    }
-                    NavigationInterface {
-                        background-color: transparent !important;
-                    }
-                    /* 面板内容容器 */
-                    #settingView, #helpView, #wizardView, #consoleView, #libraryView {
-                        background: transparent !important;
-                    }
-                """
-                setCustomStyleSheet(self, qss, qss)
             else:
                 self.setMicaEffectEnabled(False)
                 window_style_sheet.apply(self)
@@ -157,5 +139,4 @@ class MainWindow(FluentWindow):
         
         # 官方修正：如果开启了云母特效，主题切换后需要通过定时器重新触发系统特效更新
         if self.isMicaEffectEnabled():
-            # 获取 windowEffect 实例进行强制更新
             QTimer.singleShot(100, lambda: self.windowEffect.setMicaEffect(self.winId(), isDarkTheme()))

@@ -15,16 +15,14 @@ def get_container_background():
     return "transparent"
 
 def get_card_background():
-    """卡片层背景 - 保持微妙的半透明，以衬托窗口底色"""
+    """卡片层背景 - 还原为原生 QFluentWidgets 风格"""
     if isDarkTheme():
-        # 微弱的白色反光，增加层级感
         return "rgba(255, 255, 255, 0.05)"
     else:
-        # 微弱的黑色反光，即使亮色模式也不要完全遮挡
-        return "rgba(255, 255, 255, 0.4)"
+        return "rgb(255, 255, 255)"
 
 def get_hover_background():
-    return "rgba(255, 255, 255, 0.1)" if isDarkTheme() else "rgba(0, 0, 0, 0.05)"
+    return "rgba(255, 255, 255, 0.08)" if isDarkTheme() else "rgba(0, 0, 0, 0.05)"
 
 def get_border_color():
     """卡片边框颜色 - 极其细微的线条"""
@@ -63,8 +61,8 @@ INFO_COLOR = "#3B82F6"
 
 # ========== 语义化颜色 (Semantic Colors) ==========
 def get_surface_color():
-    """页面表面主色 - 增加透明度以配合 Mica"""
-    return "rgba(45, 45, 45, 0.4)" if isDarkTheme() else "rgba(255, 255, 255, 0.4)"
+    """页面表面主色"""
+    return "rgba(45, 45, 45, 0.7)" if isDarkTheme() else "rgba(255, 255, 255, 0.7)"
 
 def get_surface_variant_color():
     """变体表面色"""
