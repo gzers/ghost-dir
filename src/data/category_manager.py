@@ -35,7 +35,7 @@ class CategoryManager:
             
             categories_data = data.get('categories', [])
             self.categories = {
-                item['id']: CategoryNode(**item)
+                item['id']: CategoryNode.from_dict(item)
                 for item in categories_data
             }
             
@@ -55,6 +55,26 @@ class CategoryManager:
             is_builtin=True
         )
         self.categories = {"uncategorized": uncategorized}
+    
+    def save_categories(self):
+        """保存分类到配置文件"""
+        try:
+            # 确保配置目录存在
+            CATEGORIES_CONFIG.parent.mkdir(parents=True, exist_ok=True)
+            
+            # 转换为字典列表
+            categories_data = [cat.to_dict() for cat in self.categories.values()]
+            
+            # 保存到文件
+            data = {'categories': categories_data}
+            with open(CATEGORIES_CONFIG, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+            
+            print(f"已保存 {len(self.categories)} 个分类到配置文件")
+            return True
+        except Exception as e:
+            print(f"保存分类配置失败: {e}")
+            return False
     
     # ========== 基础查询方法 ==========
     
@@ -133,6 +153,9 @@ class CategoryManager:
         self.categories[category.id] = category
         self._clear_depth_cache()
         
+        # 5. 保存到配置文件
+        self.save_categories()
+        
         return True, f"成功添加分类 '{category.name}'"
     
     def update_category(self, category: CategoryNode) -> Tuple[bool, str]:
@@ -168,6 +191,9 @@ class CategoryManager:
         # 5. 更新分类
         self.categories[category.id] = category
         self._clear_depth_cache()
+        
+        # 6. 保存到配置文件
+        self.save_categories()
         
         return True, f"成功更新分类 '{category.name}'"
     
@@ -213,6 +239,9 @@ class CategoryManager:
         category_name = self.categories[category_id].name
         del self.categories[category_id]
         self._clear_depth_cache()
+        
+        # 7. 保存到配置文件
+        self.save_categories()
         
         child_count = len(all_children)
         if child_count > 0:

@@ -259,6 +259,18 @@ class UserManager:
     
     def get_all_categories(self) -> List[Category]:
         """获取所有分类"""
+        # 尝试从 CategoryManager 获取树形分类并转换为平铺列表，以保持兼容性
+        try:
+            from .category_manager import CategoryManager
+            cm = CategoryManager()
+            nodes = cm.get_all_categories()
+            if nodes:
+                # 过滤掉系统内置分类或者转换
+                return [Category(id=n.id, name=n.name, icon=n.icon) for n in nodes]
+        except Exception as e:
+            # print(f"从 CategoryManager 获取分类失败: {e}")
+            pass
+            
         return self.categories
     
     # ========== v7.4 新增：自定义模版管理 ==========

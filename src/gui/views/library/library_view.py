@@ -142,6 +142,11 @@ class LibraryView(BasePageView):
         self.template_table.template_selected.connect(self._on_template_selected)
         self.template_table.edit_template_requested.connect(self._on_edit_template_requested)
         self.template_table.delete_template_requested.connect(self._on_delete_template_requested)
+        
+        # 全局信号
+        from ....common.signals import signal_bus
+        signal_bus.categories_changed.connect(self._on_categories_changed)
+
 
     def _validate_and_load(self):
         """验证模板并加载"""
@@ -249,6 +254,8 @@ class LibraryView(BasePageView):
     
     def _on_categories_changed(self):
         """分类发生变化"""
+        # 重新从磁盘加载数据
+        self.category_manager.load_categories()
         # 刷新分类树
         self.category_tree.load_categories()
         # 刷新当前视图

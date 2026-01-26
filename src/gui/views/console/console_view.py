@@ -118,6 +118,7 @@ class ConsoleView(BasePageView):
 
         # 全局信号
         signal_bus.data_refreshed.connect(self._load_data)
+        signal_bus.categories_changed.connect(self._load_data)
 
     def _load_data(self):
         """加载数据"""

@@ -64,6 +64,29 @@ class CategoryNode:
         """
         return not any(c.parent_id == self.id for c in all_categories)
 
+    def to_dict(self) -> dict:
+        """转换为字典"""
+        return {
+            "id": self.id,
+            "name": self.name,
+            "parent_id": self.parent_id,
+            "icon": self.icon,
+            "order": self.order,
+            "is_builtin": self.is_builtin
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> 'CategoryNode':
+        """从字典创建"""
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            parent_id=data.get("parent_id"),
+            icon=data.get("icon", "Folder"),
+            order=data.get("order", 0),
+            is_builtin=data.get("is_builtin", True)
+        )
+
 
 @dataclass
 class Template:
@@ -78,6 +101,38 @@ class Template:
     description: Optional[str] = None      # 描述
     created_at: str = field(default_factory=lambda: datetime.now().isoformat())
     updated_at: str = field(default_factory=lambda: datetime.now().isoformat())
+
+    def to_dict(self) -> dict:
+        """转换为字典"""
+        return {
+            "id": self.id,
+            "name": self.name,
+            "default_src": self.default_src,
+            "category_id": self.category_id,
+            "default_target": self.default_target,
+            "icon": self.icon,
+            "is_custom": self.is_custom,
+            "description": self.description,
+            "created_at": self.created_at,
+            "updated_at": self.updated_at
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> 'Template':
+        """从字典创建"""
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            default_src=data["default_src"],
+            category_id=data["category_id"],
+            default_target=data.get("default_target"),
+            icon=data.get("icon"),
+            is_custom=data.get("is_custom", False),
+            description=data.get("description"),
+            created_at=data.get("created_at", datetime.now().isoformat()),
+            updated_at=data.get("updated_at", datetime.now().isoformat())
+        )
+
 
 
 @dataclass
@@ -112,6 +167,37 @@ class UserLink:
             return LinkStatus.DISCONNECTED
         else:
             return LinkStatus.INVALID
+
+    def to_dict(self) -> dict:
+        """转换为字典"""
+        return {
+            "id": self.id,
+            "name": self.name,
+            "source_path": self.source_path,
+            "target_path": self.target_path,
+            "category": self.category,
+            "template_id": self.template_id,
+            "icon": self.icon,
+            "last_known_size": self.last_known_size,
+            "created_at": self.created_at,
+            "updated_at": self.updated_at
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> 'UserLink':
+        """从字典创建"""
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            source_path=data["source_path"],
+            target_path=data["target_path"],
+            category=data["category"],
+            template_id=data.get("template_id"),
+            icon=data.get("icon"),
+            last_known_size=data.get("last_known_size", 0),
+            created_at=data.get("created_at", datetime.now().isoformat()),
+            updated_at=data.get("updated_at", datetime.now().isoformat())
+        )
 
 
 @dataclass

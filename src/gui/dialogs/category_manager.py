@@ -12,6 +12,7 @@ from qfluentwidgets import (
 from ...data.user_manager import UserManager
 from ...data.category_manager import CategoryManager
 from ...data.model import Category, CategoryNode
+from ...common.signals import signal_bus
 import uuid
 
 
@@ -221,6 +222,7 @@ class CategoryManagerDialog(MessageBoxBase):
             self.nameEdit.clear()
             self._load_categories()
             self.categories_changed.emit()
+            signal_bus.categories_changed.emit()
             InfoBar.success(
                 title='成功',
                 content=msg,
@@ -275,6 +277,7 @@ class CategoryManagerDialog(MessageBoxBase):
             self.nameEdit.clear()
             self._load_categories()
             self.categories_changed.emit()
+            signal_bus.categories_changed.emit()
             InfoBar.success(
                 title='成功',
                 content=msg,
@@ -357,6 +360,7 @@ class CategoryManagerDialog(MessageBoxBase):
         # 刷新界面
         self._load_categories()
         self.categories_changed.emit()
+        signal_bus.categories_changed.emit()
         
         # 显示结果
         if failed_count == 0:
