@@ -1,6 +1,7 @@
 # coding:utf-8
 from qfluentwidgets import ComboBoxSettingCard, FluentIcon, OptionsConfigItem, OptionsValidator
 from .....common.signals import signal_bus
+from .....common.config import THEME_OPTIONS, DEFAULT_THEME
 from ....i18n import t
 
 class ThemeCard(ComboBoxSettingCard):
@@ -9,11 +10,10 @@ class ThemeCard(ComboBoxSettingCard):
     def __init__(self, user_manager, parent=None):
         self.user_manager = user_manager
         
-        # 映射字典
+        # 从配置构建映射字典
         self.theme_map = {
-            t("settings.theme_system"): "system",
-            t("settings.theme_light"): "light",
-            t("settings.theme_dark"): "dark"
+            t(option["i18n_key"]): option["value"]
+            for option in THEME_OPTIONS
         }
         self.rev_theme_map = {v: k for k, v in self.theme_map.items()}
 
@@ -22,7 +22,7 @@ class ThemeCard(ComboBoxSettingCard):
 
         # Config Item
         config_item = OptionsConfigItem(
-            "Appearance", "Theme", "system",
+            "Appearance", "Theme", DEFAULT_THEME,
             OptionsValidator(list(self.theme_map.values())),
         )
 
@@ -44,12 +44,12 @@ class ThemeCard(ComboBoxSettingCard):
     def _init_value(self):
         """ 初始化当前选中项 """
         theme = self.user_manager.get_theme()
-        text = self.rev_theme_map.get(theme, t("settings.theme_system"))
+        text = self.rev_theme_map.get(theme, list(self.theme_map.keys())[0])
         self.comboBox.setCurrentText(text)
 
     def _on_theme_changed(self, text):
         """ 主题变更回调 """
-        theme = self.theme_map.get(text, "system")
+        theme = self.theme_map.get(text, DEFAULT_THEME)
         
         if self.user_manager.set_theme(theme):
             signal_bus.theme_changed.emit(theme)

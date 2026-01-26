@@ -8,7 +8,10 @@ from typing import List, Optional
 from datetime import datetime
 from dataclasses import asdict
 from ..data.model import UserLink, Category, Template
-from ..common.config import USER_DATA_FILE, DEFAULT_CATEGORY
+from ..common.config import (
+    USER_DATA_FILE, DEFAULT_CATEGORY,
+    DEFAULT_TARGET_ROOT, DEFAULT_THEME, DEFAULT_THEME_COLOR, DEFAULT_STARTUP_PAGE
+)
 
 
 class UserManager:
@@ -23,10 +26,10 @@ class UserManager:
         # v7.4 新增字段
         self.custom_templates: List[Template] = []      # 用户自定义模版
         self.ignored_ids: List[str] = []                # 扫描忽略名单
-        self.default_target_root: str = "D:\\Ghost_Library"  # 默认仓库路径
-        self.theme: str = "system"                        # 主题：light/dark/system
-        self.theme_color: str = "#009FAA"                 # 主题色
-        self.startup_page: str = "wizard"                 # 首次打开：wizard/console/library
+        self.default_target_root: str = DEFAULT_TARGET_ROOT  # 默认仓库路径
+        self.theme: str = DEFAULT_THEME                      # 主题：light/dark/system
+        self.theme_color: str = DEFAULT_THEME_COLOR          # 主题色
+        self.startup_page: str = DEFAULT_STARTUP_PAGE        # 首次打开：wizard/console/library
         
         self._ensure_data_dir()
         self._load_data()
@@ -68,10 +71,10 @@ class UserManager:
                 for tpl_data in data.get('custom_templates', [])
             ]
             self.ignored_ids = data.get('ignored_ids', [])
-            self.default_target_root = data.get('default_target_root', "D:\\Ghost_Library")
-            self.theme = data.get('theme', 'system')      # 主题
-            self.theme_color = data.get('theme_color', '#009FAA')  # 主题色
-            self.startup_page = data.get('startup_page', 'wizard')  # 首次打开
+            self.default_target_root = data.get('default_target_root', DEFAULT_TARGET_ROOT)
+            self.theme = data.get('theme', DEFAULT_THEME)      # 主题
+            self.theme_color = data.get('theme_color', DEFAULT_THEME_COLOR)  # 主题色
+            self.startup_page = data.get('startup_page', DEFAULT_STARTUP_PAGE)  # 首次打开
             
             # 确保有默认分类
             if not any(c.name == DEFAULT_CATEGORY for c in self.categories):
@@ -95,13 +98,13 @@ class UserManager:
         if 'ignored_ids' not in data:
             data['ignored_ids'] = []
         if 'default_target_root' not in data:
-            data['default_target_root'] = "D:\\Ghost_Library"
+            data['default_target_root'] = DEFAULT_TARGET_ROOT
         if 'theme' not in data:
-            data['theme'] = 'system'
+            data['theme'] = DEFAULT_THEME
         if 'theme_color' not in data:
-            data['theme_color'] = '#009FAA'
+            data['theme_color'] = DEFAULT_THEME_COLOR
         if 'startup_page' not in data:
-            data['startup_page'] = 'wizard'
+            data['startup_page'] = DEFAULT_STARTUP_PAGE
 
         return data
     

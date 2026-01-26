@@ -31,10 +31,54 @@ LOG_DIR = DATA_DIR / "logs"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 
-# 默认设置
+# ========== 应用默认设置 ==========
+# 这些是应用级的默认值常量，不会在运行时改变
+# UserManager 会使用这些常量作为初始值和回退值
+
+# 文件系统默认值
 DEFAULT_TARGET_DRIVE = "D:\\"
+DEFAULT_TARGET_ROOT = "D:\\Ghost_Library"
+
+# 分类默认值
 DEFAULT_CATEGORY = "未分类"
 
+# 主题默认值
+DEFAULT_THEME = "system"  # 可选值: "light", "dark", "system"
+DEFAULT_THEME_COLOR = "system"  # 可选值: "system" 或 十六进制颜色值如 "#009FAA"
+
+# 启动页默认值
+DEFAULT_STARTUP_PAGE = "wizard"  # 可选值: "wizard", "console", "library"
+
+# ========== 主题和颜色选项配置 ==========
+# 这些配置定义了 UI 组件中的可选项
+# 格式: {"value": "内部值", "i18n_key": "国际化键"}
+
+# 主题模式选项
+THEME_OPTIONS = [
+    {"value": "system", "i18n_key": "settings.theme_system"},
+    {"value": "light", "i18n_key": "settings.theme_light"},
+    {"value": "dark", "i18n_key": "settings.theme_dark"},
+]
+
+# 主题色选项
+THEME_COLOR_OPTIONS = [
+    {"value": "system", "i18n_key": "settings.theme_color_system"},
+    {"value": "#009FAA", "i18n_key": "settings.theme_color_teal"},
+    {"value": "#0078D4", "i18n_key": "settings.theme_color_blue"},
+    {"value": "#107C10", "i18n_key": "settings.theme_color_green"},
+    {"value": "#D83B01", "i18n_key": "settings.theme_color_orange"},
+    {"value": "#E81123", "i18n_key": "settings.theme_color_red"},
+    {"value": "#80397B", "i18n_key": "settings.theme_color_purple"},
+]
+
+# 启动页选项
+STARTUP_PAGE_OPTIONS = [
+    {"value": "wizard", "i18n_key": "settings.startup_wizard"},
+    {"value": "console", "i18n_key": "settings.startup_console"},
+    {"value": "library", "i18n_key": "settings.startup_library"},
+]
+
+# ========== 系统路径黑名单 ==========
 # 系统路径黑名单（禁止操作这些路径）
 BLACKLIST_PATHS = [
     "C:\\",
