@@ -5,8 +5,8 @@
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QSplitter
 from PySide6.QtCore import Qt
 from qfluentwidgets import (
-    SearchLineEdit, PushButton, FluentIcon,
-    InfoBar, InfoBarPosition, MessageBox
+    SearchLineEdit, PushButton, DropDownPushButton, FluentIcon,
+    InfoBar, InfoBarPosition, MessageBox, RoundMenu, Action
 )
 from ...i18n import t
 from src.data.user_manager import UserManager
@@ -17,7 +17,7 @@ from ...components import BasePageView
 from .widgets import CategoryTreeWidget, TemplateTableWidget
 from ...dialogs import (
     CategoryEditDialog, TemplateEditDialog, TemplatePreviewDialog,
-    BatchMoveDialog, ExportDialog, ImportDialog
+    BatchMoveDialog, ExportDialog, ImportDialog, CategoryManagerDialog
 )
 
 
@@ -77,26 +77,27 @@ class LibraryView(BasePageView):
         self.add_template_btn.clicked.connect(self._on_add_template_clicked)
         toolbar.addWidget(self.add_template_btn)
 
-        # 新建分类按钮
-        self.add_category_btn = PushButton(FluentIcon.FOLDER_ADD, '新建分类')
-        self.add_category_btn.clicked.connect(self._on_add_category_clicked)
-        toolbar.addWidget(self.add_category_btn)
+        # 管理分类按钮（合并新建分类+编辑分类）
+        self.manage_category_btn = PushButton(FluentIcon.FOLDER, '管理分类')
+        self.manage_category_btn.clicked.connect(self._on_manage_category_clicked)
+        toolbar.addWidget(self.manage_category_btn)
 
-        # 编辑分类按钮
-        self.edit_category_btn = PushButton(FluentIcon.EDIT, '编辑分类')
-        self.edit_category_btn.clicked.connect(self._on_edit_category_clicked)
-        self.edit_category_btn.setEnabled(False)
-        toolbar.addWidget(self.edit_category_btn)
-
-        # 导出按钮
-        self.export_btn = PushButton(FluentIcon.SHARE, '导出')
-        self.export_btn.clicked.connect(self._on_export_clicked)
-        toolbar.addWidget(self.export_btn)
-
-        # 导入按钮
-        self.import_btn = PushButton(FluentIcon.DOWNLOAD, '导入')
-        self.import_btn.clicked.connect(self._on_import_clicked)
-        toolbar.addWidget(self.import_btn)
+        # 导入/导出下拉菜单按钮
+        self.import_export_btn = DropDownPushButton(FluentIcon.SYNC, '导入/导出')
+        self.import_export_menu = RoundMenu(parent=self)
+        
+        # 导出操作
+        self.export_action = Action(FluentIcon.SHARE, '导出')
+        self.export_action.triggered.connect(self._on_export_clicked)
+        self.import_export_menu.addAction(self.export_action)
+        
+        # 导入操作
+        self.import_action = Action(FluentIcon.DOWNLOAD, '导入')
+        self.import_action.triggered.connect(self._on_import_clicked)
+        self.import_export_menu.addAction(self.import_action)
+        
+        self.import_export_btn.setMenu(self.import_export_menu)
+        toolbar.addWidget(self.import_export_btn)
 
         # 右侧统计标签
         right_toolbar = self.get_right_toolbar_layout()
@@ -167,9 +168,6 @@ class LibraryView(BasePageView):
         """分类被选中"""
         self.current_category_id = category_id
         
-        # 启用编辑分类按钮
-        self.edit_category_btn.setEnabled(True)
-        
         # 加载该分类下的模板
         templates = self.template_manager.get_templates_by_category(category_id)
         self.template_table.set_templates(templates, category_id)
@@ -185,8 +183,44 @@ class LibraryView(BasePageView):
 
     def _on_search_changed(self, text: str):
         """搜索文本改变"""
-        # TODO: 实现搜索功能
-        pass
+        search_text = text.strip().lower()
+        
+        # 如果搜索框为空，显示当前分类的所有模板
+        if not search_text:
+            if self.current_category_id:
+                self._on_category_selected(self.current_category_id)
+            return
+        
+        # 获取当前分类的模板
+        if self.current_category_id:
+            templates = self.template_manager.get_templates_by_category(self.current_category_id)
+        else:
+            templates = list(self.template_manager.templates.values())
+        
+        # 过滤模板：按名称、描述、标签搜索
+        filtered_templates = []
+        for template in templates:
+            # 搜索名称
+            if search_text in template.name.lower():
+                filtered_templates.append(template)
+                continue
+            
+            # 搜索描述
+            if hasattr(template, 'description') and template.description and search_text in template.description.lower():
+                filtered_templates.append(template)
+                continue
+            
+            # 搜索标签
+            if hasattr(template, 'tags') and template.tags:
+                tags_str = ' '.join(template.tags).lower()
+                if search_text in tags_str:
+                    filtered_templates.append(template)
+        
+        # 更新表格显示
+        self.template_table.set_templates(filtered_templates, self.current_category_id or "")
+        
+        # 更新统计
+        self.count_label.setText(f'搜索结果: {len(filtered_templates)} 个模板')
 
     def _on_refresh_clicked(self):
         """刷新按钮被点击"""
@@ -207,9 +241,20 @@ class LibraryView(BasePageView):
 
     # ========== 分类操作 ==========
 
-    def _on_add_category_clicked(self):
-        """新建分类按钮被点击"""
-        self._on_add_category_requested(None)
+    def _on_manage_category_clicked(self):
+        """管理分类按钮被点击"""
+        dialog = CategoryManagerDialog(self)
+        dialog.categories_changed.connect(self._on_categories_changed)
+        dialog.exec()
+    
+    def _on_categories_changed(self):
+        """分类发生变化"""
+        # 刷新分类树
+        self.category_tree.load_categories()
+        # 刷新当前视图
+        if self.current_category_id:
+            self._on_category_selected(self.current_category_id)
+        self._update_count()
 
     def _on_add_category_requested(self, parent_id: str):
         """请求添加分类"""
@@ -282,10 +327,7 @@ class LibraryView(BasePageView):
                         parent=self
                     )
 
-    def _on_edit_category_clicked(self):
-        """编辑分类按钮被点击"""
-        if self.current_category_id:
-            self._on_edit_category_requested(self.current_category_id)
+
 
     def _on_edit_category_requested(self, category_id: str):
         """请求编辑分类"""

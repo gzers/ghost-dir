@@ -15,12 +15,12 @@
 
 ---
 
-### 🎯 实施计划 ([plans/](./plans/))
+### 🎯 实施计划 ([planning/](./planning/))
 
 功能开发和重构计划：
 
-- **[模板库 UI 优化计划](./plans/LIBRARY_UI_OPTIMIZATION_PLAN.md)** - Phase 5 UI 优化
-- **[扫描进度重构计划](./plans/SCAN_PROGRESS_REFACTOR.md)** - 扫描进度组件重构
+- **[模板库 UI 优化计划](./planning/LIBRARY_UI_OPTIMIZATION_PLAN.md)** - Phase 5 UI 优化
+- **[扫描进度重构计划](./planning/SCAN_PROGRESS_REFACTOR.md)** - 扫描进度组件重构
 
 ---
 
@@ -56,7 +56,7 @@
 1. **新用户**：从 [安装指南](./guides/INSTALL.md) 开始
 2. **配置系统**：查看 [配置指南](./guides/CONFIGURATION_GUIDE.md)
 3. **了解架构**：阅读 [组件架构](./architecture/COMPONENT_ARCHITECTURE.md)
-4. **查看计划**：浏览 [实施计划](./plans/) 了解未来功能
+4. **查看计划**：浏览 [实施计划](./planning/) 了解未来功能
 
 ---
 
@@ -65,7 +65,7 @@
 如需添加或更新文档，请遵循以下结构：
 
 - **guides/** - 用户指南和教程
-- **plans/** - 功能计划和设计文档
+- **planning/** - 功能计划和设计文档
 - **reports/** - 实施报告和总结
 - **architecture/** - 架构和设计文档
 
