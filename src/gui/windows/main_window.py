@@ -82,7 +82,7 @@ class MainWindow(FluentWindow):
         # 2. 我的连接
         self.addSubInterface(
             self.console_view,
-            FluentIcon.HOME,
+            FluentIcon.IOT,
             "我的连接",
             position=NavigationItemPosition.TOP
         )

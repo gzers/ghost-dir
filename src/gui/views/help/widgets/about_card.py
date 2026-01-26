@@ -3,11 +3,11 @@
 采用专业的布局和统一的样式系统
 """
 from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout, QLabel, QWidget
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QPixmap
+from PySide6.QtCore import Qt, QUrl
+from PySide6.QtGui import QPixmap, QDesktopServices
 from qfluentwidgets import (
     StrongBodyLabel, BodyLabel, CaptionLabel,
-    HyperlinkButton
+    HyperlinkButton, PrimaryPushButton, FluentIcon
 )
 from ....i18n import t
 from ....components import Card
@@ -169,12 +169,17 @@ class AboutCard(Card):
         self.author_label = CaptionLabel(f"作者：{t('app.author')}")
         footer_layout.addWidget(self.author_label)
         
-        # GitHub 链接按钮
+        # GitHub 链接按钮 - 重构为带图标的强调色按钮
         github_layout = QHBoxLayout()
-        self.github_btn = HyperlinkButton(
-            t("app.github_url"),
+        self.github_btn = PrimaryPushButton(
+            FluentIcon.GITHUB,
             t("app.github"),
             self
+        )
+        # 设置鼠标指针及点击跳转逻辑
+        self.github_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.github_btn.clicked.connect(
+            lambda: QDesktopServices.openUrl(QUrl(t("app.github_url")))
         )
         github_layout.addWidget(self.github_btn)
         github_layout.addStretch()
@@ -186,8 +191,8 @@ class AboutCard(Card):
         """刷新底部样式"""
         if hasattr(self, 'author_label'):
             apply_font_style(self.author_label, size="sm", color="disabled")
-        if hasattr(self, 'github_btn'):
-            apply_font_style(self.github_btn, size="md")
+        # 注意：此处不再对 github_btn 调用 apply_font_style，
+        # 以保留 PrimaryPushButton 原有的系统强调色背景样式
     
     def _create_app_icon(self) -> QLabel:
         """创建应用图标"""
