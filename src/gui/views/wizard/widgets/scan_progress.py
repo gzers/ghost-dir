@@ -2,36 +2,15 @@
 扫描进度组件
 显示扫描进度和状态信息
 """
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QSizePolicy
-from PySide6.QtCore import Qt, Signal, QThread
+from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout, QSizePolicy
+from PySide6.QtCore import Qt, Signal
 from qfluentwidgets import (
     BodyLabel, PrimaryPushButton, PushButton, FluentIcon
 )
 
 from ....components import Card, CardHeader, ProgressIndicator
-from ....styles import (
-    get_spacing, apply_font_style, apply_muted_text_style
-)
+from ....styles import get_spacing, apply_font_style
 from ....i18n import t
-
-
-class ScanWorker(QThread):
-    """扫描工作线程"""
-    progress = Signal(int, int)  # current, total
-    finished = Signal(list)  # discovered templates
-    error = Signal(str)  # error message
-
-    def __init__(self, scanner):
-        super().__init__()
-        self.scanner = scanner
-
-    def run(self):
-        """执行扫描"""
-        try:
-            discovered = self.scanner.scan()
-            self.finished.emit(discovered)
-        except Exception as e:
-            self.error.emit(str(e))
 
 
 class ScanProgressCard(Card):
