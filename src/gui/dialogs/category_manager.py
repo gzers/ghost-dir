@@ -80,18 +80,9 @@ class CategoryManagerDialog(MessageBoxBase):
         self.viewLayout.addLayout(input_layout)
         self.viewLayout.addLayout(button_layout)
         
-        # 添加日志：监控 TreeWidget 的事件
-        print(f"[DEBUG] TreeWidget 已添加到 viewLayout")
-        print(f"[DEBUG] TreeWidget.isEnabled() = {self.categoryTree.isEnabled()}")
-        print(f"[DEBUG] TreeWidget.acceptDrops() = {self.categoryTree.acceptDrops()}")
-        print(f"[DEBUG] TreeWidget.mouseTracking() = {self.categoryTree.hasMouseTracking()}")
-        
-        # 连接 itemChanged 信号来监控复选框状态变化
-        # 注意：_on_item_changed 在后面定义
-        # self.categoryTree.itemChanged.connect(self._on_item_changed)
-        
         # 连接信号
         self.categoryTree.itemSelectionChanged.connect(self._on_selection_changed)
+        self.categoryTree.itemChanged.connect(self._on_item_changed)
         
         # 按钮
         self.yesButton.setText("完成")
@@ -112,9 +103,29 @@ class CategoryManagerDialog(MessageBoxBase):
             self._add_category_item(None, category)
     
     def _on_item_changed(self, item, column):
-        """Item 变化时的回调 - 用于调试"""
-        print(f"[DEBUG] _on_item_changed: item.text={item.text(0)}, column={column}")
-        print(f"[DEBUG]   checkState={item.checkState(0)}")
+        """Item 变化时的回调 - 实现父子复选框联动"""
+        if column != 0:
+            return
+        
+        # 暂时断开信号，避免递归触发
+        self.categoryTree.itemChanged.disconnect(self._on_item_changed)
+        
+        # 获取当前项的勾选状态
+        check_state = item.checkState(0)
+        
+        # 递归设置所有子项的勾选状态
+        self._set_children_check_state(item, check_state)
+        
+        # 重新连接信号
+        self.categoryTree.itemChanged.connect(self._on_item_changed)
+    
+    def _set_children_check_state(self, parent_item, check_state):
+        """递归设置所有子项的勾选状态"""
+        for i in range(parent_item.childCount()):
+            child = parent_item.child(i)
+            child.setCheckState(0, check_state)
+            # 递归设置子项的子项
+            self._set_children_check_state(child, check_state)
     
     def _add_category_item(self, parent_item, category: CategoryNode):
         """递归添加分类项"""
@@ -127,40 +138,31 @@ class CategoryManagerDialog(MessageBoxBase):
         # 设置显示文本
         item.setText(0, category.name)
         
-        print(f"[DEBUG] 添加分类: {category.name}")
-        print(f"[DEBUG]   初始 flags = {item.flags()}")
-        
-        # 立即设置复选框 - 完全按照 test_checkbox.py 的顺序
+        # 设置复选框
         item.setFlags(
             item.flags() | 
             Qt.ItemFlag.ItemIsEnabled | 
             Qt.ItemFlag.ItemIsUserCheckable |
             Qt.ItemFlag.ItemIsSelectable
         )
-        print(f"[DEBUG]   设置后 flags = {item.flags()}")
-        
         item.setCheckState(0, Qt.CheckState.Unchecked)
-        print(f"[DEBUG]   checkState = {item.checkState(0)}")
         
-        # 然后才设置其他数据
+        # 设置数据
         item.setData(0, Qt.ItemDataRole.UserRole, category)
         
-        # # 最后设置图标
-        # if category.icon:
-        #     try:
-        #         icon = getattr(FluentIcon, category.icon.upper(), FluentIcon.FOLDER)
-        #         item.setIcon(0, icon.icon())
-        #     except:
-        #         item.setIcon(0, FluentIcon.FOLDER.icon())
-        # else:
-        #     item.setIcon(0, FluentIcon.FOLDER.icon())
+        # 设置图标
+        if category.icon:
+            try:
+                icon = getattr(FluentIcon, category.icon.upper(), FluentIcon.FOLDER)
+                item.setIcon(0, icon.icon())
+            except:
+                item.setIcon(0, FluentIcon.FOLDER.icon())
+        else:
+            item.setIcon(0, FluentIcon.FOLDER.icon())
         
-        # 系统分类显示为灰色且禁用复选框
-        # 暂时注释掉以测试复选框功能
-        # if category.is_builtin:
-        #     item.setForeground(0, Qt.GlobalColor.gray)
-        #     item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsUserCheckable)
-        #     print(f"[DEBUG]   系统分类，禁用复选框，flags = {item.flags()}")
+        # 系统分类显示为灰色
+        if category.is_builtin:
+            item.setForeground(0, Qt.GlobalColor.gray)
         
         # 递归添加子分类
         children = self.category_manager.get_children(category.id)
