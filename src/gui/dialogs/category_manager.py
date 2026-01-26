@@ -6,7 +6,8 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTreeWidgetItem
 from PySide6.QtCore import Qt, Signal
 from qfluentwidgets import (
     MessageBoxBase, SubtitleLabel, LineEdit, PushButton, 
-    MessageBox, BodyLabel, TreeWidget, FluentIcon
+    MessageBox, BodyLabel, TreeWidget, FluentIcon,
+    InfoBar, InfoBarPosition
 )
 from ...data.user_manager import UserManager
 from ...data.category_manager import CategoryManager
@@ -220,7 +221,15 @@ class CategoryManagerDialog(MessageBoxBase):
             self.nameEdit.clear()
             self._load_categories()
             self.categories_changed.emit()
-            MessageBox("成功", msg, self).exec()
+            InfoBar.success(
+                title='成功',
+                content=msg,
+                orient=Qt.Orientation.Horizontal,
+                isClosable=True,
+                position=InfoBarPosition.TOP,
+                duration=2000,
+                parent=self
+            )
         else:
             MessageBox("失败", msg, self).exec()
     
@@ -266,7 +275,15 @@ class CategoryManagerDialog(MessageBoxBase):
             self.nameEdit.clear()
             self._load_categories()
             self.categories_changed.emit()
-            MessageBox("成功", msg, self).exec()
+            InfoBar.success(
+                title='成功',
+                content=msg,
+                orient=Qt.Orientation.Horizontal,
+                isClosable=True,
+                position=InfoBarPosition.TOP,
+                duration=2000,
+                parent=self
+            )
         else:
             MessageBox("失败", msg, self).exec()
     
@@ -343,7 +360,15 @@ class CategoryManagerDialog(MessageBoxBase):
         
         # 显示结果
         if failed_count == 0:
-            MessageBox("成功", f"已成功删除 {success_count} 个分类", self).exec()
+            InfoBar.success(
+                title='成功',
+                content=f"已成功删除 {success_count} 个分类",
+                orient=Qt.Orientation.Horizontal,
+                isClosable=True,
+                position=InfoBarPosition.TOP,
+                duration=2000,
+                parent=self
+            )
         else:
             MessageBox("部分成功", f"成功删除 {success_count} 个分类，失败 {failed_count} 个", self).exec()
     
