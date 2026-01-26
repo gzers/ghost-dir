@@ -1,51 +1,56 @@
 """
-模版库视图
-浏览所有官方和自定义模版
+模板库视图
+浏览所有官方和自定义模板，使用树表布局
 """
-from PySide6.QtWidgets import QGridLayout, QWidget
+from PySide6.QtWidgets import QWidget, QHBoxLayout, QSplitter
 from PySide6.QtCore import Qt
 from qfluentwidgets import (
-    SearchLineEdit, ComboBox, PushButton,
-    FluentIcon, InfoBar, InfoBarPosition
+    SearchLineEdit, PushButton, FluentIcon,
+    InfoBar, InfoBarPosition, MessageBox
 )
 from ...i18n import t
-from ....data.user_manager import UserManager
-from ....data.template_manager import TemplateManager
-from ....data.model import Template
+from src.data.user_manager import UserManager
+from src.data.template_manager import TemplateManager
+from src.data.category_manager import CategoryManager
+from src.data.model import Template, CategoryNode
 from ...components import BasePageView
-from .widgets import TemplateCard
-from ...styles import apply_transparent_background_only, apply_no_border
+from .widgets import CategoryTreeWidget, TemplateTableWidget
+from ...dialogs import (
+    CategoryEditDialog, TemplateEditDialog, TemplatePreviewDialog,
+    BatchMoveDialog, ExportDialog, ImportDialog
+)
 
 
 class LibraryView(BasePageView):
-    """模版库视图"""
+    """模板库视图"""
 
     def __init__(self, parent=None):
         super().__init__(
             parent=parent,
             title=t("library.title"),
             show_toolbar=True,
-            enable_scroll=True
+            enable_scroll=False  # 不需要滚动，由组件自己处理
         )
 
         # 初始化数据管理器
-        self.template_manager = TemplateManager()
+        self.category_manager = CategoryManager()
+        self.template_manager = TemplateManager(self.category_manager)
         self.user_manager = UserManager()
+        
+        # 双向引用
+        self.category_manager.set_template_manager(self.template_manager)
+        self.template_manager.set_category_manager(self.category_manager)
 
-        # 模版数据
-        self.all_templates = []
-        self.filtered_templates = []
-        self.template_cards = {}
-
-        # 筛选状态
-        self.current_category = "全部"
+        # 当前选中的分类
+        self.current_category_id = None
 
         # 设置页面内容
         self._setup_toolbar()
         self._setup_content()
+        self._connect_signals()
 
-        # 加载数据
-        self._load_templates()
+        # 验证模板并加载
+        self._validate_and_load()
 
     def _setup_toolbar(self):
         """设置工具栏"""
@@ -53,184 +58,482 @@ class LibraryView(BasePageView):
 
         # 搜索框
         self.search_edit = SearchLineEdit()
-        self.search_edit.setPlaceholderText(t("library.search_placeholder"))
-        self.search_edit.setFixedWidth(300)
+        self.search_edit.setPlaceholderText('搜索模板...')
+        self.search_edit.setFixedWidth(250)
         self.search_edit.textChanged.connect(self._on_search_changed)
         toolbar.addWidget(self.search_edit)
 
+        toolbar.addSpacing(10)
+
+        # 刷新按钮
+        self.refresh_btn = PushButton(FluentIcon.SYNC, '刷新')
+        self.refresh_btn.clicked.connect(self._on_refresh_clicked)
+        toolbar.addWidget(self.refresh_btn)
+
         toolbar.addStretch()
 
-        # 分类筛选
-        toolbar.addWidget(PushButton("分类:"))
-        self.category_combo = ComboBox()
-        self.category_combo.addItems(["全部"])
-        self.category_combo.setFixedWidth(150)
-        self.category_combo.currentIndexChanged.connect(self._on_category_changed)
-        toolbar.addWidget(self.category_combo)
+        # 新建模板按钮
+        self.add_template_btn = PushButton(FluentIcon.ADD, '新建模板')
+        self.add_template_btn.clicked.connect(self._on_add_template_clicked)
+        toolbar.addWidget(self.add_template_btn)
 
-        # 类型筛选
-        toolbar.addWidget(PushButton("类型:"))
-        self.type_combo = ComboBox()
-        self.type_combo.addItems(["全部", "官方", "自定义"])
-        self.type_combo.setFixedWidth(120)
-        self.type_combo.currentIndexChanged.connect(self._on_type_changed)
-        toolbar.addWidget(self.type_combo)
+        # 新建分类按钮
+        self.add_category_btn = PushButton(FluentIcon.FOLDER_ADD, '新建分类')
+        self.add_category_btn.clicked.connect(self._on_add_category_clicked)
+        toolbar.addWidget(self.add_category_btn)
 
-        # 右侧统计按钮
+        # 编辑分类按钮
+        self.edit_category_btn = PushButton(FluentIcon.EDIT, '编辑分类')
+        self.edit_category_btn.clicked.connect(self._on_edit_category_clicked)
+        self.edit_category_btn.setEnabled(False)
+        toolbar.addWidget(self.edit_category_btn)
+
+        # 导出按钮
+        self.export_btn = PushButton(FluentIcon.SHARE, '导出')
+        self.export_btn.clicked.connect(self._on_export_clicked)
+        toolbar.addWidget(self.export_btn)
+
+        # 导入按钮
+        self.import_btn = PushButton(FluentIcon.DOWNLOAD, '导入')
+        self.import_btn.clicked.connect(self._on_import_clicked)
+        toolbar.addWidget(self.import_btn)
+
+        # 右侧统计标签
         right_toolbar = self.get_right_toolbar_layout()
         self.count_label = PushButton()
         self.count_label.setEnabled(False)
-        apply_no_border(self.count_label)
+        self.count_label.setText('加载中...')
         right_toolbar.addWidget(self.count_label)
 
     def _setup_content(self):
         """设置内容区域"""
-        # 最好在 content_layout 中添加一个 QWidget 容器，而不是直接给 content_container 设置新布局
-        container = QWidget()
-        apply_transparent_background_only(container)
-        self.grid_layout = QGridLayout(container)
-        from ...styles import apply_page_layout
-        apply_page_layout(self.grid_layout, spacing="section")
-        self.grid_layout.setContentsMargins(0, 0, 0, 0)
+        # 创建分割器
+        self.splitter = QSplitter(Qt.Orientation.Horizontal)
+        
+        # 左侧：分类树
+        self.category_tree = CategoryTreeWidget(self.category_manager)
+        self.category_tree.setMinimumWidth(200)
+        self.category_tree.setMaximumWidth(400)
+        
+        # 右侧：模板表格
+        self.template_table = TemplateTableWidget()
+        
+        # 添加到分割器
+        self.splitter.addWidget(self.category_tree)
+        self.splitter.addWidget(self.template_table)
+        
+        # 设置分割比例（1:3）
+        self.splitter.setStretchFactor(0, 1)
+        self.splitter.setStretchFactor(1, 3)
+        
+        # 添加到内容区域
+        self.add_to_content(self.splitter)
 
-        # 将容器添加到 BasePageView 的内容区域
-        self.add_to_content(container)
+    def _connect_signals(self):
+        """连接信号"""
+        # 分类树信号
+        self.category_tree.category_selected.connect(self._on_category_selected)
+        self.category_tree.add_category_requested.connect(self._on_add_category_requested)
+        self.category_tree.edit_category_requested.connect(self._on_edit_category_requested)
+        self.category_tree.delete_category_requested.connect(self._on_delete_category_requested)
+        
+        # 模板表格信号
+        self.template_table.template_selected.connect(self._on_template_selected)
+        self.template_table.edit_template_requested.connect(self._on_edit_template_requested)
+        self.template_table.delete_template_requested.connect(self._on_delete_template_requested)
 
-    def _load_templates(self):
-        """加载所有模版"""
-        # 获取所有模版（官方 + 自定义）
-        all_templates = self.template_manager.get_all_templates()
-
-        # 获取自定义模版 ID 集合
-        custom_ids = set(t.id for t in self.user_manager.get_custom_templates())
-
-        # 标记自定义模版
-        self.all_templates = [
-            (template, template.id in custom_ids)
-            for template in all_templates
-        ]
-
-        # 更新分类列表
-        categories = set(t.category for t, _ in self.all_templates)
-        current_index = self.category_combo.currentIndex()
-        self.category_combo.clear()
-        self.category_combo.addItem("全部")
-        for category in sorted(categories):
-            self.category_combo.addItem(category)
-        if 0 <= current_index < self.category_combo.count():
-            self.category_combo.setCurrentIndex(current_index)
-
-        # 应用筛选
-        self._apply_filter()
-
-    def _apply_filter(self):
-        """应用搜索和筛选"""
-        category_filter = self.category_combo.currentText()
-        type_filter = self.type_combo.currentText()
-        search_text = self.search_edit.text().lower()
-
-        self.filtered_templates = [
-            (template, is_custom)
-            for template, is_custom in self.all_templates
-            if (
-                (category_filter == "全部" or template.category == category_filter)
-                and (type_filter == "全部"
-                     or (is_custom and type_filter == "自定义")
-                     or (not is_custom and type_filter == "官方"))
-                and search_text in template.name.lower()
+    def _validate_and_load(self):
+        """验证模板并加载"""
+        # 验证所有模板
+        orphaned = self.template_manager.validate_all_templates()
+        
+        if orphaned:
+            InfoBar.warning(
+                title='发现孤儿模板',
+                content=f'有 {len(orphaned)} 个模板的分类不存在，已自动归入"未分类"',
+                orient=Qt.Orientation.Horizontal,
+                isClosable=True,
+                position=InfoBarPosition.TOP,
+                duration=5000,
+                parent=self
             )
-        ]
-
-        # 更新显示
-        self._update_template_display()
-
-    def _update_template_display(self):
-        """更新模版显示"""
-        # 清空现有卡片
-        for card in self.template_cards.values():
-            card.deleteLater()
-        self.template_cards.clear()
-
-        # 创建新卡片
-        if not self.filtered_templates:
-            self._show_empty_state()
-            self.count_label.setText("共 0 个模版")
-            return
-
-        row = 0
-        col = 0
-        columns = 3  # 每行 3 列
-
-        for template, is_custom in self.filtered_templates:
-            card = TemplateCard(template, is_custom)
-            card.clicked.connect(self._on_card_clicked)
-
-            self.grid_layout.addWidget(card, row, col)
-            self.template_cards[template.id] = card
-
-            col += 1
-            if col >= columns:
-                col = 0
-                row += 1
-
-        # 添加弹簧填充剩余空间
-        if col > 0 or row > 0:
-            self.grid_layout.setRowStretch(row, 1)
-
+        
         # 更新统计
-        self.count_label.setText(f"共 {len(self.filtered_templates)} 个模版")
+        self._update_count()
 
-    def _show_empty_state(self):
-        """显示空状态"""
-        from qfluentwidgets import BodyLabel
-        from ...styles import StyleManager, apply_font_style
+    # ========== 事件处理 ==========
 
-        empty_label = BodyLabel("没有找到匹配的模版")
-        apply_font_style(empty_label, size="md", color=StyleManager.get_text_disabled())
-        empty_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.grid_layout.addWidget(empty_label, 0, 0)
+    def _on_category_selected(self, category_id: str):
+        """分类被选中"""
+        self.current_category_id = category_id
+        
+        # 启用编辑分类按钮
+        self.edit_category_btn.setEnabled(True)
+        
+        # 加载该分类下的模板
+        templates = self.template_manager.get_templates_by_category(category_id)
+        self.template_table.set_templates(templates, category_id)
+        
+        # 更新统计
+        category = self.category_manager.get_category_by_id(category_id)
+        if category:
+            self.count_label.setText(f'{category.name}: {len(templates)} 个模板')
 
-    def _on_search_changed(self, text):
+    def _on_template_selected(self, template_id: str):
+        """模板被选中"""
+        pass  # 可以在这里添加预览等功能
+
+    def _on_search_changed(self, text: str):
         """搜索文本改变"""
-        self._apply_filter()
+        # TODO: 实现搜索功能
+        pass
 
-    def _on_category_changed(self, index):
-        """分类改变"""
-        self._apply_filter()
-
-    def _on_type_changed(self, index):
-        """类型改变"""
-        self._apply_filter()
-
-    def _on_card_clicked(self, template_id):
-        """模版卡片点击"""
-        card = self.template_cards[template_id]
-        template = card.get_template()
-        is_custom = card.is_custom
-
-        # 显示模版详情（暂时用消息框）
-        from qfluentwidgets import MessageBox
-
-        info_text = f"""
-        模版名称: {template.name}
-        分类: {template.category}
-        类型: {'自定义' if is_custom else '官方'}
-        源路径: {template.default_src}
-        """
-
-        box = MessageBox("模版详情", info_text, self)
-        box.yesButton.setText("确定")
-        box.cancelButton.hide()
-        box.exec()
-
-    def refresh(self):
-        """刷新模版列表"""
-        self._load_templates()
-
+    def _on_refresh_clicked(self):
+        """刷新按钮被点击"""
+        self.category_tree.load_categories()
+        if self.current_category_id:
+            self._on_category_selected(self.current_category_id)
+        self._update_count()
+        
         InfoBar.success(
-            title="刷新成功",
-            content="模版库已更新",
-            parent=self,
+            title='刷新成功',
+            content='已重新加载所有数据',
+            orient=Qt.Orientation.Horizontal,
+            isClosable=True,
             position=InfoBarPosition.TOP,
-            duration=2000
+            duration=2000,
+            parent=self
         )
+
+    # ========== 分类操作 ==========
+
+    def _on_add_category_clicked(self):
+        """新建分类按钮被点击"""
+        self._on_add_category_requested(None)
+
+    def _on_add_category_requested(self, parent_id: str):
+        """请求添加分类"""
+        # 如果有父分类，检查是否可以添加子分类
+        if parent_id:
+            can_add, msg = self.category_manager.can_add_child_category(parent_id)
+            if not can_add:
+                # 显示模板预览对话框
+                templates = self.template_manager.get_templates_by_category(parent_id)
+                parent = self.category_manager.get_category_by_id(parent_id)
+                
+                preview_dialog = TemplatePreviewDialog(parent.name, templates, self)
+                if preview_dialog.exec():
+                    if preview_dialog.should_move_templates():
+                        # 打开批量移动对话框
+                        move_dialog = BatchMoveDialog(self.category_manager, templates, self)
+                        if move_dialog.exec():
+                            target_category_id = move_dialog.get_target_category_id()
+                            # 移动模板
+                            for template in templates:
+                                template.category_id = target_category_id
+                            
+                            InfoBar.success(
+                                title='移动成功',
+                                content=f'已移动 {len(templates)} 个模板',
+                                orient=Qt.Orientation.Horizontal,
+                                isClosable=True,
+                                position=InfoBarPosition.TOP,
+                                duration=3000,
+                                parent=self
+                            )
+                        else:
+                            return
+                else:
+                    return
+        
+        # 打开分类编辑对话框
+        dialog = CategoryEditDialog(self.category_manager, mode="create", parent=self)
+        if parent_id:
+            # 设置父分类
+            for i in range(dialog.parentCombo.count()):
+                if dialog.parentCombo.itemData(i) == parent_id:
+                    dialog.parentCombo.setCurrentIndex(i)
+                    break
+        
+        if dialog.exec():
+            if dialog.validate():
+                category = dialog.get_category()
+                success, msg = self.category_manager.add_category(category)
+                
+                if success:
+                    self.category_tree.load_categories()
+                    InfoBar.success(
+                        title='添加成功',
+                        content=msg,
+                        orient=Qt.Orientation.Horizontal,
+                        isClosable=True,
+                        position=InfoBarPosition.TOP,
+                        duration=3000,
+                        parent=self
+                    )
+                else:
+                    InfoBar.error(
+                        title='添加失败',
+                        content=msg,
+                        orient=Qt.Orientation.Horizontal,
+                        isClosable=True,
+                        position=InfoBarPosition.TOP,
+                        duration=3000,
+                        parent=self
+                    )
+
+    def _on_edit_category_clicked(self):
+        """编辑分类按钮被点击"""
+        if self.current_category_id:
+            self._on_edit_category_requested(self.current_category_id)
+
+    def _on_edit_category_requested(self, category_id: str):
+        """请求编辑分类"""
+        category = self.category_manager.get_category_by_id(category_id)
+        if not category:
+            return
+        
+        dialog = CategoryEditDialog(
+            self.category_manager,
+            category=category,
+            mode="edit",
+            parent=self
+        )
+        
+        if dialog.exec():
+            if dialog.validate():
+                updated_category = dialog.get_category()
+                success, msg = self.category_manager.update_category(updated_category)
+                
+                if success:
+                    self.category_tree.load_categories()
+                    InfoBar.success(
+                        title='更新成功',
+                        content=msg,
+                        orient=Qt.Orientation.Horizontal,
+                        isClosable=True,
+                        position=InfoBarPosition.TOP,
+                        duration=3000,
+                        parent=self
+                    )
+                else:
+                    InfoBar.error(
+                        title='更新失败',
+                        content=msg,
+                        orient=Qt.Orientation.Horizontal,
+                        isClosable=True,
+                        position=InfoBarPosition.TOP,
+                        duration=3000,
+                        parent=self
+                    )
+
+    def _on_delete_category_requested(self, category_id: str):
+        """请求删除分类"""
+        category = self.category_manager.get_category_by_id(category_id)
+        if not category:
+            return
+        
+        # 确认对话框
+        msg_box = MessageBox(
+            '确认删除',
+            f'确定要删除分类 "{category.name}" 吗？',
+            self
+        )
+        
+        if msg_box.exec():
+            success, msg = self.category_manager.delete_category(category_id)
+            
+            if success:
+                self.category_tree.load_categories()
+                self.current_category_id = None
+                self.edit_category_btn.setEnabled(False)
+                self.template_table.set_templates([], "")
+                
+                InfoBar.success(
+                    title='删除成功',
+                    content=msg,
+                    orient=Qt.Orientation.Horizontal,
+                    isClosable=True,
+                    position=InfoBarPosition.TOP,
+                    duration=3000,
+                    parent=self
+                )
+            else:
+                InfoBar.error(
+                    title='删除失败',
+                    content=msg,
+                    orient=Qt.Orientation.Horizontal,
+                    isClosable=True,
+                    position=InfoBarPosition.TOP,
+                    duration=3000,
+                    parent=self
+                )
+
+    # ========== 模板操作 ==========
+
+    def _on_add_template_clicked(self):
+        """新建模板按钮被点击"""
+        dialog = TemplateEditDialog(
+            self.template_manager,
+            self.category_manager,
+            mode="create",
+            parent=self
+        )
+        
+        if dialog.exec():
+            if dialog.validate():
+                template = dialog.get_template()
+                self.template_manager.templates[template.id] = template
+                
+                # 刷新当前分类
+                if self.current_category_id:
+                    self._on_category_selected(self.current_category_id)
+                
+                InfoBar.success(
+                    title='添加成功',
+                    content=f'已添加模板 "{template.name}"',
+                    orient=Qt.Orientation.Horizontal,
+                    isClosable=True,
+                    position=InfoBarPosition.TOP,
+                    duration=3000,
+                    parent=self
+                )
+
+    def _on_edit_template_requested(self, template_id: str):
+        """请求编辑模板"""
+        template = self.template_manager.templates.get(template_id)
+        if not template:
+            return
+        
+        dialog = TemplateEditDialog(
+            self.template_manager,
+            self.category_manager,
+            template=template,
+            mode="edit",
+            parent=self
+        )
+        
+        if dialog.exec():
+            if dialog.validate():
+                updated_template = dialog.get_template()
+                self.template_manager.templates[template_id] = updated_template
+                
+                # 刷新当前分类
+                if self.current_category_id:
+                    self._on_category_selected(self.current_category_id)
+                
+                InfoBar.success(
+                    title='更新成功',
+                    content=f'已更新模板 "{updated_template.name}"',
+                    orient=Qt.Orientation.Horizontal,
+                    isClosable=True,
+                    position=InfoBarPosition.TOP,
+                    duration=3000,
+                    parent=self
+                )
+
+    def _on_delete_template_requested(self, template_id: str):
+        """请求删除模板"""
+        template = self.template_manager.templates.get(template_id)
+        if not template:
+            return
+        
+        # 确认对话框
+        msg_box = MessageBox(
+            '确认删除',
+            f'确定要删除模板 "{template.name}" 吗？',
+            self
+        )
+        
+        if msg_box.exec():
+            del self.template_manager.templates[template_id]
+            
+            # 刷新当前分类
+            if self.current_category_id:
+                self._on_category_selected(self.current_category_id)
+            
+            InfoBar.success(
+                title='删除成功',
+                content=f'已删除模板 "{template.name}"',
+                orient=Qt.Orientation.Horizontal,
+                isClosable=True,
+                position=InfoBarPosition.TOP,
+                duration=3000,
+                parent=self
+            )
+
+    # ========== 导入/导出 ==========
+
+    def _on_export_clicked(self):
+        """导出按钮被点击"""
+        dialog = ExportDialog(self.template_manager, self.category_manager, self)
+        
+        if dialog.exec():
+            if dialog.validate():
+                options = dialog.get_export_options()
+                success, msg = self.template_manager.export_to_file(**options)
+                
+                if success:
+                    InfoBar.success(
+                        title='导出成功',
+                        content=msg,
+                        orient=Qt.Orientation.Horizontal,
+                        isClosable=True,
+                        position=InfoBarPosition.TOP,
+                        duration=3000,
+                        parent=self
+                    )
+                else:
+                    InfoBar.error(
+                        title='导出失败',
+                        content=msg,
+                        orient=Qt.Orientation.Horizontal,
+                        isClosable=True,
+                        position=InfoBarPosition.TOP,
+                        duration=3000,
+                        parent=self
+                    )
+
+    def _on_import_clicked(self):
+        """导入按钮被点击"""
+        dialog = ImportDialog(self.template_manager, self.category_manager, self)
+        
+        if dialog.exec():
+            if dialog.validate():
+                options = dialog.get_import_options()
+                success, msg = self.template_manager.import_from_file(**options)
+                
+                if success:
+                    # 刷新界面
+                    self.category_tree.load_categories()
+                    if self.current_category_id:
+                        self._on_category_selected(self.current_category_id)
+                    self._update_count()
+                    
+                    InfoBar.success(
+                        title='导入成功',
+                        content=msg,
+                        orient=Qt.Orientation.Horizontal,
+                        isClosable=True,
+                        position=InfoBarPosition.TOP,
+                        duration=3000,
+                        parent=self
+                    )
+                else:
+                    InfoBar.error(
+                        title='导入失败',
+                        content=msg,
+                        orient=Qt.Orientation.Horizontal,
+                        isClosable=True,
+                        position=InfoBarPosition.TOP,
+                        duration=3000,
+                        parent=self
+                    )
+
+    # ========== 辅助方法 ==========
+
+    def _update_count(self):
+        """更新统计信息"""
+        total_categories = len(self.category_manager.get_all_categories())
+        total_templates = len(self.template_manager.templates)
+        self.count_label.setText(f'{total_categories} 个分类, {total_templates} 个模板')

@@ -22,6 +22,7 @@ LOCK_FILE = DATA_DIR / ".ghost.lock"
 # 模板配置文件
 DEFAULT_TEMPLATES_CONFIG = PROJECT_ROOT / "config" / "default_templates.json"  # 内置默认模板（进版本控制）
 TEMPLATE_CACHE_FILE = DATA_DIR / "template_cache.json"  # API 模板缓存（运行时数据）
+CATEGORIES_CONFIG = PROJECT_ROOT / "config" / "categories.json"  # 分类配置文件
 
 # 配置和日志目录
 CONFIG_FILE = DATA_DIR / "config.json"
@@ -111,6 +112,25 @@ STATUS_ICONS = {
 
 # 文件大小单位
 SIZE_UNITS = ["B", "KB", "MB", "GB", "TB"]
+
+# ========== 分类系统配置 ==========
+# 分类树最大深度限制
+MAX_CATEGORY_DEPTH = 3
+
+# 系统保留分类（不可删除、不可修改关键属性）
+SYSTEM_CATEGORIES = ["uncategorized"]
+
+# 旧版分类名称映射（用于数据迁移）
+LEGACY_CATEGORY_MAP = {
+    "开发工具": "dev_tools",
+    "浏览器": "browsers",
+    "社交": "social",
+    "游戏": "games",
+    "云存储": "cloud_storage",
+    "办公软件": "office",
+    "多媒体": "media",
+    "未分类": "uncategorized"
+}
 
 
 def format_size(size_bytes: int) -> str:

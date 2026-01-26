@@ -1,13 +1,14 @@
 {
   "version": "1.0.0",
-  "last_updated": "2026-01-22T12:55:00Z",
+  "last_updated": "2026-01-26T15:56:00Z",
   "description": "内置默认模板配置文件，用户可以手动编辑此文件来自定义默认模板",
   "templates": [
     {
       "id": "steam",
       "name": "Steam 游戏库",
       "default_src": "C:\\Program Files (x86)\\Steam\\steamapps",
-      "category": "游戏",
+      "category_id": "games.platforms",
+      "default_target": "D:\\Ghost_Library\\Steam",
       "icon": "steam.png",
       "description": "Steam 游戏安装目录"
     },
@@ -15,7 +16,8 @@
       "id": "chrome",
       "name": "Google Chrome 用户数据",
       "default_src": "%LOCALAPPDATA%\\Google\\Chrome\\User Data",
-      "category": "浏览器",
+      "category_id": "browsers",
+      "default_target": "D:\\Ghost_Library\\Chrome",
       "icon": "chrome.png",
       "description": "Chrome 浏览器缓存和用户数据"
     },
@@ -23,7 +25,8 @@
       "id": "wechat",
       "name": "微信文件",
       "default_src": "%USERPROFILE%\\Documents\\WeChat Files",
-      "category": "社交",
+      "category_id": "social.im",
+      "default_target": "D:\\Ghost_Library\\WeChat",
       "icon": "wechat.png",
       "description": "微信聊天记录和文件"
     },
@@ -31,7 +34,8 @@
       "id": "qq",
       "name": "QQ 文件",
       "default_src": "%USERPROFILE%\\Documents\\Tencent Files",
-      "category": "社交",
+      "category_id": "social.im",
+      "default_target": "D:\\Ghost_Library\\QQ",
       "icon": "qq.png",
       "description": "QQ 聊天记录和文件"
     },
@@ -39,7 +43,8 @@
       "id": "vscode",
       "name": "VS Code 扩展",
       "default_src": "%USERPROFILE%\\.vscode\\extensions",
-      "category": "开发工具",
+      "category_id": "dev_tools.editors",
+      "default_target": "D:\\Ghost_Library\\VSCode",
       "icon": "vscode.png",
       "description": "Visual Studio Code 扩展目录"
     },
@@ -47,7 +52,8 @@
       "id": "onedrive",
       "name": "OneDrive",
       "default_src": "%USERPROFILE%\\OneDrive",
-      "category": "云存储",
+      "category_id": "cloud_storage",
+      "default_target": "D:\\Ghost_Library\\OneDrive",
       "icon": "onedrive.png",
       "description": "OneDrive 同步文件夹"
     }

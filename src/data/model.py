@@ -4,7 +4,7 @@
 """
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional
+from typing import Optional, List, Dict
 from datetime import datetime
 
 
@@ -17,15 +17,67 @@ class LinkStatus(Enum):
 
 
 @dataclass
+class CategoryNode:
+    """分类树节点"""
+    id: str                          # 唯一标识（如：dev_tools.editors）
+    name: str                        # 显示名称
+    parent_id: Optional[str] = None  # 父节点 ID
+    icon: str = "Folder"             # 图标（FluentIcon 名称）
+    order: int = 0                   # 排序权重
+    is_builtin: bool = True          # 是否为内置分类
+    _depth: int = -1                 # 缓存深度，-1 表示未计算
+    
+    def get_depth(self, all_categories: Dict[str, 'CategoryNode']) -> int:
+        """
+        获取分类深度（带缓存）
+        
+        Args:
+            all_categories: 所有分类的字典
+            
+        Returns:
+            分类深度（1-based）
+        """
+        if self._depth != -1:
+            return self._depth
+        
+        if not self.parent_id:
+            self._depth = 1
+            return 1
+        
+        parent = all_categories.get(self.parent_id)
+        if not parent:
+            self._depth = 1
+            return 1
+        
+        self._depth = parent.get_depth(all_categories) + 1
+        return self._depth
+    
+    def is_leaf(self, all_categories: List['CategoryNode']) -> bool:
+        """
+        判断是否为叶子节点
+        
+        Args:
+            all_categories: 所有分类的列表
+            
+        Returns:
+            True 如果是叶子节点（没有子分类）
+        """
+        return not any(c.parent_id == self.id for c in all_categories)
+
+
+@dataclass
 class Template:
     """软件模版"""
-    id: str                    # 唯一标识
-    name: str                  # 软件名称
-    default_src: str           # 默认源路径（支持环境变量）
-    category: str              # 分类
-    icon: Optional[str] = None # 图标路径
-    is_custom: bool = False    # 是否为用户自定义模版
-    description: Optional[str] = None  # 描述
+    id: str                                # 唯一标识
+    name: str                              # 软件名称
+    default_src: str                       # 默认源路径（支持环境变量）
+    category_id: str                       # 分类ID（必须指向叶子分类）
+    default_target: Optional[str] = None   # 默认目标路径（D盘），可选
+    icon: Optional[str] = None             # 图标路径
+    is_custom: bool = False                # 是否为用户自定义模版
+    description: Optional[str] = None      # 描述
+    created_at: str = field(default_factory=lambda: datetime.now().isoformat())
+    updated_at: str = field(default_factory=lambda: datetime.now().isoformat())
 
 
 @dataclass
