@@ -2,12 +2,17 @@
 扫描进度组件
 显示扫描进度和状态信息
 """
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QSizePolicy
 from PySide6.QtCore import Qt, Signal, QThread
 from qfluentwidgets import (
-    ProgressBar, BodyLabel, PrimaryPushButton, PushButton,
-    StrongBodyLabel, FluentIcon, CardWidget
+    BodyLabel, PrimaryPushButton, PushButton, FluentIcon
 )
+
+from ....components import Card, CardHeader, ProgressIndicator
+from ....styles import (
+    get_spacing, apply_font_style, apply_muted_text_style
+)
+from ....i18n import t
 
 
 class ScanWorker(QThread):
@@ -29,12 +34,6 @@ class ScanWorker(QThread):
             self.error.emit(str(e))
 
 
-from ....components import Card
-from ....styles import (
-    apply_font_style, apply_muted_text_style,
-    get_spacing, get_radius, get_content_width, get_icon_background
-)
-
 class ScanProgressCard(Card):
     """扫描进度卡片组件"""
 
@@ -50,95 +49,94 @@ class ScanProgressCard(Card):
         self.discovered_count = 0
         self.selected_count = 0
         self._init_ui()
-        self._refresh_content_styles()
 
     def _init_ui(self):
         """初始化 UI"""
-        # 移除固定宽度限制，使其能够占满一行
-        from PySide6.QtWidgets import QSizePolicy
+        # 设置卡片可扩展以占满一行
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum)
         
+        # 主布局
         self.main_layout = QVBoxLayout(self)
-        self.main_layout.setContentsMargins(24, 24, 24, 24)
-        self.main_layout.setSpacing(16)
+        self.main_layout.setContentsMargins(
+            get_spacing("lg"),
+            get_spacing("lg"),
+            get_spacing("lg"),
+            get_spacing("lg")
+        )
+        self.main_layout.setSpacing(get_spacing("md"))
 
-        # 标题区域
-        title_layout = QHBoxLayout()
-        # 图标
-        self.icon_label = BodyLabel("🔍")
-        self.icon_label.setFixedSize(40, 40)
-        self.icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        title_layout.addWidget(self.icon_label)
+        # 卡片头部
+        self.header = CardHeader(
+            icon=t("wizard.scan_card_icon"),
+            title=t("wizard.scan_card_title"),
+            subtitle=t("wizard.scan_card_subtitle")
+        )
+        self.main_layout.addWidget(self.header)
 
-        title_layout.addSpacing(12)
+        # 进度指示器
+        self.progress_indicator = ProgressIndicator()
+        self.progress_indicator.set_status(t("wizard.scan_idle"))
+        self.main_layout.addWidget(self.progress_indicator)
 
-        title_text = QVBoxLayout()
-        self.title_label = StrongBodyLabel("智能扫描")
-        title_text.addWidget(self.title_label)
-        self.status_label = BodyLabel("自动发现本机可管理的软件")
-        self.status_label.setWordWrap(True)
-        title_text.addWidget(self.status_label)
-        title_layout.addLayout(title_text)
-        title_layout.addStretch()
-
-        self.main_layout.addLayout(title_layout)
-
-        # 进度条
-        self.progress_bar = ProgressBar()
-        self.progress_bar.setRange(0, 0)
-        self.progress_bar.setVisible(False)
-        self.main_layout.addWidget(self.progress_bar)
-
-        # 详细状态
-        self.detail_label = BodyLabel("点击扫描开始")
-        self.detail_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.main_layout.addWidget(self.detail_label)
-
-        # 结果统计
+        # 结果统计标签
         self.result_label = BodyLabel("")
         self.result_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.result_label.setVisible(False)
+        apply_font_style(self.result_label, size="sm", color="secondary")
         self.main_layout.addWidget(self.result_label)
 
         # 按钮区域
+        self._init_buttons()
+
+    def _init_buttons(self):
+        """初始化按钮区域"""
         button_layout = QHBoxLayout()
+        button_layout.setSpacing(get_spacing("sm"))
         button_layout.addStretch()
 
-        self.scan_button = PrimaryPushButton(FluentIcon.SEARCH, "开始扫描")
+        # 扫描按钮
+        self.scan_button = PrimaryPushButton(
+            FluentIcon.SEARCH,
+            t("wizard.start_scan")
+        )
         self.scan_button.clicked.connect(self._on_scan_clicked)
         button_layout.addWidget(self.scan_button)
 
-        self.import_button = PrimaryPushButton(FluentIcon.DOWNLOAD, "一键导入")
+        # 导入按钮
+        self.import_button = PrimaryPushButton(
+            FluentIcon.DOWNLOAD,
+            t("wizard.import_selected")
+        )
         self.import_button.setEnabled(False)
         self.import_button.setVisible(False)
         self.import_button.clicked.connect(self._on_import_clicked)
         button_layout.addWidget(self.import_button)
 
-        self.refresh_button = PushButton(FluentIcon.SYNC, "重新扫描")
+        # 重新扫描按钮
+        self.refresh_button = PushButton(
+            FluentIcon.SYNC,
+            t("wizard.rescan")
+        )
         self.refresh_button.setEnabled(False)
         self.refresh_button.setVisible(False)
         self.refresh_button.clicked.connect(self._on_refresh_clicked)
         button_layout.addWidget(self.refresh_button)
 
-        self.cancel_button = PushButton(FluentIcon.CLOSE, "取消")
+        # 取消按钮
+        self.cancel_button = PushButton(
+            FluentIcon.CLOSE,
+            t("wizard.cancel")
+        )
         self.cancel_button.setVisible(False)
         self.cancel_button.clicked.connect(self._on_cancel_clicked)
         button_layout.addWidget(self.cancel_button)
 
         self.main_layout.addLayout(button_layout)
 
-    def _refresh_content_styles(self):
-        """刷新文字样式"""
-        apply_font_style(self.title_label, size="lg", weight="semibold")
-        apply_muted_text_style(self.status_label, size="sm")
-        apply_font_style(self.detail_label, weight="medium")
-
-
     def _on_scan_clicked(self):
         """扫描按钮点击"""
-        if self.scanning:
-            return
-        self.scan_clicked.emit()
+        if not self.scanning:
+            self.scan_clicked.emit()
 
     def _on_import_clicked(self):
         """导入按钮点击"""
@@ -155,33 +153,59 @@ class ScanProgressCard(Card):
     def start_scanning(self):
         """开始扫描状态"""
         self.scanning = True
-        self.progress_bar.setVisible(True)
-        self.progress_bar.setRange(0, 0)
+        
+        # 更新进度指示器
+        self.progress_indicator.start_indeterminate()
+        self.progress_indicator.set_status(t("wizard.scan_progress_detail"))
+        
+        # 更新按钮状态
         self.scan_button.setEnabled(False)
         self.import_button.setVisible(False)
         self.refresh_button.setVisible(False)
         self.result_label.setVisible(False)
-        self.detail_label.setText("正在扫描本机，请稍候...")
 
-    def update_progress(self, current, total):
-        """更新进度"""
-        self.progress_bar.setRange(0, total)
-        self.progress_bar.setValue(current)
+    def update_progress(self, current: int, total: int):
+        """
+        更新进度
+        
+        Args:
+            current: 当前进度
+            total: 总进度
+        """
+        self.progress_indicator.set_progress(current, total)
         if total > 0:
-            self.detail_label.setText(f"正在扫描: {current}/{total}")
+            self.progress_indicator.set_status(
+                t("wizard.scan_progress_count", current=current, total=total)
+            )
 
-    def scan_finished(self, discovered_count, selected_count):
-        """扫描完成"""
+    def scan_finished(self, discovered_count: int, selected_count: int):
+        """
+        扫描完成
+        
+        Args:
+            discovered_count: 发现的软件数量
+            selected_count: 选中的软件数量
+        """
         self.scanning = False
-        self.progress_bar.setRange(0, 100)
-        self.progress_bar.setValue(100)
         self.discovered_count = discovered_count
         self.selected_count = selected_count
 
+        # 完成进度
+        self.progress_indicator.complete()
+
         if discovered_count > 0:
-            self.detail_label.setText(f"扫描完成！发现 {discovered_count} 个可管理的软件")
-            self.result_label.setText(f"已选中 {selected_count} 项")
+            # 更新状态文本
+            self.progress_indicator.set_status(
+                t("wizard.scan_complete_detail", count=discovered_count)
+            )
+            
+            # 显示选中统计
+            self.result_label.setText(
+                t("wizard.selected_count", count=selected_count)
+            )
             self.result_label.setVisible(True)
+            
+            # 更新按钮状态
             self.scan_button.setVisible(False)
             self.import_button.setVisible(True)
             self.import_button.setEnabled(selected_count > 0)
@@ -189,27 +213,45 @@ class ScanProgressCard(Card):
             self.refresh_button.setEnabled(True)
             self.cancel_button.setVisible(True)
         else:
-            self.detail_label.setText("未发现可管理的软件")
+            # 未发现软件
+            self.progress_indicator.set_status(t("wizard.no_apps_found"))
             self.scan_button.setEnabled(True)
             self.refresh_button.setVisible(False)
             self.cancel_button.setVisible(False)
 
-        self.progress_bar.setVisible(False)
+        # 隐藏进度条
+        self.progress_indicator.hide_progress()
 
-    def scan_error(self, error_msg):
-        """扫描出错"""
+    def scan_error(self, error_msg: str):
+        """
+        扫描出错
+        
+        Args:
+            error_msg: 错误信息
+        """
         self.scanning = False
-        self.progress_bar.setVisible(False)
-        self.detail_label.setText(f"扫描失败: {error_msg}")
+        
+        # 隐藏进度条并显示错误
+        self.progress_indicator.hide_progress()
+        self.progress_indicator.set_status(
+            t("wizard.scan_error", error=error_msg)
+        )
+        
+        # 恢复扫描按钮
         self.scan_button.setEnabled(True)
 
     def reset(self):
         """重置状态"""
         self.scanning = False
-        self.progress_bar.setVisible(False)
-        self.progress_bar.setRange(0, 0)
-        self.detail_label.setText("点击扫描开始")
+        
+        # 重置进度指示器
+        self.progress_indicator.reset()
+        self.progress_indicator.set_status(t("wizard.scan_idle"))
+        
+        # 重置结果标签
         self.result_label.setVisible(False)
+        
+        # 重置按钮状态
         self.scan_button.setVisible(True)
         self.scan_button.setEnabled(True)
         self.import_button.setVisible(False)
@@ -218,7 +260,28 @@ class ScanProgressCard(Card):
         self.refresh_button.setEnabled(False)
         self.cancel_button.setVisible(False)
 
-    def set_import_enabled(self, enabled):
-        """设置导入按钮状态"""
+    def set_import_enabled(self, enabled: bool):
+        """
+        设置导入按钮状态
+        
+        Args:
+            enabled: 是否启用
+        """
         if self.import_button.isVisible():
             self.import_button.setEnabled(enabled)
+
+    def update_selected_count(self, count: int):
+        """
+        更新选中数量
+        
+        Args:
+            count: 选中数量
+        """
+        self.selected_count = count
+        if self.result_label.isVisible():
+            self.result_label.setText(
+                t("wizard.selected_count", count=count)
+            )
+        # 更新导入按钮状态
+        self.set_import_enabled(count > 0)
+

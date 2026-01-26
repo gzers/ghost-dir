@@ -122,8 +122,8 @@ class WizardView(BasePageView):
             1 for card in self.scan_result_cards.values()
             if card.is_selected()
         )
-        self.scan_progress.result_label.setText(f"已选中 {selected_count} 项")
-        self.scan_progress.set_import_enabled(selected_count > 0)
+        # 使用新的 API 更新选中数量
+        self.scan_progress.update_selected_count(selected_count)
 
     def _on_import_clicked(self):
         """一键导入选中的软件"""
@@ -174,14 +174,15 @@ class WizardView(BasePageView):
         # 更新统计
         if not self.scan_result_cards:
             self.get_scroll_area().setVisible(False)
-            self.scan_progress.result_label.setVisible(False)
+            # 重置扫描进度卡片
+            self.scan_progress.reset()
         else:
             selected_count = sum(
                 1 for card in self.scan_result_cards.values()
                 if card.is_selected()
             )
-            self.scan_progress.result_label.setText(f"已选中 {selected_count} 项")
-            self.scan_progress.set_import_enabled(selected_count > 0)
+            # 使用新的 API 更新选中数量
+            self.scan_progress.update_selected_count(selected_count)
 
     def _on_refresh_clicked(self):
         """重新扫描"""
