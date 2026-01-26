@@ -40,13 +40,6 @@ class CategoryManagerDialog(MessageBoxBase):
         self.categoryTree.setMinimumHeight(300)
         self.categoryTree.setMinimumWidth(400)
         
-        # 启用编辑触发器以支持复选框交互
-        from PySide6.QtWidgets import QAbstractItemView
-        self.categoryTree.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-        
-        # 确保鼠标事件被正确处理
-        self.categoryTree.setMouseTracking(True)
-        
         # 输入区域
         input_layout = QHBoxLayout()
         self.nameEdit = LineEdit()
@@ -87,6 +80,16 @@ class CategoryManagerDialog(MessageBoxBase):
         self.viewLayout.addLayout(input_layout)
         self.viewLayout.addLayout(button_layout)
         
+        # 添加日志：监控 TreeWidget 的事件
+        print(f"[DEBUG] TreeWidget 已添加到 viewLayout")
+        print(f"[DEBUG] TreeWidget.isEnabled() = {self.categoryTree.isEnabled()}")
+        print(f"[DEBUG] TreeWidget.acceptDrops() = {self.categoryTree.acceptDrops()}")
+        print(f"[DEBUG] TreeWidget.mouseTracking() = {self.categoryTree.hasMouseTracking()}")
+        
+        # 连接 itemChanged 信号来监控复选框状态变化
+        # 注意：_on_item_changed 在后面定义
+        # self.categoryTree.itemChanged.connect(self._on_item_changed)
+        
         # 连接信号
         self.categoryTree.itemSelectionChanged.connect(self._on_selection_changed)
         
@@ -108,6 +111,11 @@ class CategoryManagerDialog(MessageBoxBase):
         for category in root_categories:
             self._add_category_item(None, category)
     
+    def _on_item_changed(self, item, column):
+        """Item 变化时的回调 - 用于调试"""
+        print(f"[DEBUG] _on_item_changed: item.text={item.text(0)}, column={column}")
+        print(f"[DEBUG]   checkState={item.checkState(0)}")
+    
     def _add_category_item(self, parent_item, category: CategoryNode):
         """递归添加分类项"""
         # 创建树节点
@@ -118,39 +126,47 @@ class CategoryManagerDialog(MessageBoxBase):
         
         # 设置显示文本
         item.setText(0, category.name)
-        item.setData(0, Qt.ItemDataRole.UserRole, category)
         
-        # 设置复选框 - 保留原有标志并添加复选框支持
+        print(f"[DEBUG] 添加分类: {category.name}")
+        print(f"[DEBUG]   初始 flags = {item.flags()}")
+        
+        # 立即设置复选框 - 完全按照 test_checkbox.py 的顺序
         item.setFlags(
-            item.flags() |  # 保留原有标志
+            item.flags() | 
             Qt.ItemFlag.ItemIsEnabled | 
             Qt.ItemFlag.ItemIsUserCheckable |
             Qt.ItemFlag.ItemIsSelectable
         )
-        item.setCheckState(0, Qt.CheckState.Unchecked)
+        print(f"[DEBUG]   设置后 flags = {item.flags()}")
         
-        # 设置图标
-        if category.icon:
-            try:
-                icon = getattr(FluentIcon, category.icon.upper(), FluentIcon.FOLDER)
-                item.setIcon(0, icon.icon())
-            except:
-                item.setIcon(0, FluentIcon.FOLDER.icon())
-        else:
-            item.setIcon(0, FluentIcon.FOLDER.icon())
+        item.setCheckState(0, Qt.CheckState.Unchecked)
+        print(f"[DEBUG]   checkState = {item.checkState(0)}")
+        
+        # 然后才设置其他数据
+        item.setData(0, Qt.ItemDataRole.UserRole, category)
+        
+        # # 最后设置图标
+        # if category.icon:
+        #     try:
+        #         icon = getattr(FluentIcon, category.icon.upper(), FluentIcon.FOLDER)
+        #         item.setIcon(0, icon.icon())
+        #     except:
+        #         item.setIcon(0, FluentIcon.FOLDER.icon())
+        # else:
+        #     item.setIcon(0, FluentIcon.FOLDER.icon())
         
         # 系统分类显示为灰色且禁用复选框
-        if category.is_builtin:
-            item.setForeground(0, Qt.GlobalColor.gray)
-            item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsUserCheckable)
+        # 暂时注释掉以测试复选框功能
+        # if category.is_builtin:
+        #     item.setForeground(0, Qt.GlobalColor.gray)
+        #     item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsUserCheckable)
+        #     print(f"[DEBUG]   系统分类，禁用复选框，flags = {item.flags()}")
         
         # 递归添加子分类
         children = self.category_manager.get_children(category.id)
         for child in children:
             self._add_category_item(item, child)
-        
-        # 展开节点
-        item.setExpanded(True)
+
     
     def _on_selection_changed(self):
         """选择改变"""
