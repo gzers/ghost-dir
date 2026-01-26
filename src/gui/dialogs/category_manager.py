@@ -118,6 +118,9 @@ class CategoryManagerDialog(MessageBoxBase):
         
         # 重新连接信号
         self.categoryTree.itemChanged.connect(self._on_item_changed)
+        
+        # 更新删除按钮状态
+        self._update_delete_button_state()
     
     def _set_children_check_state(self, parent_item, check_state):
         """递归设置所有子项的勾选状态"""
@@ -175,15 +178,18 @@ class CategoryManagerDialog(MessageBoxBase):
         selected_items = self.categoryTree.selectedItems()
         has_selection = len(selected_items) > 0
         
-        if has_selection:
-            category = selected_items[0].data(0, Qt.ItemDataRole.UserRole)
-            # 系统分类不可删除
-            can_delete = not category.is_builtin
-            self.deleteButton.setEnabled(can_delete)
-            self.addChildButton.setEnabled(True)
-        else:
-            self.deleteButton.setEnabled(False)
-            self.addChildButton.setEnabled(False)
+        # 添加子分类按钮：只要有选中项就启用
+        self.addChildButton.setEnabled(has_selection)
+        
+        # 删除按钮：检查是否有勾选的项
+        self._update_delete_button_state()
+    
+    def _update_delete_button_state(self):
+        """更新删除按钮状态"""
+        # 检查是否有勾选的项
+        checked_categories = []
+        self._collect_checked_items(self.categoryTree.invisibleRootItem(), checked_categories)
+        self.deleteButton.setEnabled(len(checked_categories) > 0)
     
     def _on_add_root_category(self):
         """添加根分类"""
@@ -274,20 +280,48 @@ class CategoryManagerDialog(MessageBoxBase):
             MessageBox("提示", "请勾选要删除的分类", self).exec()
             return
         
-        # 过滤掉系统分类
-        deletable_categories = [cat for cat in checked_categories if not cat.is_builtin]
+        # 检查每个分类下的模板
+        from ...data.template_manager import TemplateManager
+        template_manager = TemplateManager()
         
-        if not deletable_categories:
-            MessageBox("提示", "系统分类无法删除", self).exec()
-            return
+        categories_with_templates = []
+        total_templates = 0
         
-        # 确认删除
-        category_names = ", ".join([cat.name for cat in deletable_categories])
-        reply = MessageBox(
-            "确认删除",
-            f"确定要删除以下 {len(deletable_categories)} 个分类吗？\n{category_names}\n\n如果有子分类和模板，也会一并删除。",
-            self
-        ).exec()
+        for category in checked_categories:
+            # 获取该分类下的所有模板
+            templates = template_manager.get_templates_by_category(category.id)
+            if templates:
+                categories_with_templates.append((category, templates))
+                total_templates += len(templates)
+        
+        # 构建确认消息
+        category_names = ", ".join([cat.name for cat in checked_categories])
+        
+        if categories_with_templates:
+            # 有模板的情况，显示详细信息
+            template_info = []
+            for category, templates in categories_with_templates:
+                template_names = [t.name for t in templates[:5]]  # 最多显示5个
+                if len(templates) > 5:
+                    template_names.append(f"... 还有 {len(templates) - 5} 个")
+                template_info.append(f"\n• {category.name} ({len(templates)} 个模板):\n  - " + "\n  - ".join(template_names))
+            
+            message = (
+                f"确定要删除以下 {len(checked_categories)} 个分类吗？\n"
+                f"{category_names}\n\n"
+                f"⚠️ 警告：这些分类下共有 {total_templates} 个模板：\n"
+                + "\n".join(template_info) +
+                "\n\n删除分类后，这些模板也会一并删除！"
+            )
+        else:
+            # 没有模板的情况
+            message = (
+                f"确定要删除以下 {len(checked_categories)} 个分类吗？\n"
+                f"{category_names}\n\n"
+                f"这些分类下没有模板。"
+            )
+        
+        reply = MessageBox("确认删除", message, self).exec()
         
         if not reply:
             return
@@ -296,7 +330,7 @@ class CategoryManagerDialog(MessageBoxBase):
         success_count = 0
         failed_count = 0
         
-        for category in deletable_categories:
+        for category in checked_categories:
             success, msg = self.category_manager.delete_category(category.id)
             if success:
                 success_count += 1
