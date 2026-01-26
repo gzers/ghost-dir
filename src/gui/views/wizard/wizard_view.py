@@ -47,8 +47,7 @@ class WizardView(BasePageView):
             before_scroll=True, 
             use_padding=True,
             top_margin=0,
-            bottom_margin=12,
-            align_left=True
+            bottom_margin=12
         )
 
         # 结果滚动区域初始隐藏

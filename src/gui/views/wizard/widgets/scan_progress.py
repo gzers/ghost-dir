@@ -54,8 +54,9 @@ class ScanProgressCard(Card):
 
     def _init_ui(self):
         """初始化 UI"""
-        # 限制卡片宽度为窄（560px），使其在向导页居中且不铺满
-        self.setFixedWidth(get_content_width("narrow"))
+        # 移除固定宽度限制，使其能够占满一行
+        from PySide6.QtWidgets import QSizePolicy
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum)
         
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setContentsMargins(24, 24, 24, 24)
