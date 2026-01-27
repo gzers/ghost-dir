@@ -64,12 +64,14 @@ THEME_OPTIONS = [
 # 主题色选项
 THEME_COLOR_OPTIONS = [
     {"value": "system", "i18n_key": "settings.theme_color_system"},
-    {"value": "#009FAA", "i18n_key": "settings.theme_color_teal"},
-    {"value": "#0078D4", "i18n_key": "settings.theme_color_blue"},
-    {"value": "#107C10", "i18n_key": "settings.theme_color_green"},
-    {"value": "#D83B01", "i18n_key": "settings.theme_color_orange"},
-    {"value": "#E81123", "i18n_key": "settings.theme_color_red"},
-    {"value": "#80397B", "i18n_key": "settings.theme_color_purple"},
+    {"value": "#2F6BFF", "i18n_key": "settings.theme_color_quantum_blue"},
+    {"value": "#2FBF9B", "i18n_key": "settings.theme_color_matte_jade"},
+    {"value": "#3DFF7A", "i18n_key": "settings.theme_color_fluorescent_cyan"},
+    {"value": "#9A7BFF", "i18n_key": "settings.theme_color_ice_purple_star"},
+    {"value": "#FF5C34", "i18n_key": "settings.theme_color_persimmon_orange"},
+    {"value": "#FF5C8A", "i18n_key": "settings.theme_color_digital_rose_pink"},
+    {"value": "#E9F056", "i18n_key": "settings.theme_color_mustard_yellow"},
+    {"value": "#351E28", "i18n_key": "settings.theme_color_deep_plum_purple"},
 ]
 
 # 启动页选项
