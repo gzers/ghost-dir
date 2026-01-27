@@ -19,8 +19,15 @@
 
 功能开发和重构计划：
 
-- **[模板库 UI 优化计划](./planning/LIBRARY_UI_OPTIMIZATION_PLAN.md)** - Phase 5 UI 优化
-- **[扫描进度重构计划](./planning/SCAN_PROGRESS_REFACTOR.md)** - 扫描进度组件重构
+**进行中**：
+- **[分类管理器实施方案](./planning/category_manager_implementation_plan.md)** - 分类管理功能重构详细计划
+- **[分类管理器任务清单](./planning/category_manager_tasks.md)** - 分类管理开发任务分解
+
+**已归档** ([archived/](./planning/archived/))：
+- [模板库 UI 优化计划](./planning/archived/LIBRARY_UI_OPTIMIZATION_PLAN.md) - Phase 5 UI 优化 ✅
+- [扫描进度重构计划](./planning/archived/SCAN_PROGRESS_REFACTOR.md) - 扫描进度组件重构 ✅
+- [重构路线图](./planning/archived/refactoring_roadmap.md) - 项目重构总体规划 ✅
+- [v7.4 实施计划](./planning/archived/v7.4-implementation-plan.md) - v7.4 版本实施计划 ✅
 
 ---
 
@@ -28,9 +35,10 @@
 
 已完成工作的总结报告：
 
-- **[扫描进度重构报告](./reports/SCAN_PROGRESS_REFACTOR_REPORT.md)** - 重构实施详情
-- **[扫描进度对比](./reports/SCAN_PROGRESS_COMPARISON.md)** - 重构前后对比
-- **[扫描进度总结](./reports/SCAN_PROGRESS_SUMMARY.md)** - 功能总结
+**已归档** ([archived/](./reports/archived/))：
+- [扫描进度重构报告](./reports/archived/SCAN_PROGRESS_REFACTOR_REPORT.md) - 重构实施详情 ✅
+- [扫描进度对比](./reports/archived/SCAN_PROGRESS_COMPARISON.md) - 重构前后对比 ✅
+- [扫描进度总结](./reports/archived/SCAN_PROGRESS_SUMMARY.md) - 功能总结 ✅
 
 ---
 
@@ -45,9 +53,14 @@
 ### 📁 其他文档目录
 
 - **[planning/](./planning/)** - 详细规划文档
+  - [archived/](./planning/archived/) - 已归档的计划文档
 - **[progress/](./progress/)** - 进度跟踪文档
-- **[tech_notes/](./tech_notes/)** - 技术笔记
+  - [archived/](./progress/archived/) - 已归档的进度文档（v7.4 等）
+- **[reports/](./reports/)** - 实施报告
+  - [archived/](./reports/archived/) - 已归档的报告文档
 - **[testing/](./testing/)** - 测试文档
+  - [archived/](./testing/archived/) - 已归档的测试报告
+- **[tech_notes/](./tech_notes/)** - 技术笔记和参考文档
 
 ---
 
@@ -79,4 +92,4 @@
 
 ---
 
-**最后更新**: 2026-01-26
+**最后更新**: 2026-01-27
