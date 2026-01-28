@@ -23,6 +23,7 @@ COMMON_TEXTS = {
     "loading": "加载中...",
     "success": "成功",
     "failed": "失败",
+    "partial_success": "部分成功",
     "error": "错误",
     "warning": "警告",
     "info": "提示",

@@ -5,7 +5,7 @@
       "name": "开发工具",
       "parent_id": null,
       "icon": "Code",
-      "order": 1,
+      "order": 0,
       "is_builtin": true
     },
     {
@@ -13,39 +13,7 @@
       "name": "编辑器",
       "parent_id": "dev_tools",
       "icon": "Edit",
-      "order": 1,
-      "is_builtin": true
-    },
-    {
-      "id": "dev_tools.ides",
-      "name": "集成开发环境",
-      "parent_id": "dev_tools",
-      "icon": "Developer",
-      "order": 2,
-      "is_builtin": true
-    },
-    {
-      "id": "dev_tools.version_control",
-      "name": "版本控制",
-      "parent_id": "dev_tools",
-      "icon": "Sync",
-      "order": 3,
-      "is_builtin": true
-    },
-    {
-      "id": "browsers",
-      "name": "浏览器",
-      "parent_id": null,
-      "icon": "Globe",
-      "order": 2,
-      "is_builtin": true
-    },
-    {
-      "id": "social",
-      "name": "社交",
-      "parent_id": null,
-      "icon": "Chat",
-      "order": 3,
+      "order": 0,
       "is_builtin": true
     },
     {
@@ -53,15 +21,7 @@
       "name": "即时通讯",
       "parent_id": "social",
       "icon": "Message",
-      "order": 1,
-      "is_builtin": true
-    },
-    {
-      "id": "games",
-      "name": "游戏",
-      "parent_id": null,
-      "icon": "Game",
-      "order": 4,
+      "order": 0,
       "is_builtin": true
     },
     {
@@ -69,31 +29,7 @@
       "name": "游戏平台",
       "parent_id": "games",
       "icon": "Library",
-      "order": 1,
-      "is_builtin": true
-    },
-    {
-      "id": "cloud_storage",
-      "name": "云存储",
-      "parent_id": null,
-      "icon": "Cloud",
-      "order": 5,
-      "is_builtin": true
-    },
-    {
-      "id": "office",
-      "name": "办公软件",
-      "parent_id": null,
-      "icon": "Document",
-      "order": 6,
-      "is_builtin": true
-    },
-    {
-      "id": "media",
-      "name": "多媒体",
-      "parent_id": null,
-      "icon": "Music",
-      "order": 7,
+      "order": 0,
       "is_builtin": true
     },
     {
@@ -101,31 +37,7 @@
       "name": "音频",
       "parent_id": "media",
       "icon": "MusicNote",
-      "order": 1,
-      "is_builtin": true
-    },
-    {
-      "id": "media.video",
-      "name": "视频",
-      "parent_id": "media",
-      "icon": "Video",
-      "order": 2,
-      "is_builtin": true
-    },
-    {
-      "id": "uncategorized",
-      "name": "未分类",
-      "parent_id": null,
-      "icon": "Folder",
-      "order": 99,
-      "is_builtin": true
-    },
-    {
-      "id": "cat_f6d5607a",
-      "name": "测试分类1",
-      "parent_id": null,
-      "icon": "Folder",
-      "order": 8,
+      "order": 0,
       "is_builtin": true
     },
     {
@@ -134,6 +46,94 @@
       "parent_id": "cat_f6d5607a",
       "icon": "Folder",
       "order": 0,
+      "is_builtin": true
+    },
+    {
+      "id": "dev_tools.ides",
+      "name": "集成开发环境",
+      "parent_id": "dev_tools",
+      "icon": "Developer",
+      "order": 1,
+      "is_builtin": true
+    },
+    {
+      "id": "browsers",
+      "name": "浏览器",
+      "parent_id": null,
+      "icon": "Globe",
+      "order": 1,
+      "is_builtin": true
+    },
+    {
+      "id": "media.video",
+      "name": "视频",
+      "parent_id": "media",
+      "icon": "Video",
+      "order": 1,
+      "is_builtin": true
+    },
+    {
+      "id": "dev_tools.version_control",
+      "name": "版本控制",
+      "parent_id": "dev_tools",
+      "icon": "Sync",
+      "order": 2,
+      "is_builtin": true
+    },
+    {
+      "id": "social",
+      "name": "社交",
+      "parent_id": null,
+      "icon": "Chat",
+      "order": 2,
+      "is_builtin": true
+    },
+    {
+      "id": "games",
+      "name": "游戏",
+      "parent_id": null,
+      "icon": "Game",
+      "order": 3,
+      "is_builtin": true
+    },
+    {
+      "id": "cloud_storage",
+      "name": "云存储",
+      "parent_id": null,
+      "icon": "Cloud",
+      "order": 4,
+      "is_builtin": true
+    },
+    {
+      "id": "office",
+      "name": "办公软件",
+      "parent_id": null,
+      "icon": "Document",
+      "order": 5,
+      "is_builtin": true
+    },
+    {
+      "id": "media",
+      "name": "多媒体",
+      "parent_id": null,
+      "icon": "Music",
+      "order": 6,
+      "is_builtin": true
+    },
+    {
+      "id": "cat_f6d5607a",
+      "name": "测试分类1",
+      "parent_id": null,
+      "icon": "Folder",
+      "order": 7,
+      "is_builtin": true
+    },
+    {
+      "id": "uncategorized",
+      "name": "未分类",
+      "parent_id": null,
+      "icon": "Folder",
+      "order": 8,
       "is_builtin": true
     }
   ]

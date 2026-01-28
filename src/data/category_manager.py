@@ -62,8 +62,9 @@ class CategoryManager:
             # 确保配置目录存在
             CATEGORIES_CONFIG.parent.mkdir(parents=True, exist_ok=True)
             
-            # 转换为字典列表
-            categories_data = [cat.to_dict() for cat in self.categories.values()]
+            # 转换为字典列表，按 order 字段排序
+            categories_list = sorted(self.categories.values(), key=lambda x: x.order)
+            categories_data = [cat.to_dict() for cat in categories_list]
             
             # 保存到文件
             data = {'categories': categories_data}
@@ -248,6 +249,77 @@ class CategoryManager:
             return True, f"已删除分类 '{category_name}' 及其 {child_count} 个子分类"
         else:
             return True, f"已删除分类 '{category_name}'"
+    
+    def rename_category(self, category_id: str, new_name: str) -> Tuple[bool, str]:
+        """
+        重命名分类
+        
+        Args:
+            category_id: 分类ID
+            new_name: 新名称
+            
+        Returns:
+            (是否成功, 消息)
+        """
+        # 1. 检查分类是否存在
+        if category_id not in self.categories:
+            return False, "分类不存在"
+        
+        category = self.categories[category_id]
+        
+        # 2. 禁止修改系统分类的名称
+        if category_id in SYSTEM_CATEGORIES:
+            return False, "系统分类无法重命名"
+        
+        # 3. 验证新名称不为空
+        new_name = new_name.strip()
+        if not new_name:
+            return False, "分类名称不能为空"
+        
+        # 4. 验证同一父分类下名称唯一性
+        siblings = self.get_children(category.parent_id)
+        for sibling in siblings:
+            if sibling.id != category_id and sibling.name == new_name:
+                return False, f"同一层级下已存在名为 '{new_name}' 的分类"
+        
+        # 5. 更新名称
+        old_name = category.name
+        category.name = new_name
+        
+        # 6. 保存到配置文件
+        self.save_categories()
+        
+        return True, f"已将分类 '{old_name}' 重命名为 '{new_name}'"
+    
+    def reorder_categories(self, category_orders: List[Tuple[str, int]]) -> Tuple[bool, str]:
+        """
+        批量更新分类的 order 字段
+        
+        Args:
+            category_orders: [(category_id, new_order), ...]
+            
+        Returns:
+            (是否成功, 消息)
+        """
+        # 1. 验证所有分类ID都存在
+        for category_id, _ in category_orders:
+            if category_id not in self.categories:
+                return False, f"分类 '{category_id}' 不存在"
+        
+        # 2. 批量更新 order 字段
+        updated_count = 0
+        for category_id, new_order in category_orders:
+            category = self.categories[category_id]
+            if category.order != new_order:
+                category.order = new_order
+                updated_count += 1
+        
+        # 3. 保存到配置文件
+        if updated_count > 0:
+            self.save_categories()
+            return True, f"已更新 {updated_count} 个分类的排序"
+        else:
+            return True, "排序未发生变化"
     
     # ========== 验证方法 ==========
     
