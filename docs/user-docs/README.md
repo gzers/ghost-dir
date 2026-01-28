@@ -20,7 +20,7 @@
 - **[configuration/](./user-guide/configuration/)** - 配置相关
   - [configuration-guide.md](./user-guide/configuration/configuration-guide.md) - 配置文件和选项说明
 - **[features/](./user-guide/features/)** - 功能说明
-  - 功能概览(待创建)
+  - [category-manager.md](./user-guide/features/category-manager.md) - 分类管理使用指南
 
 ### [troubleshooting/](./troubleshooting/) - 故障排除
 

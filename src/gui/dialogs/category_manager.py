@@ -13,8 +13,111 @@ from ...data.user_manager import UserManager
 from ...data.category_manager import CategoryManager
 from ...data.model import Category, CategoryNode
 from ...common.signals import signal_bus
+from ...common.config import MAX_CATEGORY_DEPTH, SYSTEM_CATEGORIES
 from ..i18n import t
 import uuid
+
+
+class CategoryTreeWidget(TreeWidget):
+    """自定义分类树，支持拖拽验证"""
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.category_manager = None  # 将从外部设置
+
+    def dragMoveEvent(self, event):
+        """拖拽移动过程中的验证"""
+        if self._validate_drag(event):
+            super().dragMoveEvent(event)
+        else:
+            event.ignore()
+
+    def dropEvent(self, event):
+        """放置时的验证"""
+        if self._validate_drag(event):
+            super().dropEvent(event)
+        else:
+            event.ignore()
+
+    def _validate_drag(self, event) -> bool:
+        """
+        验证拖拽操作是否合法
+        规则：
+        1. 不能移动内置分类（可选，目前允许排序但不允许改变父子关系）
+        2. 目标父分类不能包含模板
+        3. 移动后的总深度不能超过 MAX_CATEGORY_DEPTH
+        """
+        # 获取被拖拽的项
+        dragged_item = self.currentItem()
+        if not dragged_item:
+            return False
+            
+        category = dragged_item.data(0, Qt.ItemDataRole.UserRole)
+        if not category:
+            return False
+
+        # 获取放置的目标项和放置位置
+        target_item = self.itemAt(event.pos())
+        
+        # 获取 DropIndicator，判断是放置在项之上、之下还是项内部（成为子项）
+        # 注意：QTreeWidget 的 dropIndicator 比较难直接获取，我们可以简化判断
+        # 如果 target_item 为空，表示放置到根部
+        
+        # 这里的简化逻辑：如果我们是 InternalMove，我们主要关注放置到某项内部的情况
+        # Qt 的默认行为：如果鼠标在项的正中间，是作为子项；如果是项的上边缘或下边缘，是作为同级。
+        
+        # 我们可以通过计算深度来做初步预防
+        # 如果是作为子项移动：
+        if target_item and target_item != dragged_item:
+            # 1. 检查是否为子孙关系 (Qt 已拦截，但我们加固一下)
+            if self._is_descendant(dragged_item, target_item):
+                return False
+                
+            # 2. 检查放置深度
+            target_depth = self._get_item_depth(target_item)
+            subtree_depth = self._get_subtree_max_depth(dragged_item)
+            if target_depth + subtree_depth > MAX_CATEGORY_DEPTH:
+                return False
+                
+            # 3. 检查商务逻辑：目标父项是否有模板
+            target_cat = target_item.data(0, Qt.ItemDataRole.UserRole)
+            if target_cat:
+                can_add, _ = self.category_manager.can_add_child_category(target_cat.id)
+                if not can_add:
+                    return False
+            
+            # 4. 系统分类保护：系统分类不允许作为子分类 (通常保持在根部)
+            if category.id in SYSTEM_CATEGORIES:
+                return False
+                    
+        return True
+
+    def _get_item_depth(self, item) -> int:
+        """计算项的当前深度"""
+        depth = 1
+        current = item
+        while current.parent():
+            current = current.parent()
+            depth += 1
+        return depth
+
+    def _get_subtree_max_depth(self, item) -> int:
+        """获取子树的最大相对深度"""
+        if item.childCount() == 0:
+            return 1
+        max_child_depth = 0
+        for i in range(item.childCount()):
+            max_child_depth = max(max_child_depth, self._get_subtree_max_depth(item.child(i)))
+        return 1 + max_child_depth
+
+    def _is_descendant(self, parent, child) -> bool:
+        """检查 child 是否是 parent 的子孙"""
+        current = child.parent()
+        while current:
+            if current == parent:
+                return True
+            current = current.parent()
+        return False
 
 
 class CategoryManagerDialog(MessageBoxBase):
@@ -27,6 +130,11 @@ class CategoryManagerDialog(MessageBoxBase):
         
         self.user_manager = UserManager()
         self.category_manager = CategoryManager()
+        
+        # 注入 TemplateManager 以便进行业务验证
+        from ...data.template_manager import TemplateManager
+        self.template_manager = TemplateManager()
+        self.category_manager.set_template_manager(self.template_manager)
         
         self.setWindowTitle(t("library.category_manager_title"))
         self._init_ui()
@@ -74,16 +182,23 @@ class CategoryManagerDialog(MessageBoxBase):
         # 右侧功能按钮
         from qfluentwidgets import TogglePushButton
         self.sortButton = TogglePushButton(t("library.btn_sort"))
-        self.sortButton.setIcon(FluentIcon.SYNC)
+        self.sortButton.setIcon(FluentIcon.SCROLL)
         self.sortButton.toggled.connect(self._on_sort_toggled)
         toolbar_layout.addWidget(self.sortButton)
+        
+        # 取消按钮（仅在排序模式显示）
+        self.cancelSortButton = PushButton(FluentIcon.CLOSE, t("library.btn_cancel_sort"))
+        self.cancelSortButton.clicked.connect(self._on_cancel_sort)
+        self.cancelSortButton.hide()
+        toolbar_layout.addWidget(self.cancelSortButton)
         
         self.helpButton = PushButton(FluentIcon.INFO, t("library.btn_help"))
         self.helpButton.clicked.connect(self._show_help)
         toolbar_layout.addWidget(self.helpButton)
         
         # 分类树
-        self.categoryTree = TreeWidget()
+        self.categoryTree = CategoryTreeWidget()
+        self.categoryTree.category_manager = self.category_manager  # 共享实例
         self.categoryTree.setHeaderHidden(True)
         self.categoryTree.setMinimumHeight(300)
         self.categoryTree.setMinimumWidth(500)
@@ -118,7 +233,7 @@ class CategoryManagerDialog(MessageBoxBase):
         self.cancelButton.setText(t("library.btn_cancel"))
         self.cancelButton.show()  # 显示取消按钮
         
-        self.widget.setMinimumWidth(550)
+        self.widget.setMinimumWidth(700)
         
         # 初始化模式状态
         self._is_sort_mode = False
@@ -225,65 +340,47 @@ class CategoryManagerDialog(MessageBoxBase):
     
     def _on_add_category(self):
         """新建分类"""
-        from qfluentwidgets import InputDialog
+        from .category_edit_dialog import CategoryEditDialog
         
         selected_items = self.categoryTree.selectedItems()
-        
-        # 弹出输入对话框
-        dialog = InputDialog(t("library.dialog_new_category"), t("library.input_category_name"), self)
+        parent_id = None
+        if selected_items:
+            parent_category = selected_items[0].data(0, Qt.ItemDataRole.UserRole)
+            parent_id = parent_category.id
+            
+        # 打开分类编辑对话框
+        dialog = CategoryEditDialog(self.category_manager, mode="create", parent=self)
+        if parent_id:
+            # 自动选中当前项作为父分类
+            for i in range(dialog.parentCombo.count()):
+                if dialog.parentCombo.itemData(i) == parent_id:
+                    dialog.parentCombo.setCurrentIndex(i)
+                    break
         
         if dialog.exec():
-            name = dialog.textValue().strip()
-            if not name:
-                return
-            
-            # 确定父分类
-            parent_id = None
-            if selected_items:
-                parent_category = selected_items[0].data(0, Qt.ItemDataRole.UserRole)
-                parent_id = parent_category.id
+            if dialog.validate():
+                category = dialog.get_category()
+                success, msg = self.category_manager.add_category(category)
                 
-                # 检查是否可以添加子分类
-                can_add, msg = self.category_manager.can_add_child_category(parent_id)
-                if not can_add:
-                    MessageBox(t("library.dialog_hint"), msg, self).exec()
-                    return
-            
-            # 获取下一个 order 值
-            children = self.category_manager.get_children(parent_id)
-            next_order = len(children)
-            
-            # 创建分类
-            category = CategoryNode(
-                id=f"cat_{uuid.uuid4().hex[:8]}",
-                name=name,
-                icon="Folder",
-                parent_id=parent_id,
-                order=next_order
-            )
-            
-            # 添加并立即保存
-            success, msg = self.category_manager.add_category(category)
-            
-            if success:
-                self._load_categories()
-                self.categories_changed.emit()
-                signal_bus.categories_changed.emit()
-                InfoBar.success(
-                    title=t("common.success"),
-                    content=msg,
-                    orient=Qt.Orientation.Horizontal,
-                    isClosable=True,
-                    position=InfoBarPosition.TOP,
-                    duration=2000,
-                    parent=self
-                )
-            else:
-                MessageBox(t("common.failed"), msg, self).exec()
+                if success:
+                    self._load_categories()
+                    self.categories_changed.emit()
+                    signal_bus.categories_changed.emit()
+                    InfoBar.success(
+                        title=t("common.success"),
+                        content=msg,
+                        orient=Qt.Orientation.Horizontal,
+                        isClosable=True,
+                        position=InfoBarPosition.TOP,
+                        duration=2000,
+                        parent=self
+                    )
+                else:
+                    MessageBox(t("common.failed"), msg, self).exec()
     
     def _on_rename_category(self):
-        """重命名分类"""
-        from qfluentwidgets import InputDialog
+        """重命名/编辑分类"""
+        from .category_edit_dialog import CategoryEditDialog
         
         selected_items = self.categoryTree.selectedItems()
         if not selected_items:
@@ -292,33 +389,34 @@ class CategoryManagerDialog(MessageBoxBase):
         item = selected_items[0]
         category = item.data(0, Qt.ItemDataRole.UserRole)
         
-        # 弹出输入对话框
-        dialog = InputDialog(t("library.dialog_rename_category"), t("library.input_new_name"), self)
-        dialog.setTextValue(category.name)
+        # 打开分类编辑对话框（使用编辑模式）
+        dialog = CategoryEditDialog(
+            self.category_manager, 
+            category=category, 
+            mode="edit", 
+            parent=self
+        )
         
         if dialog.exec():
-            new_name = dialog.textValue().strip()
-            if not new_name or new_name == category.name:
-                return
-            
-            # 调用后端重命名方法
-            success, msg = self.category_manager.rename_category(category.id, new_name)
-            
-            if success:
-                self._load_categories()
-                self.categories_changed.emit()
-                signal_bus.categories_changed.emit()
-                InfoBar.success(
-                    title=t("common.success"),
-                    content=msg,
-                    orient=Qt.Orientation.Horizontal,
-                    isClosable=True,
-                    position=InfoBarPosition.TOP,
-                    duration=2000,
-                    parent=self
-                )
-            else:
-                MessageBox(t("common.failed"), msg, self).exec()
+            if dialog.validate():
+                updated_category = dialog.get_category()
+                success, msg = self.category_manager.update_category(updated_category)
+                
+                if success:
+                    self._load_categories()
+                    self.categories_changed.emit()
+                    signal_bus.categories_changed.emit()
+                    InfoBar.success(
+                        title=t("common.success"),
+                        content=msg,
+                        orient=Qt.Orientation.Horizontal,
+                        isClosable=True,
+                        position=InfoBarPosition.TOP,
+                        duration=2000,
+                        parent=self
+                    )
+                else:
+                    MessageBox(t("common.failed"), msg, self).exec()
     
     def _on_delete_category(self):
         """删除分类"""
@@ -442,7 +540,14 @@ class CategoryManagerDialog(MessageBoxBase):
         # 更新标题和排序按钮
         self.titleLabel.setText(t("library.category_manager_title"))
         self.sortButton.setText(t("library.btn_sort"))
+        self.sortButton.setIcon(FluentIcon.SCROLL)
         self.sortButton.setChecked(False)
+        
+        # 隐藏取消按钮
+        self.cancelSortButton.hide()
+        
+        # 隐藏拖拽手柄
+        self._set_drag_handles_visible(False)
     
     def _enter_sort_mode(self):
         """进入排序模式"""
@@ -468,8 +573,17 @@ class CategoryManagerDialog(MessageBoxBase):
         
         # 更新标题和排序按钮
         self.titleLabel.setText(t("library.category_manager_sort_mode"))
-        self.sortButton.setText(t("library.btn_exit_sort"))
+        self.sortButton.setText(t("library.btn_confirm_sort"))
+        self.sortButton.setIcon(FluentIcon.ACCEPT)
         self.sortButton.setChecked(True)
+        
+        # 显示取消按钮
+        self.cancelSortButton.setText(t("library.btn_cancel_sort"))
+        self.cancelSortButton.setIcon(FluentIcon.CLOSE)
+        self.cancelSortButton.show()
+        
+        # 显示拖拽手柄
+        self._set_drag_handles_visible(True)
     
     def _exit_sort_mode(self):
         """退出排序模式"""
@@ -485,6 +599,23 @@ class CategoryManagerDialog(MessageBoxBase):
             self._enter_sort_mode()
         else:
             self._exit_sort_mode()
+            
+    def _on_cancel_sort(self):
+        """取消排序 - 不保存直接退出"""
+        # 重新加载分类以取消 UI 上的变更
+        self.category_manager.load_categories()
+        self._load_categories()
+        self._enter_browse_mode()
+        
+        InfoBar.info(
+            title=t("common.info"),
+            content=t("library.msg_sort_cancelled", default="已取消排序，未保存任何变更"),
+            orient=Qt.Orientation.Horizontal,
+            isClosable=True,
+            position=InfoBarPosition.TOP,
+            duration=2000,
+            parent=self
+        )
     
     def _set_checkboxes_visible(self, visible: bool):
         """显示/隐藏所有复选框"""
@@ -508,36 +639,52 @@ class CategoryManagerDialog(MessageBoxBase):
         root = self.categoryTree.invisibleRootItem()
         for i in range(root.childCount()):
             update_item(root.child(i))
+            
+    def _set_drag_handles_visible(self, visible: bool):
+        """显示/隐藏拖拽手柄图标 (::)"""
+        def update_item(item):
+            category = item.data(0, Qt.ItemDataRole.UserRole)
+            if not category:
+                return
+                
+            if visible:
+                # 仅添加手柄，不影响数据
+                item.setText(0, f"⠿  {category.name}")
+            else:
+                # 恢复原始文本
+                item.setText(0, category.name)
+            
+            # 递归处理子项
+            for i in range(item.childCount()):
+                update_item(item.child(i))
+        
+        root = self.categoryTree.invisibleRootItem()
+        for i in range(root.childCount()):
+            update_item(root.child(i))
     
     def _save_current_order(self):
         """保存当前排序"""
-        category_orders = []
+        structure_data = []
         
-        # 递归遍历树，收集所有分类的新 order
-        def collect_orders(parent_item, parent_id):
+        # 递归遍历树，收集所有分类的新 parent_id 和 order
+        def collect_structure(parent_item, parent_id):
             for i in range(parent_item.childCount()):
                 child = parent_item.child(i)
                 category = child.data(0, Qt.ItemDataRole.UserRole)
                 if category:
-                    category_orders.append((category.id, i))
+                    # 更新节点的信息到列表
+                    structure_data.append((category.id, parent_id, i))
                     # 递归处理子分类
-                    collect_orders(child, category.id)
+                    collect_structure(child, category.id)
         
-        collect_orders(self.categoryTree.invisibleRootItem(), None)
+        collect_structure(self.categoryTree.invisibleRootItem(), None)
         
         # 批量更新到数据库
-        success, msg = self.category_manager.reorder_categories(category_orders)
+        success, msg = self.category_manager.update_category_structure(structure_data)
         
         if success:
-            InfoBar.success(
-                title=t("common.success"),
-                content=t("library.msg_sort_saved"),
-                orient=Qt.Orientation.Horizontal,
-                isClosable=True,
-                position=InfoBarPosition.TOP,
-                duration=2000,
-                parent=self
-            )
+            self.categories_changed.emit()
+            signal_bus.categories_changed.emit()
         else:
             MessageBox(t("common.failed"), msg, self).exec()
     

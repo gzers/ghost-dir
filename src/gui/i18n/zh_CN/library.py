@@ -26,7 +26,8 @@ LIBRARY_TEXTS = {
     "btn_rename": "重命名",
     "btn_delete": "删除",
     "btn_sort": "排序",
-    "btn_exit_sort": "退出排序",
+    "btn_confirm_sort": "确认排序",
+    "btn_cancel_sort": "取消排序",
     "btn_help": "帮助",
     "btn_done": "完成",
     "btn_cancel": "取消",
@@ -45,6 +46,7 @@ LIBRARY_TEXTS = {
     
     # 成功消息
     "msg_sort_saved": "排序已保存",
+    "msg_sort_cancelled": "已取消排序，未保存任何变更",
     
     # 右键菜单
     "menu_rename": "重命名 (F2)",

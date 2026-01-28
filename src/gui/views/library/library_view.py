@@ -254,13 +254,21 @@ class LibraryView(BasePageView):
     
     def _on_categories_changed(self):
         """分类发生变化"""
+        # 记录当前选中的分类
+        last_selected = self.current_category_id
+        
         # 重新从磁盘加载数据
         self.category_manager.load_categories()
+        
         # 刷新分类树
         self.category_tree.load_categories()
-        # 刷新当前视图
-        if self.current_category_id:
-            self._on_category_selected(self.current_category_id)
+        
+        # 恢复选中状态
+        if last_selected:
+            self.category_tree.select_category(last_selected)
+            self._on_category_selected(last_selected)
+        
+        # 刷新统计
         self._update_count()
 
     def _on_add_category_requested(self, parent_id: str):
@@ -313,7 +321,8 @@ class LibraryView(BasePageView):
                 success, msg = self.category_manager.add_category(category)
                 
                 if success:
-                    self.category_tree.load_categories()
+                    self._on_categories_changed()
+                    signal_bus.categories_changed.emit()
                     InfoBar.success(
                         title='添加成功',
                         content=msg,
@@ -355,7 +364,8 @@ class LibraryView(BasePageView):
                 success, msg = self.category_manager.update_category(updated_category)
                 
                 if success:
-                    self.category_tree.load_categories()
+                    self._on_categories_changed()
+                    signal_bus.categories_changed.emit()
                     InfoBar.success(
                         title='更新成功',
                         content=msg,
@@ -393,11 +403,12 @@ class LibraryView(BasePageView):
             success, msg = self.category_manager.delete_category(category_id)
             
             if success:
-                self.category_tree.load_categories()
+                self._on_categories_changed()
                 self.current_category_id = None
-                self.edit_category_btn.setEnabled(False)
+                # self.edit_category_btn.setEnabled(False) # 这行可能有误，BasePageView 没这个
                 self.template_table.set_templates([], "")
                 
+                signal_bus.categories_changed.emit()
                 InfoBar.success(
                     title='删除成功',
                     content=msg,

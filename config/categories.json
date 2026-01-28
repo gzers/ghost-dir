@@ -1,14 +1,6 @@
 {
   "categories": [
     {
-      "id": "dev_tools",
-      "name": "开发工具",
-      "parent_id": null,
-      "icon": "Code",
-      "order": 0,
-      "is_builtin": true
-    },
-    {
       "id": "dev_tools.editors",
       "name": "编辑器",
       "parent_id": "dev_tools",
@@ -49,18 +41,26 @@
       "is_builtin": true
     },
     {
-      "id": "dev_tools.ides",
-      "name": "集成开发环境",
-      "parent_id": "dev_tools",
-      "icon": "Developer",
+      "id": "cat_f6d5607a",
+      "name": "测试分类11",
+      "parent_id": null,
+      "icon": "Folder",
+      "order": 0,
+      "is_builtin": true
+    },
+    {
+      "id": "dev_tools",
+      "name": "开发工具",
+      "parent_id": null,
+      "icon": "Code",
       "order": 1,
       "is_builtin": true
     },
     {
-      "id": "browsers",
-      "name": "浏览器",
-      "parent_id": null,
-      "icon": "Globe",
+      "id": "dev_tools.ides",
+      "name": "集成开发环境",
+      "parent_id": "dev_tools",
+      "icon": "Developer",
       "order": 1,
       "is_builtin": true
     },
@@ -70,6 +70,14 @@
       "parent_id": "media",
       "icon": "Video",
       "order": 1,
+      "is_builtin": true
+    },
+    {
+      "id": "browsers",
+      "name": "浏览器",
+      "parent_id": null,
+      "icon": "Globe",
+      "order": 2,
       "is_builtin": true
     },
     {
@@ -85,7 +93,7 @@
       "name": "社交",
       "parent_id": null,
       "icon": "Chat",
-      "order": 2,
+      "order": 3,
       "is_builtin": true
     },
     {
@@ -93,7 +101,7 @@
       "name": "游戏",
       "parent_id": null,
       "icon": "Game",
-      "order": 3,
+      "order": 4,
       "is_builtin": true
     },
     {
@@ -101,7 +109,7 @@
       "name": "云存储",
       "parent_id": null,
       "icon": "Cloud",
-      "order": 4,
+      "order": 5,
       "is_builtin": true
     },
     {
@@ -109,7 +117,7 @@
       "name": "办公软件",
       "parent_id": null,
       "icon": "Document",
-      "order": 5,
+      "order": 6,
       "is_builtin": true
     },
     {
@@ -117,14 +125,6 @@
       "name": "多媒体",
       "parent_id": null,
       "icon": "Music",
-      "order": 6,
-      "is_builtin": true
-    },
-    {
-      "id": "cat_f6d5607a",
-      "name": "测试分类1",
-      "parent_id": null,
-      "icon": "Folder",
       "order": 7,
       "is_builtin": true
     },

@@ -6,7 +6,8 @@ import json
 from typing import List, Optional, Dict, Tuple
 from pathlib import Path
 from ..data.model import CategoryNode
-from ..common.config import CATEGORIES_CONFIG, MAX_CATEGORY_DEPTH, SYSTEM_CATEGORIES
+from ..data.category_log import CategoryLogEntry, CategoryOperation
+from ..common.config import CATEGORIES_CONFIG, CATEGORY_LOG_FILE, MAX_CATEGORY_DEPTH, SYSTEM_CATEGORIES
 
 
 class CategoryManager:
@@ -16,7 +17,9 @@ class CategoryManager:
         """初始化分类管理器"""
         self.categories: Dict[str, CategoryNode] = {}
         self.template_manager = None  # 延迟注入，避免循环依赖
+        self.logs: List[CategoryLogEntry] = []
         self.load_categories()
+        self._load_logs()
     
     def set_template_manager(self, template_manager):
         """设置模板管理器引用（用于验证）"""
@@ -44,6 +47,50 @@ class CategoryManager:
         except Exception as e:
             print(f"加载分类配置失败: {e}")
             self._create_default_category()
+
+    # ========== 日志管理 ==========
+
+    def _load_logs(self):
+        """加载操作日志"""
+        if not CATEGORY_LOG_FILE.exists():
+            return
+        
+        try:
+            with open(CATEGORY_LOG_FILE, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                self.logs = [CategoryLogEntry.from_dict(item) for item in data]
+        except Exception as e:
+            print(f"加载分类日志失败: {e}")
+
+    def _save_logs(self):
+        """保存操作日志"""
+        try:
+            # 仅保留最近 1000 条日志
+            if len(self.logs) > 1000:
+                self.logs = self.logs[-1000:]
+                
+            with open(CATEGORY_LOG_FILE, 'w', encoding='utf-8') as f:
+                data = [log.to_dict() for log in self.logs]
+                json.dump(data, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            print(f"保存分类日志失败: {e}")
+
+    def _log_operation(self, operation: CategoryOperation, category_id: str, category_name: str, details: Optional[Dict] = None):
+        """记录操作日志"""
+        from datetime import datetime
+        entry = CategoryLogEntry(
+            timestamp=datetime.now().isoformat(),
+            operation=operation.value,
+            category_id=category_id,
+            category_name=category_name,
+            details=details
+        )
+        self.logs.append(entry)
+        self._save_logs()
+
+    def get_recent_logs(self, limit: int = 50) -> List[CategoryLogEntry]:
+        """获取最近的操作日志"""
+        return self.logs[-limit:]
     
     def _create_default_category(self):
         """创建默认的"未分类"分类"""
@@ -156,8 +203,12 @@ class CategoryManager:
         
         # 5. 保存到配置文件
         self.save_categories()
-        
-        return True, f"成功添加分类 '{category.name}'"
+        # 记录日志
+        self._log_operation(CategoryOperation.CREATE, category.id, category.name, {
+            "parent_id": category.parent_id,
+            "order": category.order
+        })
+        return True, f"分类 '{category.name}' 添加成功"
     
     def update_category(self, category: CategoryNode) -> Tuple[bool, str]:
         """
@@ -173,10 +224,11 @@ class CategoryManager:
         if category.id not in self.categories:
             return False, f"分类 '{category.id}' 不存在"
         
+        old_category = self.categories[category.id]
+        
         # 2. 禁止修改系统分类的关键属性
         if category.id in SYSTEM_CATEGORIES:
-            old = self.get_category_by_id(category.id)
-            if old.parent_id != category.parent_id:
+            if old_category.parent_id != category.parent_id:
                 return False, "系统分类的父分类无法修改"
         
         # 3. 检测循环依赖
@@ -195,6 +247,13 @@ class CategoryManager:
         
         # 6. 保存到配置文件
         self.save_categories()
+        self._log_operation(CategoryOperation.UPDATE, category.id, category.name, {
+            "old_name": old_category.name,
+            "old_parent_id": old_category.parent_id,
+            "new_parent_id": category.parent_id,
+            "old_order": old_category.order,
+            "new_order": category.order
+        })
         
         return True, f"成功更新分类 '{category.name}'"
     
@@ -232,9 +291,10 @@ class CategoryManager:
                     return False, f"子分类 '{child.name}' 下有 {len(child_templates)} 个模板，无法删除"
         
         # 5. 递归删除所有子分类（从叶子开始）
-        for child in reversed(all_children):
-            if child.id in self.categories:
-                del self.categories[child.id]
+        children_ids = [child.id for child in all_children]
+        for child_id in reversed(children_ids):
+            if child_id in self.categories:
+                del self.categories[child_id]
         
         # 6. 删除当前分类
         category_name = self.categories[category_id].name
@@ -243,6 +303,11 @@ class CategoryManager:
         
         # 7. 保存到配置文件
         self.save_categories()
+        
+        self._log_operation(CategoryOperation.DELETE, category_id, category_name, {
+            "had_children": len(children_ids) > 0,
+            "children_count": len(children_ids)
+        })
         
         child_count = len(all_children)
         if child_count > 0:
@@ -288,38 +353,66 @@ class CategoryManager:
         
         # 6. 保存到配置文件
         self.save_categories()
+        self._log_operation(CategoryOperation.RENAME, category_id, new_name, {
+            "old_name": old_name
+        })
         
         return True, f"已将分类 '{old_name}' 重命名为 '{new_name}'"
     
-    def reorder_categories(self, category_orders: List[Tuple[str, int]]) -> Tuple[bool, str]:
+    def update_category_structure(self, structure_data: List[Tuple[str, Optional[str], int]]) -> Tuple[bool, str]:
         """
-        批量更新分类的 order 字段
+        批量更新分类的层级结构和顺序
         
         Args:
-            category_orders: [(category_id, new_order), ...]
+            structure_data: [(category_id, parent_id, new_order), ...]
             
         Returns:
             (是否成功, 消息)
         """
         # 1. 验证所有分类ID都存在
-        for category_id, _ in category_orders:
+        for category_id, _, _ in structure_data:
             if category_id not in self.categories:
                 return False, f"分类 '{category_id}' 不存在"
         
-        # 2. 批量更新 order 字段
+        # 2. 批量更新 parent_id 和 order 字段
         updated_count = 0
-        for category_id, new_order in category_orders:
+        for category_id, new_parent_id, new_order in structure_data:
             category = self.categories[category_id]
+            changed = False
+            
+            if category.parent_id != new_parent_id:
+                category.parent_id = new_parent_id
+                changed = True
+            
             if category.order != new_order:
                 category.order = new_order
+                changed = True
+                
+            if changed:
                 updated_count += 1
         
-        # 3. 保存到配置文件
+        # 3. 清除深度缓存并保存
         if updated_count > 0:
+            self._clear_depth_cache()
             self.save_categories()
-            return True, f"已更新 {updated_count} 个分类的排序"
+            self._log_operation(CategoryOperation.UPDATE_STRUCTURE, "batch", "批量结构更新", {
+                "updated_count": updated_count,
+                "changes": structure_data # 可以记录更详细的变更
+            })
+            return True, f"已成功保存结构变更（共 {updated_count} 处修改）"
         else:
-            return True, "排序未发生变化"
+            return True, "结构未发生变化"
+
+    def reorder_categories(self, category_orders: List[Tuple[str, int]]) -> Tuple[bool, str]:
+        """
+        (保持向后兼容) 批量更新分类的 order 字段
+        """
+        data = []
+        for cat_id, order in category_orders:
+            cat = self.get_category_by_id(cat_id)
+            if cat:
+                data.append((cat_id, cat.parent_id, order))
+        return self.update_category_structure(data)
     
     # ========== 验证方法 ==========
     
