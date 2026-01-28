@@ -27,7 +27,8 @@ class CategoryEditDialog(MessageBoxBase):
         category_manager: CategoryManager,
         category: Optional[CategoryNode] = None,
         mode: str = "create",
-        parent=None
+        parent=None,
+        target_parent_id: Optional[str] = None
     ):
         """
         初始化分类编辑对话框
@@ -37,11 +38,13 @@ class CategoryEditDialog(MessageBoxBase):
             category: 要编辑的分类（None 表示新建）
             mode: 模式 ("create" 或 "edit")
             parent: 父窗口
+            target_parent_id: 预设的父分类ID（新建模式下有效）
         """
         super().__init__(parent)
         self.category_manager = category_manager
         self.category = category
         self.mode = mode
+        self.target_parent_id = target_parent_id
         self.selected_icon = category.icon if category else "Folder"
         
         self.setWindowTitle(t("library.dialog_rename_category") if self.mode == "edit" else t("library.dialog_new_category"))
@@ -113,9 +116,19 @@ class CategoryEditDialog(MessageBoxBase):
     
     def _load_data(self):
         """加载数据"""
-        # 加载父分类列表
+        # 确定需要预选的父分类 ID
+        target_pid = None
+        if self.mode == "edit" and self.category:
+            target_pid = self.category.parent_id
+        elif self.mode == "create" and self.target_parent_id:
+            target_pid = self.target_parent_id
+
+        # 1. 加载根分类选项
         self.parentCombo.addItem(t("library.label_root_category"), None)
+        if target_pid is None:
+            self.parentCombo.setCurrentIndex(0)
         
+        # 2. 迭代并加载其他分类
         for category in self.category_manager.get_all_categories():
             # 编辑模式下，不能选择自己作为父分类
             if self.mode == "edit" and self.category and category.id == self.category.id:
@@ -132,21 +145,19 @@ class CategoryEditDialog(MessageBoxBase):
             indent = "  " * (depth - 1)
             display_name = f"{indent}{category.name}"
             
+            # 添加项
             self.parentCombo.addItem(display_name, category.id)
+            
+            # 实时检查并选中
+            if target_pid is not None and str(category.id) == str(target_pid):
+                self.parentCombo.setCurrentIndex(self.parentCombo.count() - 1)
         
-        # 如果是编辑模式，填充现有数据
+        # 3. 如果是编辑模式，填充基本信息
         if self.mode == "edit" and self.category:
             self.nameEdit.setText(self.category.name)
             self.orderSpin.setValue(self.category.order)
             self.selected_icon = self.category.icon
             self._update_icon_display()
-            
-            # 选中父分类
-            if self.category.parent_id:
-                for i in range(self.parentCombo.count()):
-                    if self.parentCombo.itemData(i) == self.category.parent_id:
-                        self.parentCombo.setCurrentIndex(i)
-                        break
     
     def _connect_signals(self):
         """连接信号"""
@@ -252,26 +263,29 @@ class CategoryEditDialog(MessageBoxBase):
             return self.category
         else:
             # 创建新分类
-            # 生成ID
-            import re
-            category_id = re.sub(r'[^\w\s-]', '', self.nameEdit.text().strip())
-            category_id = re.sub(r'[-\s]+', '_', category_id).lower()
-            
-            # 如果有父分类，添加父分类前缀
+            # 直接从输入框和父分类获取数据
+            name = self.nameEdit.text().strip()
             parent_id = self.parentCombo.currentData()
-            if parent_id:
-                category_id = f"{parent_id}.{category_id}"
             
-            # 确保ID唯一
-            original_id = category_id
+            # 生成 ID：清理名称中的非法字符
+            import re
+            base_id = re.sub(r'[^\w\s-]', '', name)
+            base_id = re.sub(r'[-\s]+', '_', base_id).lower()
+            
+            # 这里的关键点：如果是子分类，ID 应包含父 ID 前缀
+            # 如果是 root，就是 base_id
+            new_id = f"{parent_id}.{base_id}" if parent_id else base_id
+            
+            # 确保 ID 唯一
+            category_id = new_id
             counter = 1
             while category_id in self.category_manager.categories:
-                category_id = f"{original_id}_{counter}"
+                category_id = f"{new_id}_{counter}"
                 counter += 1
             
             return CategoryNode(
                 id=category_id,
-                name=self.nameEdit.text().strip(),
+                name=name,
                 parent_id=parent_id,
                 icon=self.selected_icon,
                 order=self.orderSpin.value(),

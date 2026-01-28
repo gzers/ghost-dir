@@ -36,7 +36,7 @@ class CategoryManagerDialog(MessageBoxBase):
     
     def keyPressEvent(self, event):
         """处理键盘事件"""
-        # F2 快捷键：重命名
+        # F2 快捷键：编辑分类
         if event.key() == Qt.Key.Key_F2:
             if self.renameButton.isEnabled():
                 self._on_rename_category()
@@ -228,24 +228,28 @@ class CategoryManagerDialog(MessageBoxBase):
         self._collect_checked_items(self.categoryTree.invisibleRootItem(), checked_categories)
         self.deleteButton.setEnabled(len(checked_categories) > 0)
     
-    def _on_add_category(self):
+    def _on_add_category(self, parent_id: Optional[str] = None):
         """新建分类"""
         from .category_edit_dialog import CategoryEditDialog
         
-        selected_items = self.categoryTree.selectedItems()
-        parent_id = None
-        if selected_items:
-            parent_category = selected_items[0].data(0, Qt.ItemDataRole.UserRole)
-            parent_id = parent_category.id
+        # 信号传输可能带来 bool 值，需要过滤掉
+        if isinstance(parent_id, bool):
+            parent_id = None
+            
+        # 如果没有传入 parent_id，尝试从当前选中项获取
+        if parent_id is None:
+            selected_items = self.categoryTree.selectedItems()
+            if selected_items:
+                parent_category = selected_items[0].data(0, Qt.ItemDataRole.UserRole)
+                parent_id = parent_category.id
             
         # 打开分类编辑对话框
-        dialog = CategoryEditDialog(self.category_manager, mode="create", parent=self)
-        if parent_id:
-            # 自动选中当前项作为父分类
-            for i in range(dialog.parentCombo.count()):
-                if dialog.parentCombo.itemData(i) == parent_id:
-                    dialog.parentCombo.setCurrentIndex(i)
-                    break
+        dialog = CategoryEditDialog(
+            self.category_manager, 
+            mode="create", 
+            parent=self,
+            target_parent_id=parent_id
+        )
         
         if dialog.exec():
             if dialog.validate():
@@ -268,15 +272,16 @@ class CategoryManagerDialog(MessageBoxBase):
                 else:
                     MessageBox(t("common.failed"), msg, self).exec()
     
-    def _on_rename_category(self):
-        """重命名/编辑分类"""
+    def _on_rename_category(self, item: Optional[QTreeWidgetItem] = None):
+        """编辑分类"""
         from .category_edit_dialog import CategoryEditDialog
         
-        selected_items = self.categoryTree.selectedItems()
-        if not selected_items:
-            return
+        if not item:
+            selected_items = self.categoryTree.selectedItems()
+            if not selected_items:
+                return
+            item = selected_items[0]
         
-        item = selected_items[0]
         category = item.data(0, Qt.ItemDataRole.UserRole)
         
         # 打开分类编辑对话框（使用编辑模式）
@@ -577,23 +582,32 @@ class CategoryManagerDialog(MessageBoxBase):
         if not item:
             return
         
+        # 显式选中右键点击的项，方便 UI 反馈和后续操作
+        self.categoryTree.setCurrentItem(item)
+        item.setSelected(True)
+        
         menu = QMenu(self)
         
-        # 重命名
+        # 编辑
         rename_action = QAction(FluentIcon.EDIT.icon(), t("library.menu_rename"), self)
-        rename_action.triggered.connect(self._on_rename_category)
+        rename_action.triggered.connect(lambda _: self._on_rename_category(item))
         menu.addAction(rename_action)
         
         # 在此新建
         add_child_action = QAction(FluentIcon.ADD.icon(), t("library.menu_add_child"), self)
-        add_child_action.triggered.connect(self._on_add_category)
+        
+        # 获取当前点击项的 ID
+        current_category = item.data(0, Qt.ItemDataRole.UserRole)
+        current_id = current_category.id if current_category else None
+        
+        add_child_action.triggered.connect(lambda _: self._on_add_category(current_id))
         menu.addAction(add_child_action)
         
         menu.addSeparator()
         
         # 删除此项
         delete_action = QAction(FluentIcon.DELETE.icon(), t("library.menu_delete"), self)
-        delete_action.triggered.connect(lambda: self._delete_single_category(item))
+        delete_action.triggered.connect(lambda _: self._delete_single_category(item))
         menu.addAction(delete_action)
         
         menu.exec(self.categoryTree.viewport().mapToGlobal(pos))
