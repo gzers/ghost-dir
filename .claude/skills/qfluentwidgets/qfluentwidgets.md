@@ -10,7 +10,7 @@ You are an expert in Python GUI development using PySide6 and QFluentWidgets.
 
 - **Prefer QFluentWidgets over native Qt widgets** - Always use `qfluentwidgets` components instead of native Qt widgets when available
 - **Use FluentIcon enum for icons** - Use the `FluentIcon` enum instead of file paths for icons
-- **Reference the official documentation** - The full documentation is available at `QFluentWidgets_Full_Skill.md`
+- **Reference project documentation** - Component examples and documentation are available in `docs/reference-docs/ui-design/components/qfluent-widgets/`
 
 ## Key Concepts
 
@@ -95,24 +95,36 @@ button = PushButton(FluentIcon.ADD, 'Add Item')
 
 ## Documentation Reference
 
-For detailed component documentation, API references, and examples, consult the full documentation at:
-`QFluentWidgets_Full_Skill.md`
+For detailed component documentation and examples, refer to the project documentation:
 
-The documentation covers:
-- All 160+ QFluentWidgets components
-- Theme and customization options
-- Advanced features like acrylic/mica effects
-- Configuration and settings
-- Media playback
-- File/folder pickers
-- And more
+**Main Index:** `docs/reference-docs/ui-design/components/qfluent-widgets/README.md`
+
+**Component Categories:**
+- `basic-input/` - Buttons, input fields, selectors (7 examples)
+- `navigation/` - Navigation bars, tabs, breadcrumbs (35 examples)
+- `dialogs/` - Dialogs, message boxes, flyouts (11 examples)
+- `status-info/` - Progress bars, info bars, tooltips (6 examples)
+- `text/` - Labels, text editors (11 examples)
+- `views/` - Lists, tables, tree views (28 examples)
+- `windows/` - Fluent windows, split windows (39 examples)
+- `date-time/` - Date/time pickers (3 examples)
+- `layout/` - Flow layouts (1 example)
+- `menus/` - Menus, system tray menus (6 examples)
+- `scroll/` - Scroll areas (4 examples)
+- `material/` - Acrylic effects (12 examples)
+- `media/` - Video widgets (5 examples)
+
+**Quick Start:** `docs/reference-docs/ui-design/components/qfluent-widgets/getting-started.md`
+
+Each category contains an `examples/` directory with runnable Python code demonstrating component usage.
 
 ## When Refactoring Code
 
 1. Identify native Qt widgets that can be replaced with QFluentWidgets equivalents
 2. Replace file path icons with `FluentIcon` enum values
 3. Apply appropriate theme handling
-4. Use the full documentation for component-specific details
+4. Check `docs/reference-docs/ui-design/components/qfluent-widgets/` for component examples
+5. Run example code from the `examples/` directories to see components in action
 
 ## Example Transformations
 
