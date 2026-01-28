@@ -180,7 +180,7 @@ class LibraryView(BasePageView):
         # 更新统计
         category = self.category_manager.get_category_by_id(category_id)
         if category:
-            self.count_label.setText(f'{category.name}: {len(templates)} 个模板')
+            self.count_label.setText(t("library.stats_category", name=category.name, count=len(templates)))
 
     def _on_template_selected(self, template_id: str):
         """模板被选中"""
@@ -225,7 +225,7 @@ class LibraryView(BasePageView):
         self.template_table.set_templates(filtered_templates, self.current_category_id or "")
         
         # 更新统计
-        self.count_label.setText(f'搜索结果: {len(filtered_templates)} 个模板')
+        self.count_label.setText(t("library.stats_search", count=len(filtered_templates)))
 
     def _on_refresh_clicked(self):
         """刷新按钮被点击"""
@@ -596,4 +596,4 @@ class LibraryView(BasePageView):
         """更新统计信息"""
         total_categories = len(self.category_manager.get_all_categories())
         total_templates = len(self.template_manager.templates)
-        self.count_label.setText(f'{total_categories} 个分类, {total_templates} 个模板')
+        self.count_label.setText(t("library.stats_total", categories=total_categories, templates=total_templates))

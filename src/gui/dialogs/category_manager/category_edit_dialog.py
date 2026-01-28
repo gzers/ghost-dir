@@ -15,7 +15,8 @@ from qfluentwidgets import (
 )
 from src.data.model import CategoryNode
 from src.data.category_manager import CategoryManager
-from .icon_picker_dialog import IconPickerDialog
+from ..icon_picker_dialog import IconPickerDialog
+from ...i18n import t
 
 
 class CategoryEditDialog(MessageBoxBase):
@@ -43,6 +44,7 @@ class CategoryEditDialog(MessageBoxBase):
         self.mode = mode
         self.selected_icon = category.icon if category else "Folder"
         
+        self.setWindowTitle(t("library.dialog_rename_category") if self.mode == "edit" else t("library.dialog_new_category"))
         self._init_ui()
         self._load_data()
         self._connect_signals()
@@ -50,7 +52,7 @@ class CategoryEditDialog(MessageBoxBase):
     def _init_ui(self):
         """初始化 UI"""
         # 标题
-        title = "编辑分类" if self.mode == "edit" else "新建分类"
+        title = t("library.dialog_rename_category") if self.mode == "edit" else t("library.dialog_new_category")
         self.titleLabel = SubtitleLabel(title, self)
         
         # 表单布局
@@ -61,15 +63,15 @@ class CategoryEditDialog(MessageBoxBase):
         
         # 分类名称
         self.nameEdit = LineEdit(self)
-        self.nameEdit.setPlaceholderText('输入分类名称')
+        self.nameEdit.setPlaceholderText(t("library.placeholder_category_name"))
         self.nameEdit.setFixedWidth(300)
-        form_layout.addRow('分类名称*:', self.nameEdit)
+        form_layout.addRow(t("library.label_category_name"), self.nameEdit)
         
         # 父分类
         self.parentCombo = ComboBox(self)
         self.parentCombo.setFixedWidth(300)
-        self.parentCombo.setPlaceholderText('选择父分类（可选）')
-        form_layout.addRow('父分类:', self.parentCombo)
+        self.parentCombo.setPlaceholderText(t("library.placeholder_parent_category"))
+        form_layout.addRow(t("library.label_parent_category"), self.parentCombo)
         
         # 图标选择
         icon_widget = QWidget()
@@ -80,7 +82,7 @@ class CategoryEditDialog(MessageBoxBase):
         self.iconButton = TransparentToolButton(FluentIcon.FOLDER, self)
         self.iconButton.setFixedSize(48, 48)
         self.iconButton.setIconSize(QSize(32, 32))
-        self.iconButton.setToolTip('点击选择图标')
+        self.iconButton.setToolTip(t("library.tooltip_select_icon"))
         
         self.iconLabel = QLabel(self.selected_icon, self)
         self.iconLabel.setStyleSheet('color: gray;')
@@ -89,22 +91,22 @@ class CategoryEditDialog(MessageBoxBase):
         icon_layout.addWidget(self.iconLabel)
         icon_layout.addStretch()
         
-        form_layout.addRow('图标:', icon_widget)
+        form_layout.addRow(t("library.label_icon"), icon_widget)
         
         # 排序权重
         self.orderSpin = SpinBox(self)
         self.orderSpin.setRange(0, 999)
         self.orderSpin.setValue(0)
         self.orderSpin.setFixedWidth(150)
-        form_layout.addRow('排序权重:', self.orderSpin)
+        form_layout.addRow(t("library.label_order"), self.orderSpin)
         
         # 添加到布局
         self.viewLayout.addWidget(self.titleLabel)
         self.viewLayout.addWidget(form_widget)
         
         # 按钮文本
-        self.yesButton.setText('保存')
-        self.cancelButton.setText('取消')
+        self.yesButton.setText(t("library.btn_save"))
+        self.cancelButton.setText(t("library.btn_cancel"))
         
         # 设置对话框大小
         self.widget.setMinimumWidth(450)
@@ -112,7 +114,7 @@ class CategoryEditDialog(MessageBoxBase):
     def _load_data(self):
         """加载数据"""
         # 加载父分类列表
-        self.parentCombo.addItem('无（根分类）', None)
+        self.parentCombo.addItem(t("library.label_root_category"), None)
         
         for category in self.category_manager.get_all_categories():
             # 编辑模式下，不能选择自己作为父分类
@@ -178,8 +180,8 @@ class CategoryEditDialog(MessageBoxBase):
         name = self.nameEdit.text().strip()
         if not name:
             InfoBar.warning(
-                title='验证失败',
-                content='分类名称不能为空',
+                title=t("common.failed"),
+                content=t("library.error_empty_name"),
                 orient=Qt.Orientation.Horizontal,
                 isClosable=True,
                 position=InfoBarPosition.TOP,
@@ -196,7 +198,7 @@ class CategoryEditDialog(MessageBoxBase):
             can_add, msg = self.category_manager.can_add_child_category(parent_id)
             if not can_add:
                 InfoBar.warning(
-                    title='验证失败',
+                    title=t("common.failed"),
                     content=msg,
                     orient=Qt.Orientation.Horizontal,
                     isClosable=True,
@@ -218,12 +220,12 @@ class CategoryEditDialog(MessageBoxBase):
             )
             
             depth = temp_category.get_depth(self.category_manager.categories)
-            from ...common.config import MAX_CATEGORY_DEPTH
+            from ....common.config import MAX_CATEGORY_DEPTH
             
             if depth > MAX_CATEGORY_DEPTH:
                 InfoBar.warning(
-                    title='验证失败',
-                    content=f'分类层级不能超过 {MAX_CATEGORY_DEPTH} 层',
+                    title=t("common.failed"),
+                    content=t("library.help_notes_3"), # 复用层级限制说明或者建新key，这里复用
                     orient=Qt.Orientation.Horizontal,
                     isClosable=True,
                     position=InfoBarPosition.TOP,
@@ -250,7 +252,7 @@ class CategoryEditDialog(MessageBoxBase):
             return self.category
         else:
             # 创建新分类
-            # 生成ID（使用名称的拼音或简单转换）
+            # 生成ID
             import re
             category_id = re.sub(r'[^\w\s-]', '', self.nameEdit.text().strip())
             category_id = re.sub(r'[-\s]+', '_', category_id).lower()

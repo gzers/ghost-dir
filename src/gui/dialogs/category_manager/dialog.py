@@ -1,123 +1,20 @@
-"""
-分类管理对话框 - 树形结构版本
-支持层叠弹窗模式，显示分类树形结构
-"""
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTreeWidgetItem
+from PySide6.QtWidgets import QHBoxLayout, QTreeWidgetItem, QAbstractItemView, QMenu
 from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QAction
 from qfluentwidgets import (
-    MessageBoxBase, SubtitleLabel, LineEdit, PushButton, 
-    MessageBox, BodyLabel, TreeWidget, FluentIcon,
+    MessageBoxBase, SubtitleLabel, PushButton, 
+    MessageBox, FluentIcon, TogglePushButton,
     InfoBar, InfoBarPosition
 )
-from ...data.user_manager import UserManager
-from ...data.category_manager import CategoryManager
-from ...data.model import Category, CategoryNode
-from ...common.signals import signal_bus
-from ...common.config import MAX_CATEGORY_DEPTH, SYSTEM_CATEGORIES
-from ..i18n import t
-import uuid
 
-
-class CategoryTreeWidget(TreeWidget):
-    """自定义分类树，支持拖拽验证"""
-    
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.category_manager = None  # 将从外部设置
-
-    def dragMoveEvent(self, event):
-        """拖拽移动过程中的验证"""
-        if self._validate_drag(event):
-            super().dragMoveEvent(event)
-        else:
-            event.ignore()
-
-    def dropEvent(self, event):
-        """放置时的验证"""
-        if self._validate_drag(event):
-            super().dropEvent(event)
-        else:
-            event.ignore()
-
-    def _validate_drag(self, event) -> bool:
-        """
-        验证拖拽操作是否合法
-        规则：
-        1. 不能移动内置分类（可选，目前允许排序但不允许改变父子关系）
-        2. 目标父分类不能包含模板
-        3. 移动后的总深度不能超过 MAX_CATEGORY_DEPTH
-        """
-        # 获取被拖拽的项
-        dragged_item = self.currentItem()
-        if not dragged_item:
-            return False
-            
-        category = dragged_item.data(0, Qt.ItemDataRole.UserRole)
-        if not category:
-            return False
-
-        # 获取放置的目标项和放置位置
-        target_item = self.itemAt(event.pos())
-        
-        # 获取 DropIndicator，判断是放置在项之上、之下还是项内部（成为子项）
-        # 注意：QTreeWidget 的 dropIndicator 比较难直接获取，我们可以简化判断
-        # 如果 target_item 为空，表示放置到根部
-        
-        # 这里的简化逻辑：如果我们是 InternalMove，我们主要关注放置到某项内部的情况
-        # Qt 的默认行为：如果鼠标在项的正中间，是作为子项；如果是项的上边缘或下边缘，是作为同级。
-        
-        # 我们可以通过计算深度来做初步预防
-        # 如果是作为子项移动：
-        if target_item and target_item != dragged_item:
-            # 1. 检查是否为子孙关系 (Qt 已拦截，但我们加固一下)
-            if self._is_descendant(dragged_item, target_item):
-                return False
-                
-            # 2. 检查放置深度
-            target_depth = self._get_item_depth(target_item)
-            subtree_depth = self._get_subtree_max_depth(dragged_item)
-            if target_depth + subtree_depth > MAX_CATEGORY_DEPTH:
-                return False
-                
-            # 3. 检查商务逻辑：目标父项是否有模板
-            target_cat = target_item.data(0, Qt.ItemDataRole.UserRole)
-            if target_cat:
-                can_add, _ = self.category_manager.can_add_child_category(target_cat.id)
-                if not can_add:
-                    return False
-            
-            # 4. 系统分类保护：系统分类不允许作为子分类 (通常保持在根部)
-            if category.id in SYSTEM_CATEGORIES:
-                return False
-                    
-        return True
-
-    def _get_item_depth(self, item) -> int:
-        """计算项的当前深度"""
-        depth = 1
-        current = item
-        while current.parent():
-            current = current.parent()
-            depth += 1
-        return depth
-
-    def _get_subtree_max_depth(self, item) -> int:
-        """获取子树的最大相对深度"""
-        if item.childCount() == 0:
-            return 1
-        max_child_depth = 0
-        for i in range(item.childCount()):
-            max_child_depth = max(max_child_depth, self._get_subtree_max_depth(item.child(i)))
-        return 1 + max_child_depth
-
-    def _is_descendant(self, parent, child) -> bool:
-        """检查 child 是否是 parent 的子孙"""
-        current = child.parent()
-        while current:
-            if current == parent:
-                return True
-            current = current.parent()
-        return False
+from ....data.user_manager import UserManager
+from ....data.category_manager import CategoryManager
+from ....data.template_manager import TemplateManager
+from ....data.model import CategoryNode
+from ....common.signals import signal_bus
+from ....common.config import SYSTEM_CATEGORIES
+from ...i18n import t
+from .category_tree import CategoryTreeWidget
 
 
 class CategoryManagerDialog(MessageBoxBase):
@@ -130,9 +27,6 @@ class CategoryManagerDialog(MessageBoxBase):
         
         self.user_manager = UserManager()
         self.category_manager = CategoryManager()
-        
-        # 注入 TemplateManager 以便进行业务验证
-        from ...data.template_manager import TemplateManager
         self.template_manager = TemplateManager()
         self.category_manager.set_template_manager(self.template_manager)
         
@@ -142,8 +36,6 @@ class CategoryManagerDialog(MessageBoxBase):
     
     def keyPressEvent(self, event):
         """处理键盘事件"""
-        from PySide6.QtCore import Qt
-        
         # F2 快捷键：重命名
         if event.key() == Qt.Key.Key_F2:
             if self.renameButton.isEnabled():
@@ -180,7 +72,6 @@ class CategoryManagerDialog(MessageBoxBase):
         toolbar_layout.addStretch()
         
         # 右侧功能按钮
-        from qfluentwidgets import TogglePushButton
         self.sortButton = TogglePushButton(t("library.btn_sort"))
         self.sortButton.setIcon(FluentIcon.SCROLL)
         self.sortButton.toggled.connect(self._on_sort_toggled)
@@ -204,7 +95,6 @@ class CategoryManagerDialog(MessageBoxBase):
         self.categoryTree.setMinimumWidth(500)
         
         # 禁用双击编辑
-        from PySide6.QtWidgets import QAbstractItemView
         self.categoryTree.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         
         # 初始禁用拖拽
@@ -324,7 +214,6 @@ class CategoryManagerDialog(MessageBoxBase):
     def _on_selection_changed(self):
         """选择改变"""
         selected_items = self.categoryTree.selectedItems()
-        has_selection = len(selected_items) > 0
         
         # 重命名按钮：只有选中一个项时启用
         self.renameButton.setEnabled(len(selected_items) == 1 and not self._is_sort_mode)
@@ -381,7 +270,7 @@ class CategoryManagerDialog(MessageBoxBase):
     
     def _on_rename_category(self):
         """重命名/编辑分类"""
-        from .category_edit_dialog import CategoryEditDialog
+        from ..category_edit_dialog import CategoryEditDialog
         
         selected_items = self.categoryTree.selectedItems()
         if not selected_items:
@@ -426,19 +315,15 @@ class CategoryManagerDialog(MessageBoxBase):
         self._collect_checked_items(self.categoryTree.invisibleRootItem(), checked_categories)
         
         if not checked_categories:
-            MessageBox(t("library.dialog_hint"), t("library.error_empty_delete_selection", default="请勾选要删除的分类"), self).exec()
+            MessageBox(t("library.dialog_hint"), t("library.error_empty_delete_selection"), self).exec()
             return
-        
-        # 检查每个分类下的模板
-        from ...data.template_manager import TemplateManager
-        template_manager = TemplateManager()
         
         categories_with_templates = []
         total_templates = 0
         
         for category in checked_categories:
             # 获取该分类下的所有模板
-            templates = template_manager.get_templates_by_category(category.id)
+            templates = self.template_manager.get_templates_by_category(category.id)
             if templates:
                 categories_with_templates.append((category, templates))
                 total_templates += len(templates)
@@ -447,14 +332,14 @@ class CategoryManagerDialog(MessageBoxBase):
         category_names = ", ".join([cat.name for cat in checked_categories])
         
         if categories_with_templates:
-            # 有模板的情况，使用 i18n
-            category_names = ", ".join([cat.name for cat in checked_categories])
             template_info = []
             for category, templates in categories_with_templates:
                 template_names = [t_obj.name for t_obj in templates[:5]]
                 if len(templates) > 5:
-                    template_names.append(f"... 还有 {len(templates) - 5} 个")
-                template_info.append(f"\n• {category.name} ({len(templates)} 模板):\n  - " + "\n  - ".join(template_names))
+                    template_names.append(t("library.template_more", count=len(templates) - 5))
+                
+                summary = t("library.template_summary", name=category.name, count=len(templates))
+                template_info.append(summary + "\n    - ".join(template_names))
             
             message = t("library.confirm_delete_with_templates", 
                         count=len(checked_categories), 
@@ -462,10 +347,9 @@ class CategoryManagerDialog(MessageBoxBase):
                         template_count=total_templates, 
                         template_info="".join(template_info))
         else:
-            # 没有模板的情况，使用 i18n
             message = t("library.confirm_delete_batch", 
                         count=len(checked_categories), 
-                        names=", ".join([cat.name for cat in checked_categories]))
+                        names=category_names)
         
         reply = MessageBox(t("library.dialog_confirm_delete"), message, self).exec()
         
@@ -492,7 +376,7 @@ class CategoryManagerDialog(MessageBoxBase):
         if failed_count == 0:
             InfoBar.success(
                 title=t("common.success"),
-                content=t("library.msg_delete_success", count=success_count, default=f"已成功删除 {success_count} 个分类"),
+                content=t("library.msg_delete_success", count=success_count),
                 orient=Qt.Orientation.Horizontal,
                 isClosable=True,
                 position=InfoBarPosition.TOP,
@@ -500,8 +384,8 @@ class CategoryManagerDialog(MessageBoxBase):
                 parent=self
             )
         else:
-            MessageBox(t("common.partial_success", default="部分成功"), 
-                       t("library.msg_delete_partial", success=success_count, failed=failed_count, default=f"成功删除 {success_count} 个分类，失败 {failed_count} 个"), 
+            MessageBox(t("common.partial_success"), 
+                       t("library.msg_delete_partial", success=success_count, failed=failed_count), 
                        self).exec()
     
     def _collect_checked_items(self, parent_item, checked_list):
@@ -525,7 +409,6 @@ class CategoryManagerDialog(MessageBoxBase):
         self._set_checkboxes_visible(True)
         
         # 禁用拖拽
-        from PySide6.QtWidgets import QAbstractItemView
         self.categoryTree.setDragEnabled(False)
         self.categoryTree.setAcceptDrops(False)
         self.categoryTree.setDragDropMode(QAbstractItemView.DragDropMode.NoDragDrop)
@@ -557,7 +440,6 @@ class CategoryManagerDialog(MessageBoxBase):
         self._set_checkboxes_visible(False)
         
         # 启用拖拽
-        from PySide6.QtWidgets import QAbstractItemView
         self.categoryTree.setDragEnabled(True)
         self.categoryTree.setAcceptDrops(True)
         self.categoryTree.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
@@ -608,7 +490,7 @@ class CategoryManagerDialog(MessageBoxBase):
         
         InfoBar.info(
             title=t("common.info"),
-            content=t("library.msg_sort_cancelled", default="已取消排序，未保存任何变更"),
+            content=t("library.msg_sort_cancelled"),
             orient=Qt.Orientation.Horizontal,
             isClosable=True,
             position=InfoBarPosition.TOP,
@@ -691,9 +573,6 @@ class CategoryManagerDialog(MessageBoxBase):
     
     def _show_context_menu(self, pos):
         """显示右键菜单"""
-        from PySide6.QtGui import QAction
-        from PySide6.QtWidgets import QMenu
-        
         item = self.categoryTree.itemAt(pos)
         if not item:
             return
@@ -726,7 +605,6 @@ class CategoryManagerDialog(MessageBoxBase):
             return
         
         # 检查是否为系统分类
-        from ...common.config import SYSTEM_CATEGORIES
         if category.id in SYSTEM_CATEGORIES:
             MessageBox(t("library.dialog_hint"), t("library.error_system_category_delete"), self).exec()
             return
@@ -797,5 +675,3 @@ class CategoryManagerDialog(MessageBoxBase):
     def validate(self):
         """验证（用户点击完成按钮时调用）"""
         return True
-
-
