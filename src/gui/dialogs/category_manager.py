@@ -229,9 +229,10 @@ class CategoryManagerDialog(MessageBoxBase):
         self.categoryTree.itemChanged.connect(self._on_item_changed)
         
         # 按钮
+        self.buttonLayout.insertStretch(0, 1)
         self.yesButton.setText(t("library.btn_done"))
-        self.cancelButton.setText(t("library.btn_cancel"))
-        self.cancelButton.show()  # 显示取消按钮
+        self.buttonLayout.addStretch(1)
+        self.cancelButton.hide()
         
         self.widget.setMinimumWidth(700)
         
@@ -535,7 +536,6 @@ class CategoryManagerDialog(MessageBoxBase):
         
         # 恢复对话框按钮
         self.yesButton.setEnabled(True)
-        self.cancelButton.setEnabled(True)
         
         # 更新标题和排序按钮
         self.titleLabel.setText(t("library.category_manager_title"))
@@ -569,7 +569,6 @@ class CategoryManagerDialog(MessageBoxBase):
         
         # 禁用对话框按钮（防止在排序模式下关闭）
         self.yesButton.setEnabled(False)
-        self.cancelButton.setEnabled(False)
         
         # 更新标题和排序按钮
         self.titleLabel.setText(t("library.category_manager_sort_mode"))
