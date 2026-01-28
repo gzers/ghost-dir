@@ -15,7 +15,7 @@ from qfluentwidgets import (
 )
 from src.data.model import CategoryNode
 from src.data.category_manager import CategoryManager
-from ..icon_picker_dialog import IconPickerDialog
+from ..icon_picker import IconPickerDialog
 from ...i18n import t
 
 

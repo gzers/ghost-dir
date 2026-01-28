@@ -336,7 +336,7 @@ class ConsoleView(BasePageView):
 
     def _on_add_link(self):
         """新增连接"""
-        from ...dialogs.add_link_dialog import AddLinkDialog
+        from ...dialogs import AddLinkDialog
 
         dialog = AddLinkDialog(self)
         dialog.link_added.connect(self._load_data)
@@ -344,7 +344,7 @@ class ConsoleView(BasePageView):
 
     def _on_scan(self):
         """扫描本机应用"""
-        from ...dialogs.scan_wizard_dialog import ScanWizardDialog
+        from ...dialogs import ScanWizardDialog
 
         dialog = ScanWizardDialog(self)
         dialog.scan_completed.connect(self._on_scan_completed)

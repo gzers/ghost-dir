@@ -7,9 +7,9 @@ from qfluentwidgets import (
     MessageBoxBase, SubtitleLabel, BodyLabel, 
     PushButton, ProgressBar, CheckBox, ScrollArea
 )
-from ...core.scanner import SmartScanner
-from ...data.template_manager import TemplateManager
-from ...data.user_manager import UserManager
+from ....core.scanner import SmartScanner
+from ....data.template_manager import TemplateManager
+from ....data.user_manager import UserManager
 
 
 class ScanWorker(QThread):

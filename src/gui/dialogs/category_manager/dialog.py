@@ -270,7 +270,7 @@ class CategoryManagerDialog(MessageBoxBase):
     
     def _on_rename_category(self):
         """重命名/编辑分类"""
-        from ..category_edit_dialog import CategoryEditDialog
+        from .category_edit_dialog import CategoryEditDialog
         
         selected_items = self.categoryTree.selectedItems()
         if not selected_items:
