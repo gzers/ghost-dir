@@ -19,12 +19,12 @@ class CategoryTreeWidget(TreeWidget):
         signal_bus.theme_color_changed.connect(self._apply_style)
 
     def _apply_style(self):
-        """应用主题敏感样式 - 使用官方默认效果"""
+        """应用主题敏感样式 - 还原官方默认布局"""
         from qfluentwidgets import setCustomStyleSheet
         text_primary = get_text_primary()
         font_style = get_font_style(size="md")
         
-        # 只设置必要的样式，选中效果完全使用 QFluentWidgets 官方默认
+        # 移除自定义 padding 和样式，完全信任 QFluentWidgets 的内部排版控制
         qss = f"""
             TreeWidget {{
                 outline: none;
@@ -33,7 +33,6 @@ class CategoryTreeWidget(TreeWidget):
                 border: none;
             }}
             TreeWidget::item {{
-                padding-left: 32px;  /* 增加左边距，为复选框预留空间 */
                 color: {text_primary};
             }}
         """
