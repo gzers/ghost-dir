@@ -4,7 +4,7 @@
 """
 from typing import Optional
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import QTreeWidget, QTreeWidgetItem, QMenu
+from PySide6.QtWidgets import QTreeWidget, QTreeWidgetItem, QMenu, QLabel
 from PySide6.QtGui import QAction
 from qfluentwidgets import FluentIcon, RoundMenu, Action, setCustomStyleSheet, TreeWidget
 from src.data.category_manager import CategoryManager
@@ -111,7 +111,35 @@ class CategoryTreeWidget(TreeWidget):
         # 获取根分类
         root_categories = self.category_manager.get_category_tree()
         
-        # 递归构建树
+        # 1. 手动添加“全部”根节点
+        all_item = QTreeWidgetItem(self)
+        all_item.setData(0, Qt.ItemDataRole.UserRole, "all")
+        self.category_items["all"] = all_item
+        
+        # 为“全部”节点创建 Widget
+        from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel
+        container = QWidget()
+        layout = QHBoxLayout(container)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(8)
+        
+        icon_label = QLabel()
+        icon_label.setPixmap(FluentIcon.APPLICATION.icon().pixmap(16, 16))
+        layout.addWidget(icon_label)
+        
+        text_label = QLabel("全部")
+        text_label.setStyleSheet("background: transparent; border: none;")
+        layout.addWidget(text_label)
+        layout.addStretch()
+        
+        container.setStyleSheet("background: transparent; border: none;")
+        container.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        self.setItemWidget(all_item, 0, container)
+        
+        # 默认选中“全部”
+        self.setCurrentItem(all_item)
+
+        # 2. 递归构建现有分类树
         for category in sorted(root_categories, key=lambda x: x.order):
             self._add_category_item(category, None)
         
@@ -229,6 +257,62 @@ class CategoryTreeWidget(TreeWidget):
             return item.data(0, Qt.ItemDataRole.UserRole)
         return None
     
+    def highlight_categories(self, category_ids: List[str]):
+        """
+        高亮并展开指定的分类
+        
+        Args:
+            category_ids: 需要高亮的分类ID列表
+        """
+        from ....styles import get_text_primary, get_accent_color, get_text_secondary
+
+        # 1. 重置所有项的样式（使用次级文字颜色，让未匹配项变暗但仍可见）
+        text_primary = get_text_primary()
+        text_secondary = get_text_secondary()
+        accent_color = get_accent_color()
+
+        for item in self.category_items.values():
+            widget = self.itemWidget(item, 0)
+            if widget:
+                for child in widget.findChildren(QLabel):
+                    if child.text() != "":
+                        child.setStyleSheet(f"background: transparent; border: none; font-weight: normal; color: {text_secondary};")
+
+        if not category_ids:
+            # 如果没有搜索结果，恢复到主文字颜色
+            self.clear_highlights()
+            return
+
+        # 2. 高亮指定的分类并展开父级
+        for cid in category_ids:
+            if cid in self.category_items:
+                item = self.category_items[cid]
+                
+                # 高亮文本（使用主题强调色和加粗）
+                widget = self.itemWidget(item, 0)
+                if widget:
+                    for child in widget.findChildren(QLabel):
+                        if child.text() != "":
+                            child.setStyleSheet(f"background: transparent; border: none; font-weight: bold; color: {accent_color};")
+                
+                # 展开父级
+                parent = item.parent()
+                while parent:
+                    parent.setExpanded(True)
+                    parent = parent.parent()
+    
+    def clear_highlights(self):
+        """清除所有高亮样式，恢复到主文字颜色"""
+        from ....styles import get_text_primary
+        text_primary = get_text_primary()
+        
+        for item in self.category_items.values():
+            widget = self.itemWidget(item, 0)
+            if widget:
+                for child in widget.findChildren(QLabel):
+                    if child.text() != "":
+                        child.setStyleSheet(f"background: transparent; border: none; font-weight: normal; color: {text_primary};")
+
     def select_category(self, category_id: str):
         """选中指定分类"""
         if category_id in self.category_items:

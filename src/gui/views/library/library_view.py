@@ -45,12 +45,15 @@ class LibraryView(BasePageView):
         self.current_category_id = None
 
         # 设置页面内容
-        self._setup_toolbar()
         self._setup_content()
+        self._setup_toolbar()
         self._connect_signals()
 
         # 验证模板并加载
         self._validate_and_load()
+        
+        # 初始加载“全部”分类的数据
+        self._on_category_selected("all")
 
     def _setup_toolbar(self):
         """设置工具栏"""
@@ -62,6 +65,17 @@ class LibraryView(BasePageView):
         self.search_edit.setFixedWidth(250)
         self.search_edit.textChanged.connect(self._on_search_changed)
         toolbar.addWidget(self.search_edit)
+
+        toolbar.addSpacing(10)
+
+        # 展开/收缩按钮
+        self.expand_btn = PushButton(FluentIcon.UP, '展开全部')
+        self.expand_btn.clicked.connect(self.category_tree.expandAll)
+        toolbar.addWidget(self.expand_btn)
+
+        self.collapse_btn = PushButton(FluentIcon.DOWN, '收缩全部')
+        self.collapse_btn.clicked.connect(self.category_tree.collapseAll)
+        toolbar.addWidget(self.collapse_btn)
 
         toolbar.addSpacing(10)
 
@@ -204,6 +218,13 @@ class LibraryView(BasePageView):
         """分类被选中"""
         self.current_category_id = category_id
         
+        if category_id == "all":
+            # 加载所有模板
+            templates = self.template_manager.get_all_templates()
+            self.template_table.set_templates(templates, "all")
+            self.count_label.setText(t("library.stats_category", name="全部", count=len(templates)))
+            return
+
         # 加载该分类下的模板
         templates = self.template_manager.get_templates_by_category(category_id)
         self.template_table.set_templates(templates, category_id)
@@ -227,11 +248,8 @@ class LibraryView(BasePageView):
                 self._on_category_selected(self.current_category_id)
             return
         
-        # 获取当前分类的模板
-        if self.current_category_id:
-            templates = self.template_manager.get_templates_by_category(self.current_category_id)
-        else:
-            templates = list(self.template_manager.templates.values())
+        # 无论当前选中哪个分类，搜索都应该在全库进行，这也是用户的直觉
+        templates = self.template_manager.get_all_templates()
         
         # 过滤模板：按名称、描述、标签搜索
         filtered_templates = []
@@ -255,6 +273,17 @@ class LibraryView(BasePageView):
         # 更新表格显示
         self.template_table.set_templates(filtered_templates, self.current_category_id or "")
         
+        # 更新分类树高亮联动
+        matched_categories = set()
+        for tpl in filtered_templates:
+            if hasattr(tpl, 'category_id'):
+                matched_categories.add(tpl.category_id)
+        
+        if matched_categories:
+            self.category_tree.highlight_categories(list(matched_categories))
+        else:
+            self.category_tree.clear_highlights()
+
         # 更新统计
         self.count_label.setText(t("library.stats_search", count=len(filtered_templates)))
 
