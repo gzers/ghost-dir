@@ -27,6 +27,8 @@ class TemplateTableWidget(TableWidget):
         
         # 记录每行的复选框
         self.checkboxes: Dict[int, CheckBox] = {}
+        self.header_checkbox: CheckBox = None
+        self.header_checkbox_container: QWidget = None
         
         self._init_ui()
         self._connect_signals()
@@ -38,6 +40,14 @@ class TemplateTableWidget(TableWidget):
         self.setHorizontalHeaderLabels([
             '', '名称', '源路径', '目标路径', '描述', '类型', '操作'
         ])
+        
+        # 逐列设置表头对齐方式
+        header = self.horizontalHeader()
+        # 第0列（复选框）、第5列（类型）、第6列（操作）居中
+        for col in [0, 5, 6]:
+            self.model().setHeaderData(col, Qt.Orientation.Horizontal, 
+                                      Qt.AlignmentFlag.AlignCenter, 
+                                      Qt.ItemDataRole.TextAlignmentRole)
         
         # 使用原生特性
         self.setBorderRadius(8)
@@ -73,7 +83,45 @@ class TemplateTableWidget(TableWidget):
         
         apply_transparent_style(self)
         
+        # 添加表头全选复选框
+        self._setup_header_checkbox()
+        
         self._apply_style()
+    
+    def _setup_header_checkbox(self):
+        """设置表头全选复选框并实现动态对齐"""
+        header = self.horizontalHeader()
+        
+        # 创建容器和布局，与内容行的复选框布局保持完全一致
+        self.header_checkbox_container = QWidget(header)
+        container_layout = QHBoxLayout(self.header_checkbox_container)
+        self.header_checkbox = CheckBox()
+        container_layout.addWidget(self.header_checkbox)
+        container_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        container_layout.setContentsMargins(0, 0, 0, 0)
+        
+        # 连接状态信号
+        self.header_checkbox.stateChanged.connect(self._on_header_checked_changed)
+        # 连接尺寸同步信号，确保列宽变动时依然居中
+        header.sectionResized.connect(self._on_header_section_resized)
+        
+        # 初始对齐
+        self._update_header_checkbox_pos()
+    
+    def _on_header_section_resized(self, index, old_size, new_size):
+        """当表头列宽改变时重新对齐"""
+        if index == 0:
+            self._update_header_checkbox_pos()
+            
+    def _update_header_checkbox_pos(self):
+        """精确计算并更新复选框容器位置和大小"""
+        if not self.header_checkbox_container:
+            return
+        # 设置容器的大小和位置与第一列完全匹配
+        # x坐标需要加上表头的padding-left偏移
+        width = self.columnWidth(0)
+        height = self.horizontalHeader().height()
+        self.header_checkbox_container.setGeometry(8, 0, width - 8, height)
 
     def _apply_style(self):
         """应用主题敏感样式 - 使用官方默认选中效果"""
@@ -92,15 +140,15 @@ class TemplateTableWidget(TableWidget):
             QHeaderView::section {{
                 background-color: transparent;
                 border: none;
-                padding-left: 8px;
                 color: {header_text_color};
                 font-size: 13px;
                 font-weight: 600;
+                padding-left: 8px;
             }}
             QTableWidget::item {{
                 color: {text_primary};
-                padding-left: 8px;
                 border: none;
+                padding-left: 8px;
             }}
         """
         setCustomStyleSheet(self, qss, qss)
@@ -122,6 +170,13 @@ class TemplateTableWidget(TableWidget):
         self.current_category_id = category_id
         self.templates = {t.id: t for t in templates}
         self.checkboxes.clear()
+        
+        # 重置表头状态而不触发批量修改
+        if self.header_checkbox:
+            self.header_checkbox.blockSignals(True)
+            self.header_checkbox.setChecked(False)
+            self.header_checkbox.blockSignals(False)
+            
         self.checked_changed.emit(0)
         
         self.setSortingEnabled(False)
@@ -166,10 +221,16 @@ class TemplateTableWidget(TableWidget):
             desc_item = QTableWidgetItem(desc)
             self.setItem(i, 4, desc_item)
             
-            # 5. 类型
+            # 5. 类型 - 使用 QLabel 作为 cell widget 以确保完美居中
+            from PySide6.QtWidgets import QLabel
             type_text = '自定义' if template.is_custom else '官方'
-            type_item = QTableWidgetItem(type_text)
-            self.setItem(i, 5, type_item)
+            type_container = QWidget()
+            type_layout = QHBoxLayout(type_container)
+            type_label = QLabel(type_text)
+            type_layout.addWidget(type_label)
+            type_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            type_layout.setContentsMargins(0, 0, 0, 0)
+            self.setCellWidget(i, 5, type_container)
             
             # 6. 操作按钮
             btn_container = QWidget()
@@ -265,5 +326,33 @@ class TemplateTableWidget(TableWidget):
 
     def _on_checked_changed(self):
         """处理勾选状态改变"""
-        count = len(self.get_checked_template_ids())
+        checked_ids = self.get_checked_template_ids()
+        count = len(checked_ids)
         self.checked_changed.emit(count)
+        
+        # 同步表头复选框状态
+        if self.header_checkbox:
+            self.header_checkbox.blockSignals(True)
+            total = len(self.checkboxes)
+            if count == 0:
+                self.header_checkbox.setChecked(False)
+            elif count == total:
+                self.header_checkbox.setChecked(True)
+            else:
+                # 注意：QFluentWidgets 的 CheckBox 可能不支持三态/半选状态表现，
+                # 如果标准 Qt 的话可以用 Qt.PartiallyChecked
+                self.header_checkbox.setChecked(False)
+            self.header_checkbox.blockSignals(False)
+
+    def _on_header_checked_changed(self, state):
+        """处理表头勾选状态改变"""
+        is_checked = state == Qt.CheckState.Checked.value
+        
+        # 批量设置所有行的复选框
+        for cb in self.checkboxes.values():
+            cb.blockSignals(True)
+            cb.setChecked(is_checked)
+            cb.blockSignals(False)
+            
+        # 发射信号
+        self._on_checked_changed()
