@@ -62,7 +62,9 @@ def get_shadow_color() -> str:
     return colors.get_shadow_color()
 
 def get_accent_color() -> str:
-    return colors.ACCENT_COLOR
+    """获取当前的强调色 (Hex 格式)"""
+    from qfluentwidgets import ThemeColor
+    return ThemeColor.PRIMARY.color().name()
 
 def get_icon_background(opacity: float = 0.05) -> str:
     """

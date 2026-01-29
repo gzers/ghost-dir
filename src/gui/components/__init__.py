@@ -7,6 +7,7 @@ from .card import Card
 from .card_header import CardHeader
 from .link_table import LinkTable
 from .progress_indicator import ProgressIndicator
+from .category_selector import CategorySelector
 
 __all__ = [
     "BasePageView",
@@ -14,4 +15,5 @@ __all__ = [
     "CardHeader",
     "LinkTable",
     "ProgressIndicator",
+    "CategorySelector",
 ]

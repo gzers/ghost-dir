@@ -13,9 +13,7 @@ from qfluentwidgets import (
     PushButton, TextEdit, FluentIcon, TransparentToolButton,
     InfoBar, InfoBarPosition
 )
-from src.data.model import Template
-from src.data.template_manager import TemplateManager
-from src.data.category_manager import CategoryManager
+from ...components import CategorySelector
 
 
 class TemplateEditDialog(MessageBoxBase):
@@ -103,10 +101,9 @@ class TemplateEditDialog(MessageBoxBase):
         
         form_layout.addRow('目标路径:', target_widget)
         
-        # 分类选择
-        self.categoryCombo = ComboBox(self)
+        # 分类选择 (使用公共组件)
+        self.categoryCombo = CategorySelector(self)
         self.categoryCombo.setFixedWidth(350)
-        self.categoryCombo.setPlaceholderText('选择分类')
         form_layout.addRow('分类*:', self.categoryCombo)
         
         # 描述
@@ -129,17 +126,10 @@ class TemplateEditDialog(MessageBoxBase):
     
     def _load_data(self):
         """加载数据"""
-        # 加载分类列表（只显示叶子分类）
-        for category in self.category_manager.get_all_categories():
-            if self.category_manager.is_leaf(category.id):
-                # 显示分类层级
-                depth = category.get_depth(self.category_manager.categories)
-                indent = "  " * (depth - 1)
-                display_name = f"{indent}{category.name}"
-                
-                self.categoryCombo.addItem(display_name, category.id)
+        # 1. 使用公共组件加载分类列表
+        self.categoryCombo.set_manager(self.category_manager)
         
-        # 如果是编辑模式，填充现有数据
+        # 2. 如果是编辑模式，填充现有数据
         if self.mode == "edit" and self.template:
             self.nameEdit.setText(self.template.name)
             self.srcEdit.setText(self.template.default_src)
@@ -152,12 +142,14 @@ class TemplateEditDialog(MessageBoxBase):
             if self.template.description:
                 self.descEdit.setPlainText(self.template.description)
             
-            # 选中分类
-            category_id = getattr(self.template, 'category_id', self.template.category)
-            for i in range(self.categoryCombo.count()):
-                if self.categoryCombo.itemData(i) == category_id:
-                    self.categoryCombo.setCurrentIndex(i)
-                    break
+            # 3. 选中分类 (通过组件方法精准选中)
+            category_id = getattr(self.template, 'category_id', getattr(self.template, 'category', None))
+            print(f"[DEBUG] Raw category_id from template object: '{category_id}'")
+            if category_id:
+                self.categoryCombo.set_value(category_id)
+                print(f"[DEBUG] CategorySelector set_value called with: '{category_id}'")
+                print(f"[DEBUG] CategorySelector currentData after set: '{self.categoryCombo.currentData()}'")
+
     
     def _connect_signals(self):
         """连接信号"""
@@ -273,7 +265,8 @@ class TemplateEditDialog(MessageBoxBase):
             # 创建新模板
             # 生成ID
             import re
-            template_id = re.sub(r'[^\w\s-]', '', self.nameEdit.text().strip())
+            name = self.nameEdit.text().strip()
+            template_id = re.sub(r'[^\w\s-]', '', name)
             template_id = re.sub(r'[-\s]+', '_', template_id).lower()
             
             # 确保ID唯一
@@ -285,7 +278,7 @@ class TemplateEditDialog(MessageBoxBase):
             
             return Template(
                 id=template_id,
-                name=self.nameEdit.text().strip(),
+                name=name,
                 default_src=self.srcEdit.text().strip(),
                 category_id=self.categoryCombo.currentData(),
                 default_target=self.targetEdit.text().strip() or None,

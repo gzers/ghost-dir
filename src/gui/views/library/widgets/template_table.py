@@ -123,6 +123,11 @@ class TemplateTableWidget(TableWidget):
             self.setCellWidget(i, 0, cb_container)
             self.checkboxes[i] = cb
             
+            # 同时在第 0 列设置数据项用于存储 ID
+            id_item = QTableWidgetItem()
+            id_item.setData(Qt.ItemDataRole.UserRole, template.id)
+            self.setItem(i, 0, id_item)
+            
             # 1. 名称
             name_item = QTableWidgetItem(template.name)
             name_item.setData(Qt.ItemDataRole.UserRole, template.id)
@@ -229,10 +234,3 @@ class TemplateTableWidget(TableWidget):
                 ids.append(id_item.data(Qt.ItemDataRole.UserRole))
         return ids
     
-    def get_selected_templates(self) -> List[str]:
-        """获取所有选中的模板ID"""
-        selected_rows = set(item.row() for item in self.selectedItems())
-        return [
-            self.item(row, 0).data(Qt.ItemDataRole.UserRole)
-            for row in selected_rows
-        ]

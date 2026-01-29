@@ -2,6 +2,8 @@ from PySide6.QtWidgets import QAbstractItemView, QTreeWidgetItem
 from PySide6.QtCore import Qt
 from qfluentwidgets import TreeWidget
 from ....common.config import MAX_CATEGORY_DEPTH, SYSTEM_CATEGORIES
+from ....common.signals import signal_bus
+from ...styles import get_accent_color, get_text_primary, get_font_style
 
 class CategoryTreeWidget(TreeWidget):
     """自定义分类树，支持拖拽验证"""
@@ -9,6 +11,39 @@ class CategoryTreeWidget(TreeWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.category_manager = None  # 将从外部设置
+        
+        # 初始化样式
+        self._apply_style()
+        
+        # 连接主题色变更信号
+        signal_bus.theme_color_changed.connect(self._apply_style)
+
+    def _apply_style(self):
+        """应用主题敏感样式"""
+        accent_color = get_accent_color()
+        text_primary = get_text_primary()
+        font_style = get_font_style(size="md")
+        
+        # 强化 QFluentWidgets 的指示条样式，确保其使用软件配置的强调色
+        # 这里的 QSS 会与 qfluentwidgets 内部样式合并
+        qss = f"""
+            TreeWidget {{
+                outline: none;
+                {font_style}
+            }}
+            TreeWidget::item {{
+                padding: 6px 4px;
+                padding-left: 12px;
+                height: 32px;
+                color: {text_primary};
+                border-left: 4px solid transparent; 
+            }}
+            TreeWidget::item:selected {{
+                border-left: 4px solid {accent_color};
+                background: rgba(255, 255, 255, 0.08);
+            }}
+        """
+        self.setStyleSheet(qss)
 
     def dragMoveEvent(self, event):
         """拖拽移动过程中的验证"""

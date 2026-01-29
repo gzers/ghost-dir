@@ -415,14 +415,14 @@ class TemplateManager:
                 if category_filter:
                     templates = [
                         t for t in templates
-                        if getattr(t, 'category_id', t.category) in category_filter
+                        if getattr(t, 'category_id', getattr(t, 'category', 'uncategorized')) in category_filter
                     ]
                 export_data["templates"] = [
                     {
                         "id": t.id,
                         "name": t.name,
                         "default_src": t.default_src,
-                        "category_id": getattr(t, 'category_id', t.category),
+                        "category_id": getattr(t, 'category_id', getattr(t, 'category', 'uncategorized')),
                         "default_target": getattr(t, 'default_target', None),
                         "icon": t.icon,
                         "description": t.description
