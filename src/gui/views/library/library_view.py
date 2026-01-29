@@ -112,7 +112,7 @@ class LibraryView(BasePageView):
         self.splitter = QSplitter(Qt.Orientation.Horizontal)
         
         # 左侧：分类树
-        self.category_tree = CategoryTreeWidget(self.category_manager)
+        self.category_tree = CategoryTreeWidget(self.category_manager, self.user_manager)
         self.category_tree.setMinimumWidth(200)
         self.category_tree.setMaximumWidth(400)
         
@@ -129,6 +129,18 @@ class LibraryView(BasePageView):
         
         # 添加到内容区域
         self.add_to_content(self.splitter)
+        
+        # 确保充满容器高度：BasePageView 在非滚动模式下默认在底部加了 stretch
+        # 我们需要移除那个 stretch 以便垂直充满
+        content_layout = self.get_content_layout()
+        if content_layout and content_layout.count() > 0:
+            last_item = content_layout.itemAt(content_layout.count() - 1)
+            if last_item.spacerItem():
+                content_layout.removeItem(last_item)
+        
+        # 应用透明背景
+        from ...styles import apply_transparent_style
+        apply_transparent_style(self.splitter)
 
     def _connect_signals(self):
         """连接信号"""

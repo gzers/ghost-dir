@@ -6,8 +6,9 @@ from typing import List, Dict
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QTableWidget, QTableWidgetItem, QHeaderView, QMenu
 from PySide6.QtGui import QAction
-from qfluentwidgets import FluentIcon, RoundMenu, Action
+from qfluentwidgets import FluentIcon, RoundMenu, Action, setCustomStyleSheet
 from src.data.model import Template
+from ....styles import get_font_style, get_text_primary, apply_transparent_style, TABLE_ROW_HEIGHT, TABLE_HEADER_HEIGHT
 
 
 class TemplateTableWidget(QTableWidget):
@@ -44,13 +45,53 @@ class TemplateTableWidget(QTableWidget):
         header.setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)
         header.setSectionResizeMode(5, QHeaderView.ResizeMode.ResizeToContents)
         
+        # 设置项高度和表头高度
+        self.verticalHeader().setDefaultSectionSize(TABLE_ROW_HEIGHT)
+        header.setFixedHeight(TABLE_HEADER_HEIGHT)
+        
         # 设置表格属性
         self.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
-        self.setAlternatingRowColors(True)
+        self.setAlternatingRowColors(False)  # 透明背景下禁用交替色
         self.setSortingEnabled(True)
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.setShowGrid(False)  # 隐藏网格线以获得更现代的风格
+        
+        # 应用透明背景
+        apply_transparent_style(self)
+        
+        # 应用统一文字样式
+        from ....styles import get_text_secondary
+        font_style = get_font_style(size="md", weight="normal")
+        header_text_color = get_text_secondary()
+        header_font_size = 13 # 略小于正文但清晰
+        
+        qss = f"""
+            QTableWidget {{
+                background: transparent;
+                border: none;
+                gridline-color: transparent;
+                {font_style}
+            }}
+            QTableWidget::item {{
+                padding: 4px 8px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            }}
+            QHeaderView::section {{
+                background-color: transparent;
+                border: none;
+                padding-left: 8px;
+                color: {header_text_color};
+                font-size: {header_font_size}px;
+                font-weight: 600;
+            }}
+            QTableWidget::item:selected {{
+                background-color: rgba(255, 255, 255, 0.08);
+                color: #0078D4;
+            }}
+        """
+        self.setStyleSheet(qss)
         
         # 垂直表头
         self.verticalHeader().setVisible(False)
