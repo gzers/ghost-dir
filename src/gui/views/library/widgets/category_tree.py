@@ -44,6 +44,9 @@ class CategoryTreeWidget(QTreeWidget):
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.setAnimated(True)
         
+        # 禁用原生的水平滚动条，防止边缘空隙
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        
         # 核心：必须禁用 Indentation，否则 branch 伪元素会导致多个指示条
         self.setIndentation(0)
         self.setSelectionBehavior(QTreeWidget.SelectionBehavior.SelectRows)
@@ -91,7 +94,8 @@ class CategoryTreeWidget(QTreeWidget):
                 height: 32px;
                 color: {text_primary};
                 background: transparent;
-                border-left: 4px solid transparent;
+                border: none;
+                border-left: 4px solid transparent; 
             }}
             QTreeWidget::item:hover {{
                 background: rgba(255, 255, 255, 0.08);

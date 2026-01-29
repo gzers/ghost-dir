@@ -127,20 +127,32 @@ class LibraryView(BasePageView):
         self.splitter.setStretchFactor(0, 1)
         self.splitter.setStretchFactor(1, 3)
         
-        # 添加到内容区域
-        self.add_to_content(self.splitter)
-        
-        # 确保充满容器高度：BasePageView 在非滚动模式下默认在底部加了 stretch
-        # 我们需要移除那个 stretch 以便垂直充满
+        # 彻底解决高度撑满问题：移除 BasePageView 默认添加的所有底部弹簧
         content_layout = self.get_content_layout()
-        if content_layout and content_layout.count() > 0:
-            last_item = content_layout.itemAt(content_layout.count() - 1)
-            if last_item.spacerItem():
-                content_layout.removeItem(last_item)
+        main_layout = self.layout()
         
-        # 应用透明背景
+        # 1. 移除内容布局末尾的弹簧
+        for i in range(content_layout.count() - 1, -1, -1):
+            item = content_layout.itemAt(i)
+            if item and item.spacerItem():
+                content_layout.removeItem(item)
+        
+        # 2. 移除主布局末尾的弹簧
+        if main_layout:
+            for i in range(main_layout.count() - 1, -1, -1):
+                item = main_layout.itemAt(i)
+                if item and item.spacerItem():
+                    main_layout.removeItem(item)
+                    
+        # 3. 设置最高拉伸优先级并添加
+        from PySide6.QtWidgets import QSizePolicy
+        self.splitter.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        content_layout.addWidget(self.splitter, 1)
+        
+        # 应用透明背景并隐藏分割线条（黑条）
         from ...styles import apply_transparent_style
         apply_transparent_style(self.splitter)
+        self.splitter.setStyleSheet("QSplitter::handle { background: transparent; border: none; }")
 
     def _connect_signals(self):
         """连接信号"""
