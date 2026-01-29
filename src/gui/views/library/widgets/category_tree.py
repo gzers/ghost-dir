@@ -6,14 +6,14 @@ from typing import Optional
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QTreeWidget, QTreeWidgetItem, QMenu
 from PySide6.QtGui import QAction
-from qfluentwidgets import FluentIcon, RoundMenu, Action, setCustomStyleSheet
+from qfluentwidgets import FluentIcon, RoundMenu, Action, setCustomStyleSheet, TreeWidget
 from src.data.category_manager import CategoryManager
 from src.data.model import CategoryNode
 from ....styles import get_font_style, get_text_primary, apply_transparent_style
 
 
-class CategoryTreeWidget(QTreeWidget):
-    """分类树组件"""
+class CategoryTreeWidget(TreeWidget):
+    """分类树组件 - 使用 QFluentWidgets 官方 TreeWidget"""
     
     category_selected = Signal(str)  # 分类被选中时发出信号 (category_id)
     add_category_requested = Signal(str)  # 请求添加分类 (parent_id)
@@ -79,39 +79,19 @@ class CategoryTreeWidget(QTreeWidget):
         font_style = get_font_style(size="md", weight="normal")
         text_primary = get_text_primary()
         
-        # 终极修复：彻底隐藏 branch，背景和指示条全部由 item 接管
-        # 这确保了指示条永远只在最左侧出现一次，背景连贯且无叠加产生阴影。
+        # 使用 QFluentWidgets 官方默认样式，仅设置基础样式
         qss = f"""
-            QTreeWidget {{
+            TreeWidget {{
                 background: transparent;
                 border: none;
                 outline: none;
                 {font_style}
             }}
-            QTreeWidget::item {{
-                padding: 6px 4px;
-                padding-left: 12px;
-                height: 32px;
+            TreeWidget::item {{
                 color: {text_primary};
-                background: transparent;
-                border: none;
-                border-left: 4px solid transparent; 
-            }}
-            QTreeWidget::item:hover {{
-                background: rgba(255, 255, 255, 0.08);
-            }}
-            QTreeWidget::item:selected {{
-                background: rgba(255, 255, 255, 0.12);
-                color: {text_primary};
-                border-left: 4px solid {accent_color};
-            }}
-            /* 彻底移除 branch 的渲染，消除指示条重复的根源 */
-            QTreeWidget::branch {{
-                background: transparent;
-                width: 0px;
             }}
         """
-        self.setStyleSheet(qss)
+        setCustomStyleSheet(self, qss, qss)
 
     def _connect_signals(self):
         """连接内部和外部信号"""
