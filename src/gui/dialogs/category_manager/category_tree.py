@@ -19,31 +19,25 @@ class CategoryTreeWidget(TreeWidget):
         signal_bus.theme_color_changed.connect(self._apply_style)
 
     def _apply_style(self):
-        """应用主题敏感样式"""
-        accent_color = get_accent_color()
+        """应用主题敏感样式 - 使用官方默认效果"""
+        from qfluentwidgets import setCustomStyleSheet
         text_primary = get_text_primary()
         font_style = get_font_style(size="md")
         
-        # 强化 QFluentWidgets 的指示条样式，确保其使用软件配置的强调色
-        # 这里的 QSS 会与 qfluentwidgets 内部样式合并
+        # 只设置必要的样式，选中效果完全使用 QFluentWidgets 官方默认
         qss = f"""
             TreeWidget {{
                 outline: none;
                 {font_style}
+                background: transparent;
+                border: none;
             }}
             TreeWidget::item {{
-                padding: 6px 4px;
-                padding-left: 12px;
-                height: 32px;
+                padding-left: 32px;  /* 增加左边距，为复选框预留空间 */
                 color: {text_primary};
-                border-left: 4px solid transparent; 
-            }}
-            TreeWidget::item:selected {{
-                border-left: 4px solid {accent_color};
-                background: rgba(255, 255, 255, 0.08);
             }}
         """
-        self.setStyleSheet(qss)
+        setCustomStyleSheet(self, qss, qss)
 
     def dragMoveEvent(self, event):
         """拖拽移动过程中的验证"""
