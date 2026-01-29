@@ -3,7 +3,7 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QTableWidgetItem, QHeaderView, QWidget, QHBoxLayout
 from qfluentwidgets import TableWidget, FluentIcon, RoundMenu, Action, CheckBox, TransparentToolButton
 from src.data.model import Template
-from ....styles import get_font_style, get_text_primary, apply_transparent_style, get_text_secondary
+from ....styles import get_font_style, get_text_primary, apply_transparent_style, get_text_secondary, get_accent_color
 
 
 class TemplateTableWidget(TableWidget):
@@ -69,15 +69,20 @@ class TemplateTableWidget(TableWidget):
         
         apply_transparent_style(self)
         
-        font_style = get_font_style(size="md", weight="normal")
+        self._apply_style()
+
+    def _apply_style(self):
+        """应用主题敏感样式 - 保持清爽原生感"""
         header_text_color = get_text_secondary()
         text_primary = get_text_primary()
+        font_style = get_font_style(size="md", weight="normal")
         
+        # 仅保留基础美化 QSS，不干涉 QFluentWidgets 的背景绘制
         qss = f"""
             QTableWidget {{
                 background: transparent;
-                border: none;
                 outline: none;
+                border: none;
                 {font_style}
             }}
             QHeaderView::section {{
@@ -91,6 +96,7 @@ class TemplateTableWidget(TableWidget):
             QTableWidget::item {{
                 color: {text_primary};
                 padding-left: 8px;
+                border: none;
             }}
         """
         self.setStyleSheet(qss)
@@ -101,6 +107,11 @@ class TemplateTableWidget(TableWidget):
         self.itemClicked.connect(self._on_item_clicked)
         self.customContextMenuRequested.connect(self._on_context_menu)
         self.horizontalHeader().sectionClicked.connect(self._on_header_clicked)
+        
+        # 连接主题/颜色变更信号
+        from src.common.signals import signal_bus
+        signal_bus.theme_color_changed.connect(self._apply_style)
+        signal_bus.theme_changed.connect(self._apply_style)
     
     def set_templates(self, templates: List[Template], category_id: str = ""):
         """设置模板列表"""
@@ -113,7 +124,7 @@ class TemplateTableWidget(TableWidget):
         
         self.setRowCount(len(templates))
         for i, template in enumerate(templates):
-            # 0. 复选框
+            # 0. 复选框容器
             cb_container = QWidget()
             cb_layout = QHBoxLayout(cb_container)
             cb = CheckBox()
@@ -176,6 +187,7 @@ class TemplateTableWidget(TableWidget):
             self.sortByColumn(column, order)
         
         self.setSortingEnabled(True)
+        self.clearSelection()
     
     def _on_item_clicked(self, item: QTableWidgetItem):
         """表项被点击"""
