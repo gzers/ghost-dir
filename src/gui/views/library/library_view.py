@@ -70,6 +70,12 @@ class LibraryView(BasePageView):
         self.refresh_btn.clicked.connect(self._on_refresh_clicked)
         toolbar.addWidget(self.refresh_btn)
 
+        # 批量删除按钮
+        self.batch_delete_btn = PushButton(FluentIcon.DELETE, '批量删除')
+        self.batch_delete_btn.clicked.connect(self._on_batch_delete_clicked)
+        self.batch_delete_btn.setEnabled(False)  # 默认禁用
+        toolbar.addWidget(self.batch_delete_btn)
+
         toolbar.addStretch()
 
         # 新建模板按钮
@@ -166,6 +172,7 @@ class LibraryView(BasePageView):
         self.template_table.template_selected.connect(self._on_template_selected)
         self.template_table.edit_template_requested.connect(self._on_edit_template_requested)
         self.template_table.delete_template_requested.connect(self._on_delete_template_requested)
+        self.template_table.checked_changed.connect(self._on_checked_count_changed)
         
         # 全局信号
         from ....common.signals import signal_bus
@@ -461,6 +468,7 @@ class LibraryView(BasePageView):
             self.template_manager,
             self.category_manager,
             mode="create",
+            default_category_id=self.current_category_id,
             parent=self
         )
         
@@ -546,6 +554,55 @@ class LibraryView(BasePageView):
                 parent=self
             )
 
+    def _on_batch_delete_clicked(self):
+        """批量删除被点击"""
+        checked_ids = self.template_table.get_checked_template_ids()
+        
+        if not checked_ids:
+            InfoBar.warning(
+                title='操作提示',
+                content='请先勾选需要删除的模板',
+                orient=Qt.Orientation.Horizontal,
+                isClosable=True,
+                position=InfoBarPosition.TOP,
+                duration=3000,
+                parent=self
+            )
+            return
+            
+        # 确认对话框
+        msg_box = MessageBox(
+            '确认批量删除',
+            f'确定要删除选中的 {len(checked_ids)} 个模板吗？此操作不可撤销。',
+            self
+        )
+        
+        if msg_box.exec():
+            # 执行删除
+            for tid in checked_ids:
+                if tid in self.template_manager.templates:
+                    del self.template_manager.templates[tid]
+            
+            # 刷新当前分类
+            if self.current_category_id:
+                self._on_category_selected(self.current_category_id)
+            else:
+                # 如果没有选中分类，可能是在搜索结果中批量删除
+                self._on_search_changed(self.search_edit.text())
+            
+            # 刷新全库统计
+            self._update_count()
+            
+            InfoBar.success(
+                title='删除成功',
+                content=f'已成功删除 {len(checked_ids)} 个模板',
+                orient=Qt.Orientation.Horizontal,
+                isClosable=True,
+                position=InfoBarPosition.TOP,
+                duration=3000,
+                parent=self
+            )
+
     # ========== 导入/导出 ==========
 
     def _on_export_clicked(self):
@@ -613,6 +670,16 @@ class LibraryView(BasePageView):
                         duration=3000,
                         parent=self
                     )
+
+    def _on_checked_count_changed(self, count: int):
+        """勾选数量改变"""
+        self.batch_delete_btn.setEnabled(count > 0)
+        
+        # 如果需要，可以在按钮文字上显示数量
+        if count > 0:
+            self.batch_delete_btn.setText(f'批量删除 ({count})')
+        else:
+            self.batch_delete_btn.setText('批量删除')
 
     # ========== 辅助方法 ==========
 

@@ -15,6 +15,7 @@ class TemplateTableWidget(TableWidget):
     template_selected = Signal(str)  # 模板被选中时发出信号 (template_id)
     edit_template_requested = Signal(str)  # 请求编辑模板 (template_id)
     delete_template_requested = Signal(str)  # 请求删除模板 (template_id)
+    checked_changed = Signal(int)  # 勾选状态改变信号 (选中的数量)
     
     def __init__(self, parent=None, user_manager=None):
         """初始化模板表格组件"""
@@ -121,6 +122,7 @@ class TemplateTableWidget(TableWidget):
         self.current_category_id = category_id
         self.templates = {t.id: t for t in templates}
         self.checkboxes.clear()
+        self.checked_changed.emit(0)
         
         self.setSortingEnabled(False)
         self.setRowCount(0)
@@ -136,6 +138,9 @@ class TemplateTableWidget(TableWidget):
             cb_layout.setContentsMargins(0, 0, 0, 0)
             self.setCellWidget(i, 0, cb_container)
             self.checkboxes[i] = cb
+            
+            # 连接勾选状态改变信号
+            cb.stateChanged.connect(self._on_checked_changed)
             
             # 同时在第 0 列设置数据项用于存储 ID
             id_item = QTableWidgetItem()
@@ -248,4 +253,17 @@ class TemplateTableWidget(TableWidget):
             if id_item:
                 ids.append(id_item.data(Qt.ItemDataRole.UserRole))
         return ids
-    
+    def get_checked_template_ids(self) -> List[str]:
+        """获取所有已勾选的模板ID"""
+        ids = []
+        for row, cb in self.checkboxes.items():
+            if cb.isChecked():
+                id_item = self.item(row, 0)
+                if id_item:
+                    ids.append(id_item.data(Qt.ItemDataRole.UserRole))
+        return ids
+
+    def _on_checked_changed(self):
+        """处理勾选状态改变"""
+        count = len(self.get_checked_template_ids())
+        self.checked_changed.emit(count)

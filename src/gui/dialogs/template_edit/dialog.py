@@ -24,6 +24,7 @@ class TemplateEditDialog(MessageBoxBase):
         template_manager: TemplateManager,
         category_manager: CategoryManager,
         template: Optional[Template] = None,
+        default_category_id: Optional[str] = None,
         mode: str = "create",
         parent=None
     ):
@@ -41,6 +42,7 @@ class TemplateEditDialog(MessageBoxBase):
         self.template_manager = template_manager
         self.category_manager = category_manager
         self.template = template
+        self.default_category_id = default_category_id
         self.mode = mode
         
         self._init_ui()
@@ -147,8 +149,12 @@ class TemplateEditDialog(MessageBoxBase):
             print(f"[DEBUG] Raw category_id from template object: '{category_id}'")
             if category_id:
                 self.categoryCombo.set_value(category_id)
-                print(f"[DEBUG] CategorySelector set_value called with: '{category_id}'")
-                print(f"[DEBUG] CategorySelector currentData after set: '{self.categoryCombo.currentData()}'")
+        
+        # 3. 如果是新建模式且有默认分类
+        elif self.mode == "create" and self.default_category_id:
+            # 只有当它是叶子节点时才预选（符合业务逻辑）
+            if self.category_manager.is_leaf(self.default_category_id):
+                self.categoryCombo.set_value(self.default_category_id)
 
     
     def _connect_signals(self):
