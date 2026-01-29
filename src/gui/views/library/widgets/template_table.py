@@ -3,7 +3,10 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QTableWidgetItem, QHeaderView, QWidget, QHBoxLayout
 from qfluentwidgets import TableWidget, FluentIcon, RoundMenu, Action, CheckBox, TransparentToolButton
 from src.data.model import Template
-from ....styles import get_font_style, get_text_primary, apply_transparent_style, get_text_secondary, get_accent_color
+from ....styles import (
+    get_font_style, get_text_primary, apply_transparent_style, 
+    get_text_secondary, get_accent_color, get_item_selected_background
+)
 
 
 class TemplateTableWidget(TableWidget):
@@ -72,12 +75,11 @@ class TemplateTableWidget(TableWidget):
         self._apply_style()
 
     def _apply_style(self):
-        """应用主题敏感样式 - 保持清爽原生感"""
+        """应用主题敏感样式 - 与分类树完全一致"""
         header_text_color = get_text_secondary()
         text_primary = get_text_primary()
         font_style = get_font_style(size="md", weight="normal")
         
-        # 仅保留基础美化 QSS，不干涉 QFluentWidgets 的背景绘制
         qss = f"""
             QTableWidget {{
                 background: transparent;
@@ -97,6 +99,11 @@ class TemplateTableWidget(TableWidget):
                 color: {text_primary};
                 padding-left: 8px;
                 border: none;
+            }}
+            /* 与分类树完全一致：选中使用半透明白色背景 */
+            QTableWidget::item:selected {{
+                background: rgba(255, 255, 255, 0.12);
+                color: {text_primary};
             }}
         """
         self.setStyleSheet(qss)

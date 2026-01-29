@@ -66,6 +66,15 @@ def get_accent_color() -> str:
     from qfluentwidgets import ThemeColor
     return ThemeColor.PRIMARY.color().name()
 
+def get_item_selected_background(opacity: float = 0.12) -> str:
+    """获取标准的项选中背景色 (RGBA)"""
+    from qfluentwidgets import isDarkTheme
+    # 保持与分类树一致的规范
+    if isDarkTheme():
+        return f"rgba(255, 255, 255, {opacity})"
+    else:
+        return f"rgba(0, 0, 0, {opacity * 0.5})" # 亮色模式透明度减半
+
 def get_icon_background(opacity: float = 0.05) -> str:
     """
     获取图标背景色
