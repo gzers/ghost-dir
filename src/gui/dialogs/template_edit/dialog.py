@@ -14,6 +14,7 @@ from qfluentwidgets import (
     InfoBar, InfoBarPosition, BodyLabel
 )
 from ...components import CategorySelector
+from ...styles import format_required_label
 from src.data.template_manager import TemplateManager
 from src.data.category_manager import CategoryManager
 from src.data.model import Template
@@ -69,14 +70,14 @@ class TemplateEditDialog(MessageBoxBase):
         CONTENT_WIDTH = 380
         
         # 模板名称
-        self.nameLabel = BodyLabel('模板名称*:', self)
+        self.nameLabel = BodyLabel(format_required_label('模板名称'), self)
         self.nameEdit = LineEdit(self)
         self.nameEdit.setPlaceholderText('输入模板名称')
         self.nameEdit.setFixedWidth(CONTENT_WIDTH)
         form_layout.addRow(self.nameLabel, self.nameEdit)
         
-        # 源路径
-        self.srcLabel = BodyLabel('源路径*:', self)
+        # 标源路径
+        self.srcLabel = BodyLabel(format_required_label('源路径'), self)
         src_widget = QWidget()
         src_layout = QHBoxLayout(src_widget)
         src_layout.setContentsMargins(0, 0, 0, 0)
@@ -113,7 +114,7 @@ class TemplateEditDialog(MessageBoxBase):
         form_layout.addRow(self.targetLabel, target_widget)
         
         # 分类选择 (使用公共组件)
-        self.categoryLabel = BodyLabel('分类*:', self)
+        self.categoryLabel = BodyLabel(format_required_label('分类'), self)
         self.categoryCombo = CategorySelector(self)
         self.categoryCombo.setFixedWidth(CONTENT_WIDTH)
         form_layout.addRow(self.categoryLabel, self.categoryCombo)

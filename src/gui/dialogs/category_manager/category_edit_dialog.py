@@ -11,12 +11,13 @@ from PySide6.QtWidgets import (
 from qfluentwidgets import (
     MessageBoxBase, SubtitleLabel, LineEdit, ComboBox,
     PushButton, SpinBox, FluentIcon, TransparentToolButton,
-    InfoBar, InfoBarPosition
+    InfoBar, InfoBarPosition, BodyLabel
 )
 from src.data.model import CategoryNode
 from src.data.category_manager import CategoryManager
 from ..icon_picker import IconPickerDialog
 from ...i18n import t
+from ...styles import format_required_label
 
 
 class CategoryEditDialog(MessageBoxBase):
@@ -64,17 +65,21 @@ class CategoryEditDialog(MessageBoxBase):
         form_layout.setSpacing(12)
         form_layout.setContentsMargins(0, 0, 0, 0)
         
+        CONTENT_WIDTH = 380
+        
         # 分类名称
+        self.nameLabel = BodyLabel(format_required_label(t("library.label_category_name")), self)
         self.nameEdit = LineEdit(self)
         self.nameEdit.setPlaceholderText(t("library.placeholder_category_name"))
-        self.nameEdit.setFixedWidth(300)
-        form_layout.addRow(t("library.label_category_name"), self.nameEdit)
+        self.nameEdit.setFixedWidth(CONTENT_WIDTH)
+        form_layout.addRow(self.nameLabel, self.nameEdit)
         
         # 父分类
+        self.parentLabel = BodyLabel(f'{t("library.label_parent_category")}:', self)
         self.parentCombo = ComboBox(self)
-        self.parentCombo.setFixedWidth(300)
+        self.parentCombo.setFixedWidth(CONTENT_WIDTH)
         self.parentCombo.setPlaceholderText(t("library.placeholder_parent_category"))
-        form_layout.addRow(t("library.label_parent_category"), self.parentCombo)
+        form_layout.addRow(self.parentLabel, self.parentCombo)
         
         # 图标选择
         icon_widget = QWidget()
@@ -94,14 +99,16 @@ class CategoryEditDialog(MessageBoxBase):
         icon_layout.addWidget(self.iconLabel)
         icon_layout.addStretch()
         
-        form_layout.addRow(t("library.label_icon"), icon_widget)
+        self.iconTitleLabel = BodyLabel(f'{t("library.label_icon")}:', self)
+        form_layout.addRow(self.iconTitleLabel, icon_widget)
         
         # 排序权重
+        self.orderLabel = BodyLabel(f'{t("library.label_order")}:', self)
         self.orderSpin = SpinBox(self)
         self.orderSpin.setRange(0, 999)
         self.orderSpin.setValue(0)
         self.orderSpin.setFixedWidth(150)
-        form_layout.addRow(t("library.label_order"), self.orderSpin)
+        form_layout.addRow(self.orderLabel, self.orderSpin)
         
         # 添加到布局
         self.viewLayout.addWidget(self.titleLabel)
