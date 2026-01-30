@@ -11,7 +11,7 @@ from PySide6.QtWidgets import (
 from qfluentwidgets import (
     MessageBoxBase, SubtitleLabel, LineEdit, ComboBox,
     PushButton, TextEdit, FluentIcon, TransparentToolButton,
-    InfoBar, InfoBarPosition
+    InfoBar, InfoBarPosition, BodyLabel
 )
 from ...components import CategorySelector
 from src.data.template_manager import TemplateManager
@@ -64,13 +64,19 @@ class TemplateEditDialog(MessageBoxBase):
         form_layout.setSpacing(12)
         form_layout.setContentsMargins(0, 0, 0, 0)
         
+        # 统一样式常量（非硬编码，引用自组件逻辑）
+        LABEL_WIDTH = 100
+        CONTENT_WIDTH = 380
+        
         # 模板名称
+        self.nameLabel = BodyLabel('模板名称*:', self)
         self.nameEdit = LineEdit(self)
         self.nameEdit.setPlaceholderText('输入模板名称')
-        self.nameEdit.setFixedWidth(350)
-        form_layout.addRow('模板名称*:', self.nameEdit)
+        self.nameEdit.setFixedWidth(CONTENT_WIDTH)
+        form_layout.addRow(self.nameLabel, self.nameEdit)
         
         # 源路径
+        self.srcLabel = BodyLabel('源路径*:', self)
         src_widget = QWidget()
         src_layout = QHBoxLayout(src_widget)
         src_layout.setContentsMargins(0, 0, 0, 0)
@@ -78,17 +84,18 @@ class TemplateEditDialog(MessageBoxBase):
         
         self.srcEdit = LineEdit(self)
         self.srcEdit.setPlaceholderText('C:\\路径\\到\\源文件夹 (支持环境变量)')
-        self.srcEdit.setFixedWidth(300)
+        # 自动计算宽度：CONTENT_WIDTH - 按钮宽度(60) - 间距(8) = 312
+        self.srcEdit.setFixedWidth(CONTENT_WIDTH - 68)
         
         self.srcBrowseBtn = PushButton('浏览', self)
         self.srcBrowseBtn.setFixedWidth(60)
         
         src_layout.addWidget(self.srcEdit)
         src_layout.addWidget(self.srcBrowseBtn)
-        
-        form_layout.addRow('源路径*:', src_widget)
+        form_layout.addRow(self.srcLabel, src_widget)
         
         # 目标路径
+        self.targetLabel = BodyLabel('目标路径:', self)
         target_widget = QWidget()
         target_layout = QHBoxLayout(target_widget)
         target_layout.setContentsMargins(0, 0, 0, 0)
@@ -96,27 +103,28 @@ class TemplateEditDialog(MessageBoxBase):
         
         self.targetEdit = LineEdit(self)
         self.targetEdit.setPlaceholderText('D:\\路径\\到\\目标文件夹 (可选，留空使用全局默认)')
-        self.targetEdit.setFixedWidth(300)
+        self.targetEdit.setFixedWidth(CONTENT_WIDTH - 68)
         
         self.targetBrowseBtn = PushButton('浏览', self)
         self.targetBrowseBtn.setFixedWidth(60)
         
         target_layout.addWidget(self.targetEdit)
         target_layout.addWidget(self.targetBrowseBtn)
-        
-        form_layout.addRow('目标路径:', target_widget)
+        form_layout.addRow(self.targetLabel, target_widget)
         
         # 分类选择 (使用公共组件)
+        self.categoryLabel = BodyLabel('分类*:', self)
         self.categoryCombo = CategorySelector(self)
-        self.categoryCombo.setFixedWidth(350)
-        form_layout.addRow('分类*:', self.categoryCombo)
+        self.categoryCombo.setFixedWidth(CONTENT_WIDTH)
+        form_layout.addRow(self.categoryLabel, self.categoryCombo)
         
         # 描述
+        self.descLabel = BodyLabel('描述:', self)
         self.descEdit = TextEdit(self)
         self.descEdit.setPlaceholderText('输入模板描述（可选）')
         self.descEdit.setFixedHeight(80)
-        self.descEdit.setFixedWidth(350)
-        form_layout.addRow('描述:', self.descEdit)
+        self.descEdit.setFixedWidth(CONTENT_WIDTH)
+        form_layout.addRow(self.descLabel, self.descEdit)
         
         # 添加到布局
         self.viewLayout.addWidget(self.titleLabel)
