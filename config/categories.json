@@ -129,11 +129,27 @@
       "is_builtin": true
     },
     {
+      "id": "hardware",
+      "name": "硬件与驱动",
+      "parent_id": null,
+      "icon": "Hardware",
+      "order": 7,
+      "is_builtin": true
+    },
+    {
+      "id": "user_data",
+      "name": "个人数据",
+      "parent_id": null,
+      "icon": "Folder",
+      "order": 8,
+      "is_builtin": true
+    },
+    {
       "id": "uncategorized",
       "name": "未分类",
       "parent_id": null,
       "icon": "Folder",
-      "order": 8,
+      "order": 9,
       "is_builtin": true
     }
   ]

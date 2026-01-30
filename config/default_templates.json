@@ -56,6 +56,174 @@
       "default_target": "D:\\Ghost_Library\\OneDrive",
       "icon": "onedrive.png",
       "description": "OneDrive 同步文件夹"
+    },
+    {
+      "id": "razer_core",
+      "name": "Razer 核心程序",
+      "default_src": "C:\\Program Files\\Razer",
+      "category_id": "hardware",
+      "default_target": "D:\\Software\\Devices\\Razer\\Program Files\\Razer",
+      "description": "Razer 核心组件目录"
+    },
+    {
+      "id": "razer_chroma_sdk_x86",
+      "name": "Razer Chroma SDK (x86)",
+      "default_src": "C:\\Program Files (x86)\\Razer Chroma SDK",
+      "category_id": "hardware",
+      "default_target": "D:\\Software\\Devices\\Razer\\Program Files (x86)\\Razer Chroma SDK",
+      "description": "雷蛇幻彩灯效 SDK (32位)"
+    },
+    {
+      "id": "razer_x86",
+      "name": "Razer 软件 (x86)",
+      "default_src": "C:\\Program Files (x86)\\Razer",
+      "category_id": "hardware",
+      "default_target": "D:\\Software\\Devices\\Razer\\Program Files (x86)\\Razer",
+      "description": "Razer 32位应用程序目录"
+    },
+    {
+      "id": "razer_chroma_sdk",
+      "name": "Razer Chroma SDK",
+      "default_src": "C:\\Program Files\\Razer Chroma SDK",
+      "category_id": "hardware",
+      "default_target": "D:\\Software\\Devices\\Razer\\Program Files\\Razer Chroma SDK",
+      "description": "雷蛇幻彩灯效 SDK (64位)"
+    },
+    {
+      "id": "yeelight_station",
+      "name": "Yeelight Station",
+      "default_src": "C:\\Program Files (x86)\\Yeelight Station",
+      "category_id": "hardware",
+      "default_target": "D:\\Software\\Devices\\Yeelight Station",
+      "description": "Yeelight 智能灯光控制台"
+    },
+    {
+      "id": "adobe_common_files",
+      "name": "Adobe 公共组件 (Common Files)",
+      "default_src": "C:\\Program Files\\Common Files\\Adobe",
+      "category_id": "office",
+      "default_target": "D:\\Software\\Adobe\\Common\\Common Files",
+      "description": "Adobe 共享库文件"
+    },
+    {
+      "id": "adobe_program_files",
+      "name": "Adobe 程序主目录 (64位)",
+      "default_src": "C:\\Program Files\\Adobe",
+      "category_id": "office",
+      "default_target": "D:\\Software\\Adobe\\Common\\Program Files",
+      "description": "Adobe 系列软件 64位安装根目录"
+    },
+    {
+      "id": "adobe_program_files_x86",
+      "name": "Adobe 程序主目录 (x86)",
+      "default_src": "C:\\Program Files (x86)\\Adobe",
+      "category_id": "office",
+      "default_target": "D:\\Software\\Adobe\\Common\\Program Files (x86)",
+      "description": "Adobe 系列软件 32位安装根目录"
+    },
+    {
+      "id": "pyenv_win_versions",
+      "name": "PyEnv-Win Python 版本库",
+      "default_src": "D:\\Libraries\\Python\\versions",
+      "category_id": "dev_tools",
+      "default_target": "D:\\Software\\Develop\\PyEnv-Win\\versions",
+      "description": "PyEnv-Win 管理的所有 Python 解释器版本"
+    },
+    {
+      "id": "comfyui_appdata",
+      "name": "ComfyUI 漫游配置 (AppData)",
+      "default_src": "%APPDATA%\\ComfyUI",
+      "category_id": "dev_tools",
+      "default_target": "E:\\Users\\{UserName}\\WorkSpace\\AI\\ComfyUI\\AppData",
+      "description": "ComfyUI 的用户设置和扩展插件"
+    },
+    {
+      "id": "comfyui_program",
+      "name": "ComfyUI 程序数据 (Documents)",
+      "default_src": "%USERPROFILE%\\Documents\\ComfyUI",
+      "category_id": "dev_tools",
+      "default_target": "E:\\Users\\{UserName}\\WorkSpace\\AI\\ComfyUI\\Program",
+      "description": "ComfyUI 工作流与数据"
+    },
+    {
+      "id": "ea_electronic_arts",
+      "name": "Electronic Arts 核心",
+      "default_src": "C:\\Program Files\\Electronic Arts",
+      "category_id": "games.platforms",
+      "default_target": "D:\\Games\\EA\\Electronic Arts",
+      "description": "EA 平台基础组件"
+    },
+    {
+      "id": "ea_desktop",
+      "name": "EA Desktop 客户端",
+      "default_src": "C:\\Program Files\\EA",
+      "category_id": "games.platforms",
+      "default_target": "D:\\Games\\EA\\EA",
+      "description": "EA Desktop 应用程序目录"
+    },
+    {
+      "id": "epic_games_store",
+      "name": "Epic Games Store",
+      "default_src": "C:\\Program Files (x86)\\Epic Games",
+      "category_id": "games.platforms",
+      "default_target": "D:\\Games\\Epic",
+      "description": "Epic 游戏平台安装目录"
+    },
+    {
+      "id": "repo_drivers",
+      "name": "驱动程序仓库",
+      "default_src": "D:\\Drivers",
+      "category_id": "user_data",
+      "default_target": "E:\\Drivers",
+      "description": "驱动安装包备份仓库"
+    },
+    {
+      "id": "repo_cloud_drive",
+      "name": "个人云盘",
+      "default_src": "D:\\Users\\{UserName}\\云盘",
+      "category_id": "user_data",
+      "default_target": "E:\\Users\\{UserName}\\Drive",
+      "description": "同步盘/云盘本地目录"
+    },
+    {
+      "id": "repo_themes",
+      "name": "系统主题库",
+      "default_src": "D:\\Users\\{UserName}\\主题",
+      "category_id": "user_data",
+      "default_target": "E:\\Users\\{UserName}\\Theme",
+      "description": "壁纸、图标与个性化主题存放地"
+    },
+    {
+      "id": "repo_workspace",
+      "name": "用户工作区",
+      "default_src": "D:\\Users\\{UserName}\\工作区",
+      "category_id": "user_data",
+      "default_target": "E:\\Users\\{UserName}\\WorkSpace",
+      "description": "个人代码与开发项目"
+    },
+    {
+      "id": "repo_videos",
+      "name": "视频库",
+      "default_src": "D:\\Users\\{UserName}\\视频",
+      "category_id": "user_data",
+      "default_target": "E:\\Users\\{UserName}\\Videos",
+      "description": "电影、视频录制存放目录"
+    },
+    {
+      "id": "repo_pictures",
+      "name": "图片库",
+      "default_src": "D:\\Users\\{UserName}\\图片",
+      "category_id": "user_data",
+      "default_target": "E:\\Users\\{UserName}\\Pictures",
+      "description": "静态图片与照片存放目录"
+    },
+    {
+      "id": "repo_downloads",
+      "name": "下载目录",
+      "default_src": "D:\\Users\\{UserName}\\下载",
+      "category_id": "user_data",
+      "default_target": "E:\\Users\\{UserName}\\Downloads",
+      "description": "系统默认下载路径重定向"
     }
   ]
 }
