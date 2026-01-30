@@ -267,10 +267,28 @@ class LibraryView(BasePageView):
         
         # 4. 更新分类树高亮联动 (仅在有搜索词时)
         if search_text:
+            # 核心修复：高亮应该基于全库搜索结果，而不是当前分类范围内的结果
+            # 这样即使点击了某个分类，其他有搜索结果的分类依然会保持高亮
+            all_templates = self.template_manager.get_all_templates()
             matched_categories = set()
-            for tpl in filtered_templates:
-                if hasattr(tpl, 'category_id'):
-                    matched_categories.add(tpl.category_id)
+            
+            for tpl in all_templates:
+                # 对每个模板应用相同的搜索逻辑
+                if search_text in tpl.name.lower():
+                    if hasattr(tpl, 'category_id'):
+                        matched_categories.add(tpl.category_id)
+                    continue
+                    
+                if hasattr(tpl, 'description') and tpl.description and search_text in tpl.description.lower():
+                    if hasattr(tpl, 'category_id'):
+                        matched_categories.add(tpl.category_id)
+                    continue
+                    
+                if hasattr(tpl, 'tags') and tpl.tags:
+                    tags_str = ' '.join(tpl.tags).lower()
+                    if search_text in tags_str:
+                        if hasattr(tpl, 'category_id'):
+                            matched_categories.add(tpl.category_id)
             
             if matched_categories:
                 self.category_tree.highlight_categories(list(matched_categories))

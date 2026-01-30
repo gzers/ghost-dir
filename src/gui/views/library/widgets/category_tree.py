@@ -266,36 +266,35 @@ class CategoryTreeWidget(TreeWidget):
         """
         from ....styles import get_text_primary, get_accent_color, get_text_secondary
 
-        # 1. 重置所有项的样式（使用次级文字颜色，让未匹配项变暗但仍可见）
         text_primary = get_text_primary()
         text_secondary = get_text_secondary()
         accent_color = get_accent_color()
+        
+        # 将输入列表转为集合以获得更好的查找性能
+        highlight_set = set(category_ids) if category_ids else set()
 
-        for item in self.category_items.values():
+        # 1. 遍历所有项，根据是否命中搜索词设置样式
+        for cid, item in self.category_items.items():
             widget = self.itemWidget(item, 0)
-            if widget:
-                for child in widget.findChildren(QLabel):
-                    if child.text() != "":
-                        child.setStyleSheet(f"background: transparent; border: none; font-weight: normal; color: {text_secondary};")
-
-        if not category_ids:
-            # 如果没有搜索结果，恢复到主文字颜色
-            self.clear_highlights()
-            return
-
-        # 2. 高亮指定的分类并展开父级
-        for cid in category_ids:
-            if cid in self.category_items:
-                item = self.category_items[cid]
-                
-                # 高亮文本（使用主题强调色和加粗）
-                widget = self.itemWidget(item, 0)
-                if widget:
-                    for child in widget.findChildren(QLabel):
-                        if child.text() != "":
-                            child.setStyleSheet(f"background: transparent; border: none; font-weight: bold; color: {accent_color};")
-                
-                # 展开父级
+            if not widget:
+                continue
+            
+            is_matched = cid in highlight_set
+            
+            for child in widget.findChildren(QLabel):
+                if child.text() == "":
+                    continue
+                    
+                if is_matched:
+                    # 命中的分类：橙色加粗
+                    child.setStyleSheet(f"background: transparent; border: none; font-weight: bold; color: {accent_color};")
+                else:
+                    # 未命中的分类：且如果有搜索词，则变暗
+                    color = text_secondary if category_ids else text_primary
+                    child.setStyleSheet(f"background: transparent; border: none; font-weight: normal; color: {color};")
+            
+            # 如果匹配，则展开父级
+            if is_matched:
                 parent = item.parent()
                 while parent:
                     parent.setExpanded(True)
