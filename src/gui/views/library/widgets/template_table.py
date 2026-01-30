@@ -219,23 +219,27 @@ class TemplateTableWidget(TableWidget):
             name_item = QTableWidgetItem(template.name)
             name_item.setData(Qt.ItemDataRole.UserRole, template.id)
             name_item.setTextAlignment(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)
+            name_item.setToolTip(template.name)
             self.setItem(i, 1, name_item)
             
             # 2. 源路径
             src_item = QTableWidgetItem(template.default_src)
             src_item.setTextAlignment(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)
+            src_item.setToolTip(template.default_src)
             self.setItem(i, 2, src_item)
             
             # 3. 目标路径
             target = getattr(template, 'default_target', None) or '(使用全局默认)'
             target_item = QTableWidgetItem(target)
             target_item.setTextAlignment(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)
+            target_item.setToolTip(target)
             self.setItem(i, 3, target_item)
             
             # 4. 描述
             desc = template.description or ''
             desc_item = QTableWidgetItem(desc)
             desc_item.setTextAlignment(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)
+            desc_item.setToolTip(desc if desc else None)
             self.setItem(i, 4, desc_item)
             
             # 5. 类型 - 使用 QLabel 作为 cell widget 以确保完美居中
