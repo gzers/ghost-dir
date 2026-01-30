@@ -254,16 +254,16 @@ class LibraryView(BasePageView):
                         filtered_templates.append(template)
         
         # 3. 确定是否允许操作
-        # 用户反馈：在“全部”或非叶子分类视图下，依然希望能操作模板（如批量删除或单项编辑）
-        is_leaf = False
-        if category_id != "all":
-            is_leaf = self.category_manager.is_leaf(category_id)
+        # 逻辑：允许在“全部”视图以及具体的“叶子节点”视图下操作模板
+        # 目录级父节点依然置灰（除非是在“全部”视图下），以防止管理混乱
+        is_leaf = self.category_manager.is_leaf(category_id) if category_id != "all" else False
+        allow_ops = (category_id == "all") or is_leaf
             
-        # 启用新建按钮：始终允许点击，对话框会强制用户选择一个叶子分类
-        self.add_template_btn.setEnabled(True)
+        # 启用新建按钮
+        self.add_template_btn.setEnabled(allow_ops)
         
-        # 4. 更新表格显示：始终允许操作列和复选框，因为列表中的每一项都是具体的模板
-        self.template_table.set_templates(filtered_templates, category_id, allow_operations=True)
+        # 4. 更新表格显示：操作列和复选框的启用状态取决于 allow_ops
+        self.template_table.set_templates(filtered_templates, category_id, allow_operations=allow_ops)
         
         # 4. 更新分类树高亮联动 (仅在有搜索词时)
         if search_text:
