@@ -217,22 +217,8 @@ class LibraryView(BasePageView):
     def _on_category_selected(self, category_id: str):
         """分类被选中"""
         self.current_category_id = category_id
-        
-        if category_id == "all":
-            # 加载所有模板
-            templates = self.template_manager.get_all_templates()
-            self.template_table.set_templates(templates, "all")
-            self.count_label.setText(t("library.stats_category", name="全部", count=len(templates)))
-            return
-
-        # 加载该分类下的模板
-        templates = self.template_manager.get_templates_by_category(category_id)
-        self.template_table.set_templates(templates, category_id)
-        
-        # 更新统计
-        category = self.category_manager.get_category_by_id(category_id)
-        if category:
-            self.count_label.setText(t("library.stats_category", name=category.name, count=len(templates)))
+        # 使用统一过滤逻辑处理搜索和分类切换
+        self._filter_templates()
 
     def _on_template_selected(self, template_id: str):
         """模板被选中"""
@@ -240,52 +226,69 @@ class LibraryView(BasePageView):
 
     def _on_search_changed(self, text: str):
         """搜索文本改变"""
-        search_text = text.strip().lower()
+        self._filter_templates()
+
+    def _filter_templates(self):
+        """统一模板过滤逻辑（搜索词 + 分类范围）"""
+        search_text = self.search_edit.text().strip().lower()
+        category_id = self.current_category_id or "all"
         
-        # 如果搜索框为空，显示当前分类的所有模板
+        # 1. 确定基础模板池（基于分类范围）
+        if category_id == "all":
+            base_templates = self.template_manager.get_all_templates()
+        else:
+            # 包含子分类的模板
+            base_templates = self.template_manager.get_templates_by_category_recursive(category_id)
+            
+        # 2. 应用搜索词过滤
         if not search_text:
-            if self.current_category_id:
-                self._on_category_selected(self.current_category_id)
-            return
-        
-        # 无论当前选中哪个分类，搜索都应该在全库进行，这也是用户的直觉
-        templates = self.template_manager.get_all_templates()
-        
-        # 过滤模板：按名称、描述、标签搜索
-        filtered_templates = []
-        for template in templates:
-            # 搜索名称
-            if search_text in template.name.lower():
-                filtered_templates.append(template)
-                continue
-            
-            # 搜索描述
-            if hasattr(template, 'description') and template.description and search_text in template.description.lower():
-                filtered_templates.append(template)
-                continue
-            
-            # 搜索标签
-            if hasattr(template, 'tags') and template.tags:
-                tags_str = ' '.join(template.tags).lower()
-                if search_text in tags_str:
+            filtered_templates = base_templates
+        else:
+            filtered_templates = []
+            for template in base_templates:
+                # 搜索名称
+                if search_text in template.name.lower():
                     filtered_templates.append(template)
+                    continue
+                
+                # 搜索描述
+                if hasattr(template, 'description') and template.description and search_text in template.description.lower():
+                    filtered_templates.append(template)
+                    continue
+                
+                # 搜索标签
+                if hasattr(template, 'tags') and template.tags:
+                    tags_str = ' '.join(template.tags).lower()
+                    if search_text in tags_str:
+                        filtered_templates.append(template)
         
-        # 更新表格显示
-        self.template_table.set_templates(filtered_templates, self.current_category_id or "")
+        # 3. 更新表格显示
+        self.template_table.set_templates(filtered_templates, category_id)
         
-        # 更新分类树高亮联动
-        matched_categories = set()
-        for tpl in filtered_templates:
-            if hasattr(tpl, 'category_id'):
-                matched_categories.add(tpl.category_id)
-        
-        if matched_categories:
-            self.category_tree.highlight_categories(list(matched_categories))
+        # 4. 更新分类树高亮联动 (仅在有搜索词时)
+        if search_text:
+            matched_categories = set()
+            for tpl in filtered_templates:
+                if hasattr(tpl, 'category_id'):
+                    matched_categories.add(tpl.category_id)
+            
+            if matched_categories:
+                self.category_tree.highlight_categories(list(matched_categories))
+            else:
+                self.category_tree.clear_highlights()
+            
+            # 更新统计 (搜索模式)
+            self.count_label.setText(t("library.stats_search", count=len(filtered_templates)))
         else:
             self.category_tree.clear_highlights()
-
-        # 更新统计
-        self.count_label.setText(t("library.stats_search", count=len(filtered_templates)))
+            # 更新统计 (正常模式)
+            if category_id == "all":
+                total_categories = len(self.category_manager.get_all_categories())
+                self.count_label.setText(t("library.stats_total", categories=total_categories, templates=len(filtered_templates)))
+            else:
+                category = self.category_manager.get_category_by_id(category_id)
+                name = category.name if category else "未知"
+                self.count_label.setText(t("library.stats_category", name=name, count=len(filtered_templates)))
 
     def _on_refresh_clicked(self):
         """刷新按钮被点击"""
