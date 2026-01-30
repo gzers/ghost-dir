@@ -168,9 +168,10 @@ class TemplateTableWidget(TableWidget):
         signal_bus.theme_color_changed.connect(self._apply_style)
         signal_bus.theme_changed.connect(self._apply_style)
     
-    def set_templates(self, templates: List[Template], category_id: str = ""):
+    def set_templates(self, templates: List[Template], category_id: str = "", allow_operations: bool = True):
         """设置模板列表"""
         self.current_category_id = category_id
+        self.allow_operations = allow_operations
         self.templates = {t.id: t for t in templates}
         self.checkboxes.clear()
         
@@ -178,6 +179,7 @@ class TemplateTableWidget(TableWidget):
         if self.header_checkbox:
             self.header_checkbox.blockSignals(True)
             self.header_checkbox.setChecked(False)
+            self.header_checkbox.setEnabled(allow_operations)  # 根据权限启用/禁用
             self.header_checkbox.blockSignals(False)
             
         self.checked_changed.emit(0)
@@ -195,6 +197,7 @@ class TemplateTableWidget(TableWidget):
             # 确保容器背景透明，避免遮挡选中效果
             cb_container.setStyleSheet("background: transparent; border: none;")
             cb = CheckBox()
+            cb.setEnabled(allow_operations)  # 根据权限启用/禁用
             # 移除 CheckBox 可能存在的默认文字空间干扰
             cb.setText("")
             cb_layout.addWidget(cb)
@@ -260,11 +263,13 @@ class TemplateTableWidget(TableWidget):
             edit_btn = TransparentToolButton(FluentIcon.EDIT, btn_container)
             edit_btn.setToolTip('编辑')
             edit_btn.setFixedSize(32, 32) # 固定大小有助于居中平衡
+            edit_btn.setEnabled(allow_operations)
             edit_btn.clicked.connect(lambda checked=False, tid=template.id: self.edit_template_requested.emit(tid))
             
             del_btn = TransparentToolButton(FluentIcon.DELETE, btn_container)
             del_btn.setToolTip('删除')
             del_btn.setFixedSize(32, 32)
+            del_btn.setEnabled(allow_operations)
             del_btn.clicked.connect(lambda checked=False, tid=template.id: self.delete_template_requested.emit(tid))
             
             btn_layout.addWidget(edit_btn)
@@ -312,10 +317,12 @@ class TemplateTableWidget(TableWidget):
         
         menu = RoundMenu(parent=self)
         edit_action = Action(FluentIcon.EDIT, '编辑')
+        edit_action.setEnabled(self.allow_operations)
         edit_action.triggered.connect(lambda: self.edit_template_requested.emit(template_id))
         menu.addAction(edit_action)
         
         delete_action = Action(FluentIcon.DELETE, '删除')
+        delete_action.setEnabled(self.allow_operations)
         delete_action.triggered.connect(lambda: self.delete_template_requested.emit(template_id))
         menu.addAction(delete_action)
         
