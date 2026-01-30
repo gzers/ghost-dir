@@ -94,6 +94,7 @@ LIBRARY_TEXTS = {
     "help_notes_1": "• 所有操作立即保存，无需点击'完成'按钮",
     "help_notes_2": "• 系统分类（如'未分类'）无法删除或编辑",
     "help_notes_3": "• 分类层级最多支持 3 层",
+    "help_notes_4": "• 📄 文档图标表示叶子分类（可放置模板），📁 文件夹图标表示非叶子分类（仅用于组织结构）",
     "template_more": "... 还有 {count} 个",
     "template_summary": "\n• {name} ({count} 模板):\n  - ",
     "stats_category": "{name}: {count} 个模板",

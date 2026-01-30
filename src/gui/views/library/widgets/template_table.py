@@ -69,7 +69,6 @@ class TemplateTableWidget(TableWidget):
         self.setColumnWidth(6, 100)
         
         # 优化显示
-        self.verticalHeader().setDefaultSectionSize(40)
         header.setFixedHeight(36)
         
         # 基本属性
@@ -130,6 +129,7 @@ class TemplateTableWidget(TableWidget):
         font_style = get_font_style(size="md", weight="normal")
         
         # 只设置基础样式，选中效果使用 QFluentWidgets 官方默认
+        # 注意: 不要在 CSS 中设置 item 的 height,会与 verticalHeader 冲突导致布局崩溃
         qss = f"""
             QTableWidget {{
                 background: transparent;
@@ -153,6 +153,9 @@ class TemplateTableWidget(TableWidget):
         """
         setCustomStyleSheet(self, qss, qss)
         self.verticalHeader().setVisible(False)
+        
+        # 设置默认行高 (不使用 Fixed 模式,避免与 QFluentWidgets 冲突)
+        self.verticalHeader().setDefaultSectionSize(40)
     
     def _connect_signals(self):
         """连接信号"""
@@ -187,6 +190,7 @@ class TemplateTableWidget(TableWidget):
             # 0. 复选框容器
             from PySide6.QtWidgets import QSizePolicy
             cb_container = QWidget()
+            cb_container.setFixedHeight(40)  # 关键: 设置固定高度,与行高一致
             cb_layout = QHBoxLayout(cb_container)
             # 确保容器背景透明，避免遮挡选中效果
             cb_container.setStyleSheet("background: transparent; border: none;")
@@ -235,6 +239,7 @@ class TemplateTableWidget(TableWidget):
             from PySide6.QtWidgets import QLabel
             type_text = '自定义' if template.is_custom else '官方'
             type_container = QWidget()
+            type_container.setFixedHeight(40)  # 设置固定高度,与行高一致
             type_container.setStyleSheet("background: transparent; border: none;")
             type_layout = QHBoxLayout(type_container)
             type_label = QLabel(type_text)
@@ -246,6 +251,7 @@ class TemplateTableWidget(TableWidget):
             
             # 6. 操作按钮
             btn_container = QWidget()
+            btn_container.setFixedHeight(40)  # 设置固定高度,与行高一致
             btn_container.setStyleSheet("background: transparent; border: none;")
             btn_layout = QHBoxLayout(btn_container)
             btn_layout.setContentsMargins(0, 0, 0, 0)
@@ -271,7 +277,17 @@ class TemplateTableWidget(TableWidget):
             self.sortByColumn(column, order)
         
         self.setSortingEnabled(True)
+        
+        # 关键修复: setSortingEnabled(True) 会重置 verticalHeader 的配置
+        # 使用延迟刷新确保在 Qt 完成所有布局计算后重新设置行高
+        from PySide6.QtCore import QTimer
+        QTimer.singleShot(0, self._ensure_row_height)
+        
         self.clearSelection()
+    
+    def _ensure_row_height(self):
+        """确保行高设置正确 (延迟调用)"""
+        self.verticalHeader().setDefaultSectionSize(40)
     
     def _on_item_clicked(self, item: QTableWidgetItem):
         """表项被点击"""

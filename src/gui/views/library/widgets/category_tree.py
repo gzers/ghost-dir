@@ -64,9 +64,18 @@ class InternalCategoryTree(TreeWidget):
             }}
             TreeWidget::item {{
                 color: {text_primary};
+                height: 36px;
+                padding: 0px;
+                margin: 0px;
+            }}
+            TreeWidget::branch {{
+                background: transparent;
             }}
         """
         setCustomStyleSheet(self, qss, qss)
+        
+        # 关键: 设置统一行高,避免展开/折叠时的布局抖动
+        self.setUniformRowHeights(True)
 
     def _connect_signals(self):
         """连接内部和外部信号"""
@@ -95,7 +104,7 @@ class InternalCategoryTree(TreeWidget):
         
         container = QWidget()
         layout = QHBoxLayout(container)
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setContentsMargins(8, 0, 0, 0)  # 左边距为强调条留出空间
         layout.setSpacing(8)
         
         icon_label = QLabel()
@@ -107,6 +116,7 @@ class InternalCategoryTree(TreeWidget):
         layout.addWidget(text_label)
         layout.addStretch()
         
+        container.setFixedHeight(36)  # 设置固定高度,与树项高度一致
         container.setStyleSheet("background: transparent; border: none;")
         container.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         self.setItemWidget(all_item, 0, container)
@@ -135,7 +145,7 @@ class InternalCategoryTree(TreeWidget):
         
         container = QWidget()
         layout = QHBoxLayout(container)
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setContentsMargins(8, 0, 0, 0)  # 左边距为强调条留出空间
         layout.setSpacing(8)
         
         if depth > 0:
@@ -145,18 +155,44 @@ class InternalCategoryTree(TreeWidget):
         icon_size = ICON_SIZES["sm"]
         
         icon_label = QLabel()
+        
+        # 根据是否为叶子节点选择图标
+        all_categories = list(self.category_manager.categories.values())
+        is_leaf = category.is_leaf(all_categories)
+        
         try:
-            icon_enum = getattr(FluentIcon, category.icon, FluentIcon.FOLDER)
-            icon_label.setPixmap(icon_enum.icon().pixmap(icon_size, icon_size))
-        except:
-            icon_label.setPixmap(FluentIcon.FOLDER.icon().pixmap(icon_size, icon_size))
+            # 优先使用自定义图标,如果没有则根据叶子状态选择默认图标
+            if category.icon:
+                icon_enum = getattr(FluentIcon, category.icon, None)
+                if icon_enum:
+                    icon_label.setPixmap(icon_enum.icon().pixmap(icon_size, icon_size))
+                else:
+                    # 自定义图标无效时使用默认图标
+                    default_icon = FluentIcon.DOCUMENT if is_leaf else FluentIcon.FOLDER
+                    icon_label.setPixmap(default_icon.icon().pixmap(icon_size, icon_size))
+            else:
+                # 没有自定义图标时根据叶子状态选择
+                default_icon = FluentIcon.DOCUMENT if is_leaf else FluentIcon.FOLDER
+                icon_label.setPixmap(default_icon.icon().pixmap(icon_size, icon_size))
+        except Exception as e:
+            # 异常情况下使用默认图标
+            default_icon = FluentIcon.DOCUMENT if is_leaf else FluentIcon.FOLDER
+            icon_label.setPixmap(default_icon.icon().pixmap(icon_size, icon_size))
+        
         layout.addWidget(icon_label)
         
+        # 创建文本标签
         text_label = QLabel(category.name)
         text_label.setStyleSheet("background: transparent; border: none;") 
+        
+        # 为非叶子节点添加工具提示
+        if not is_leaf:
+            text_label.setToolTip("此分类包含子分类,不能直接放置模板。点击查看所有子分类下的模板。")
+        
         layout.addWidget(text_label)
         
         layout.addStretch()
+        container.setFixedHeight(36)  # 设置固定高度,与树项高度一致
         container.setStyleSheet("background: transparent; border: none;")
         container.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents) 
         self.setItemWidget(item, 0, container)

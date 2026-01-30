@@ -19,12 +19,13 @@ class CategoryTreeWidget(TreeWidget):
         signal_bus.theme_color_changed.connect(self._apply_style)
 
     def _apply_style(self):
-        """应用主题敏感样式 - 还原官方默认布局"""
+        """应用主题敏感样式 - 确保垂直居中对齐"""
         from qfluentwidgets import setCustomStyleSheet
         text_primary = get_text_primary()
         font_style = get_font_style(size="md")
         
-        # 移除自定义 padding 和样式，完全信任 QFluentWidgets 的内部排版控制
+        # 设置合适的行高和对齐方式,确保复选框、图标和文字垂直居中
+        # 使用固定尺寸避免展开/折叠时的布局抖动
         qss = f"""
             TreeWidget {{
                 outline: none;
@@ -34,9 +35,24 @@ class CategoryTreeWidget(TreeWidget):
             }}
             TreeWidget::item {{
                 color: {text_primary};
+                height: 32px;
+                padding: 0px;
+                margin: 0px;
+            }}
+            TreeWidget::indicator {{
+                width: 18px;
+                height: 18px;
+                margin: 0px 4px 0px 0px;
+                subcontrol-position: center left;
+            }}
+            TreeWidget::branch {{
+                background: transparent;
             }}
         """
         setCustomStyleSheet(self, qss, qss)
+        
+        # 设置统一的行高,避免动态调整
+        self.setUniformRowHeights(True)
 
     def dragMoveEvent(self, event):
         """拖拽移动过程中的验证"""

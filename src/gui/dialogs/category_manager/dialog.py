@@ -672,7 +672,8 @@ class CategoryManagerDialog(MessageBoxBase):
             t("library.help_notes") + "\n" +
             t("library.help_notes_1") + "\n" +
             t("library.help_notes_2") + "\n" +
-            t("library.help_notes_3")
+            t("library.help_notes_3") + "\n" +
+            t("library.help_notes_4")
         )
         
         MessageBox(t("library.btn_help"), help_content, self).exec()
