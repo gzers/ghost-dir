@@ -13,6 +13,7 @@ class CategoryTreeWidget(TreeWidget):
         self.category_manager = None  # 将从外部设置
         
         # 初始化样式
+        self.setIndentation(28)  # 增加缩进空间
         self._apply_style()
         
         # 连接主题色变更信号
@@ -33,20 +34,21 @@ class CategoryTreeWidget(TreeWidget):
                 background: transparent;
                 border: none;
             }}
-            TreeWidget::item {{
-                color: {text_primary};
-                height: 32px;
-                padding: 0px;
-                margin: 0px;
-            }}
             TreeWidget::indicator {{
                 width: 18px;
                 height: 18px;
-                margin: 0px 4px 0px 0px;
-                subcontrol-position: center left;
+                margin-left: 2px;
+                margin-right: 8px;
+            }}
+            TreeWidget::item {{
+                color: {text_primary};
+                height: 32px;
+                padding-left: 12px;
+                margin: 0px;
             }}
             TreeWidget::branch {{
                 background: transparent;
+                width: 24px;
             }}
         """
         setCustomStyleSheet(self, qss, qss)

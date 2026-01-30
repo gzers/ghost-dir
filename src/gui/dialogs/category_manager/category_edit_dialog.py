@@ -15,7 +15,6 @@ from qfluentwidgets import (
 )
 from src.data.model import CategoryNode
 from src.data.category_manager import CategoryManager
-from ..icon_picker import IconPickerDialog
 from ...i18n import t
 from ...styles import format_required_label
 
@@ -46,12 +45,10 @@ class CategoryEditDialog(MessageBoxBase):
         self.category = category
         self.mode = mode
         self.target_parent_id = target_parent_id
-        self.selected_icon = category.icon if category else "Folder"
         
         self.setWindowTitle(t("library.dialog_rename_category") if self.mode == "edit" else t("library.dialog_new_category"))
         self._init_ui()
         self._load_data()
-        self._connect_signals()
     
     def _init_ui(self):
         """初始化 UI"""
@@ -80,27 +77,6 @@ class CategoryEditDialog(MessageBoxBase):
         self.parentCombo.setFixedWidth(CONTENT_WIDTH)
         self.parentCombo.setPlaceholderText(t("library.placeholder_parent_category"))
         form_layout.addRow(self.parentLabel, self.parentCombo)
-        
-        # 图标选择
-        icon_widget = QWidget()
-        icon_layout = QHBoxLayout(icon_widget)
-        icon_layout.setContentsMargins(0, 0, 0, 0)
-        icon_layout.setSpacing(8)
-        
-        self.iconButton = TransparentToolButton(FluentIcon.FOLDER, self)
-        self.iconButton.setFixedSize(48, 48)
-        self.iconButton.setIconSize(QSize(32, 32))
-        self.iconButton.setToolTip(t("library.tooltip_select_icon"))
-        
-        self.iconLabel = QLabel(self.selected_icon, self)
-        self.iconLabel.setStyleSheet('color: gray;')
-        
-        icon_layout.addWidget(self.iconButton)
-        icon_layout.addWidget(self.iconLabel)
-        icon_layout.addStretch()
-        
-        self.iconTitleLabel = BodyLabel(t("library.label_icon"), self)
-        form_layout.addRow(self.iconTitleLabel, icon_widget)
         
         # 排序权重
         self.orderLabel = BodyLabel(t("library.label_order"), self)
@@ -163,29 +139,8 @@ class CategoryEditDialog(MessageBoxBase):
         if self.mode == "edit" and self.category:
             self.nameEdit.setText(self.category.name)
             self.orderSpin.setValue(self.category.order)
-            self.selected_icon = self.category.icon
-            self._update_icon_display()
     
-    def _connect_signals(self):
-        """连接信号"""
-        self.iconButton.clicked.connect(self._on_icon_button_clicked)
-    
-    def _on_icon_button_clicked(self):
-        """图标按钮被点击"""
-        dialog = IconPickerDialog(self.selected_icon, self)
-        if dialog.exec():
-            self.selected_icon = dialog.get_selected_icon()
-            self._update_icon_display()
-    
-    def _update_icon_display(self):
-        """更新图标显示"""
-        try:
-            icon = getattr(FluentIcon, self.selected_icon, FluentIcon.FOLDER)
-            self.iconButton.setIcon(icon)
-            self.iconLabel.setText(self.selected_icon)
-        except:
-            self.iconButton.setIcon(FluentIcon.FOLDER)
-            self.iconLabel.setText("Folder")
+
     
     def validate(self) -> bool:
         """
@@ -233,7 +188,6 @@ class CategoryEditDialog(MessageBoxBase):
                 id=self.category.id if self.category else "temp",
                 name=name,
                 parent_id=parent_id,
-                icon=self.selected_icon,
                 order=self.orderSpin.value()
             )
             
@@ -265,7 +219,6 @@ class CategoryEditDialog(MessageBoxBase):
             # 更新现有分类
             self.category.name = self.nameEdit.text().strip()
             self.category.parent_id = self.parentCombo.currentData()
-            self.category.icon = self.selected_icon
             self.category.order = self.orderSpin.value()
             return self.category
         else:
@@ -294,7 +247,6 @@ class CategoryEditDialog(MessageBoxBase):
                 id=category_id,
                 name=name,
                 parent_id=parent_id,
-                icon=self.selected_icon,
                 order=self.orderSpin.value(),
                 is_builtin=False
             )

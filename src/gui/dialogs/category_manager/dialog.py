@@ -192,16 +192,6 @@ class CategoryManagerDialog(MessageBoxBase):
         # 设置数据
         item.setData(0, Qt.ItemDataRole.UserRole, category)
         
-        # 设置图标
-        if category.icon:
-            try:
-                icon = getattr(FluentIcon, category.icon.upper(), FluentIcon.FOLDER)
-                item.setIcon(0, icon.icon())
-            except:
-                item.setIcon(0, FluentIcon.FOLDER.icon())
-        else:
-            item.setIcon(0, FluentIcon.FOLDER.icon())
-        
         # 系统分类显示为灰色
         if category.is_builtin:
             item.setForeground(0, Qt.GlobalColor.gray)

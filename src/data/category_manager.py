@@ -97,7 +97,6 @@ class CategoryManager:
         uncategorized = CategoryNode(
             id="uncategorized",
             name="未分类",
-            icon="Folder",
             order=99,
             is_builtin=True
         )

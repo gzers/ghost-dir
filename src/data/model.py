@@ -22,7 +22,6 @@ class CategoryNode:
     id: str                          # 唯一标识（如：dev_tools.editors）
     name: str                        # 显示名称
     parent_id: Optional[str] = None  # 父节点 ID
-    icon: str = "Folder"             # 图标（FluentIcon 名称）
     order: int = 0                   # 排序权重
     is_builtin: bool = True          # 是否为内置分类
     _depth: int = -1                 # 缓存深度，-1 表示未计算
@@ -70,7 +69,6 @@ class CategoryNode:
             "id": self.id,
             "name": self.name,
             "parent_id": self.parent_id,
-            "icon": self.icon,
             "order": self.order,
             "is_builtin": self.is_builtin
         }
@@ -82,7 +80,6 @@ class CategoryNode:
             id=data["id"],
             name=data["name"],
             parent_id=data.get("parent_id"),
-            icon=data.get("icon", "Folder"),
             order=data.get("order", 0),
             is_builtin=data.get("is_builtin", True)
         )
