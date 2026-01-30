@@ -35,7 +35,7 @@ class CategoryTreeDropdown(QFrame):
     def _init_ui(self):
         """初始化 UI"""
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(4, 4, 4, 4)
+        layout.setContentsMargins(1, 1, 1, 1)
         layout.setSpacing(0)
         
         # 树形视图 - 使用官方 TreeWidget
@@ -44,7 +44,7 @@ class CategoryTreeDropdown(QFrame):
         self.tree.setAnimated(True)
         self.tree.setIndentation(20)
         self.tree.setFixedHeight(300)
-        self.tree.setFixedWidth(360)
+        # 移除硬编码宽度，由 _show_dropdown 动态控制
         
         # 核心：设置统一行高，并遵循 selectRows 行为
         self.tree.setUniformRowHeights(True)
@@ -75,8 +75,7 @@ class CategoryTreeDropdown(QFrame):
             bg_color = "rgba(255, 255, 255, 0.95)"
             border_color = "rgba(0, 0, 0, 0.15)"
         
-        # 注意：这里移除了对 ::item:selected 的自定义颜色设置，
-        # 让 qfluentwidgets.TreeWidget 的原生 Delegate 来处理选中状态和强调条
+        # 修复：在 f-string 中，CSS 的大括号必须写成双大括号 {{ }}
         qss = f"""
             #CategoryTreeDropdown {{
                 background: {bg_color};
@@ -87,6 +86,8 @@ class CategoryTreeDropdown(QFrame):
                 background: transparent;
                 border: none;
                 outline: none;
+                margin: 0px;
+                padding: 0px;
                 {font_style}
             }}
             TreeWidget::item {{
@@ -94,14 +95,16 @@ class CategoryTreeDropdown(QFrame):
                 height: 36px;
                 padding-left: 12px;
                 margin: 0px;
+                border: none;
             }}
             TreeWidget::branch {{
                 background: transparent;
                 width: 24px;
             }}
         """
+        # 对内部树和外壳都应用样式
         setCustomStyleSheet(self.tree, qss, qss)
-        self.setStyleSheet(f"#CategoryTreeDropdown {{ background: {bg_color}; border: 1px solid {border_color}; border-radius: 8px; }}")
+        self.setStyleSheet(qss)
     
     def load_categories(self):
         """加载分类树"""
@@ -203,10 +206,19 @@ class CategorySelector(QWidget):
         if not self.dropdown:
             return
         
-        # 定位下拉框
-        pos = self.mapToGlobal(self.lineEdit.rect().bottomLeft())
+        # 1. 同步宽度：下拉框总宽度与当前组件一致
+        self.dropdown.setFixedWidth(self.width())
+        # 同步内部树视图宽度 (减去布局边距左右各1, 共2)
+        self.dropdown.tree.setFixedWidth(self.width() - 2)
+        
+        # 2. 定位并增加间距
+        # 标准 Fluent 下拉间距通常为 4px
+        pos = self.mapToGlobal(self.rect().bottomLeft())
+        pos.setY(pos.y() + 4) 
+        
         self.dropdown.move(pos)
         self.dropdown.show()
+        self.dropdown.tree.setFocus()
     
     def _on_category_selected(self, category_id: str, category_name: str):
         """分类被选中"""
