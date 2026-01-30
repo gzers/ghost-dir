@@ -3,8 +3,8 @@
 显示分类树结构
 """
 from typing import Optional, List
-from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import QTreeWidget, QTreeWidgetItem, QMenu, QLabel
+from PySide6.QtCore import Qt, Signal, QSize
+from PySide6.QtWidgets import QTreeWidget, QTreeWidgetItem, QMenu, QLabel, QWidget
 from PySide6.QtGui import QAction
 from qfluentwidgets import FluentIcon, RoundMenu, Action, setCustomStyleSheet, TreeWidget
 from src.data.category_manager import CategoryManager
@@ -12,27 +12,19 @@ from src.data.model import CategoryNode
 from ....styles import get_font_style, get_text_primary, apply_transparent_style
 
 
-class CategoryTreeWidget(TreeWidget):
-    """分类树组件 - 使用 QFluentWidgets 官方 TreeWidget"""
+class InternalCategoryTree(TreeWidget):
+    """内部分类树 - 仅包含树逻辑"""
     
-    category_selected = Signal(str)  # 分类被选中时发出信号 (category_id)
-    add_category_requested = Signal(str)  # 请求添加分类 (parent_id)
-    edit_category_requested = Signal(str)  # 请求编辑分类 (category_id)
-    delete_category_requested = Signal(str)  # 请求删除分类 (category_id)
+    category_selected = Signal(str)
+    add_category_requested = Signal(str)
+    edit_category_requested = Signal(str)
+    delete_category_requested = Signal(str)
     
     def __init__(self, category_manager: CategoryManager, user_manager: Optional['UserManager'] = None, parent=None):
-        """
-        初始化分类树组件
-        
-        Args:
-            category_manager: 分类管理器
-            user_manager: 用户数据管理器
-            parent: 父窗口
-        """
         super().__init__(parent)
         self.category_manager = category_manager
         self.user_manager = user_manager
-        self.category_items = {}  # category_id -> QTreeWidgetItem
+        self.category_items = {}
         
         self._init_ui()
         self._connect_signals()
@@ -43,43 +35,26 @@ class CategoryTreeWidget(TreeWidget):
         self.setHeaderHidden(True)
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.setAnimated(True)
-        
-        # 禁用原生的水平滚动条，防止边缘空隙
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        
-        # 核心：必须禁用 Indentation，否则 branch 伪元素会导致多个指示条
         self.setIndentation(0)
         self.setSelectionBehavior(QTreeWidget.SelectionBehavior.SelectRows)
-        
-        # 应用透明背景
         apply_transparent_style(self)
-        
-        # 初始化样式
         self._apply_style()
 
     def _apply_style(self, theme_color: str = None):
-        """
-        应用统一样式
-        
-        Args:
-            theme_color: 可选的主题色（Hex），如果不传则从 user_manager 或系统获取
-        """
-        from .....common.signals import signal_bus
+        """应用统一样式"""
         from ....styles import get_accent_color, get_font_style, get_text_primary
         
-        # 获取颜色优先级：传参 > user_manager 配置 > 系统默认 (ACCENT_COLOR)
         accent_color = theme_color
         if not accent_color and self.user_manager:
             accent_color = self.user_manager.get_theme_color()
         
-        # 如果是 "system"，回退到 get_accent_color() (内部处理了系统色)
         if not accent_color or accent_color == "system":
             accent_color = get_accent_color()
             
         font_style = get_font_style(size="md", weight="normal")
         text_primary = get_text_primary()
         
-        # 使用 QFluentWidgets 官方默认样式，仅设置基础样式
         qss = f"""
             TreeWidget {{
                 background: transparent;
@@ -95,11 +70,9 @@ class CategoryTreeWidget(TreeWidget):
 
     def _connect_signals(self):
         """连接内部和外部信号"""
-        # 点击信号
         self.itemClicked.connect(self._on_item_clicked)
         self.customContextMenuRequested.connect(self._on_context_menu)
         
-        # 监听全局主题色变更
         from .....common.signals import signal_bus
         signal_bus.theme_color_changed.connect(self._apply_style)
     
@@ -108,7 +81,6 @@ class CategoryTreeWidget(TreeWidget):
         self.clear()
         self.category_items.clear()
         
-        # 获取根分类
         root_categories = self.category_manager.get_category_tree()
         
         # 1. 手动添加“全部”根节点
@@ -116,15 +88,18 @@ class CategoryTreeWidget(TreeWidget):
         all_item.setData(0, Qt.ItemDataRole.UserRole, "all")
         self.category_items["all"] = all_item
         
-        # 为“全部”节点创建 Widget
         from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel
+        from ....styles.constants.icons import ICON_SIZES
+        
+        icon_size = ICON_SIZES["sm"]
+        
         container = QWidget()
         layout = QHBoxLayout(container)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(8)
         
         icon_label = QLabel()
-        icon_label.setPixmap(FluentIcon.APPLICATION.icon().pixmap(16, 16))
+        icon_label.setPixmap(FluentIcon.APPLICATION.icon().pixmap(icon_size, icon_size))
         layout.addWidget(icon_label)
         
         text_label = QLabel("全部")
@@ -147,61 +122,45 @@ class CategoryTreeWidget(TreeWidget):
         self.expandAll()
     
     def _add_category_item(self, category, parent_item=None, depth=0):
-        """
-        添加分类项
+        """添加分类项"""
+        from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel
         
-        Args:
-            category: 分类对象
-            parent_item: 父项（None 表示根节点）
-            depth: 层级深度
-        """
-        from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel, QSpacerItem, QSizePolicy
-        
-        # 创建项
         if parent_item:
             item = QTreeWidgetItem(parent_item)
         else:
             item = QTreeWidgetItem(self)
         
-        # 存储分类ID
         item.setData(0, Qt.ItemDataRole.UserRole, category.id)
         self.category_items[category.id] = item
         
-        # --- 核心修复：使用 setItemWidget 配合 Spacer 手动实现物理层级感 ---
-        # 这种方式不会触发 QTreeWidget 的 branch 渲染，从而保证只有最左侧一条指示条。
         container = QWidget()
         layout = QHBoxLayout(container)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(8)
         
-        # 1. 缩进 Spacer
         if depth > 0:
             layout.addSpacing(depth * 24)
             
-        # 2. 图标
+        from ....styles.constants.icons import ICON_SIZES
+        icon_size = ICON_SIZES["sm"]
+        
         icon_label = QLabel()
         try:
             icon_enum = getattr(FluentIcon, category.icon, FluentIcon.FOLDER)
-            icon_label.setPixmap(icon_enum.icon().pixmap(16, 16))
+            icon_label.setPixmap(icon_enum.icon().pixmap(icon_size, icon_size))
         except:
-            icon_label.setPixmap(FluentIcon.FOLDER.icon().pixmap(16, 16))
+            icon_label.setPixmap(FluentIcon.FOLDER.icon().pixmap(icon_size, icon_size))
         layout.addWidget(icon_label)
         
-        # 3. 文本
         text_label = QLabel(category.name)
-        text_label.setStyleSheet("background: transparent; border: none;") # 确保继承外层颜色
+        text_label.setStyleSheet("background: transparent; border: none;") 
         layout.addWidget(text_label)
         
         layout.addStretch()
-        
-        # 关键：我们需要让 item 知道它有一个 Widget，同时 QSS 依然能控制背景
-        # 为了让点击事件和悬停背景正常工作，我们将 container 设为透明
         container.setStyleSheet("background: transparent; border: none;")
-        container.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents) # 让点击穿透到 item
-        
+        container.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents) 
         self.setItemWidget(item, 0, container)
         
-        # 递归添加子分类
         children = self.category_manager.get_children(category.id)
         for child in sorted(children, key=lambda x: x.order):
             self._add_category_item(child, item, depth + 1)
@@ -215,85 +174,61 @@ class CategoryTreeWidget(TreeWidget):
     def _on_context_menu(self, pos):
         """显示右键菜单"""
         item = self.itemAt(pos)
-        
         menu = RoundMenu(parent=self)
         
         if item:
-            # 有选中项
             category_id = item.data(0, Qt.ItemDataRole.UserRole)
             category = self.category_manager.get_category_by_id(category_id)
             
             if category:
-                # 添加子分类
                 add_child_action = Action(FluentIcon.ADD, '添加子分类')
                 add_child_action.triggered.connect(lambda: self.add_category_requested.emit(category_id))
                 menu.addAction(add_child_action)
-                
                 menu.addSeparator()
-                
-                # 编辑
                 edit_action = Action(FluentIcon.EDIT, '编辑')
                 edit_action.triggered.connect(lambda: self.edit_category_requested.emit(category_id))
                 menu.addAction(edit_action)
                 
-                # 删除（系统分类不可删除）
                 from ....common.config import SYSTEM_CATEGORIES
                 if category_id not in SYSTEM_CATEGORIES:
                     delete_action = Action(FluentIcon.DELETE, '删除')
                     delete_action.triggered.connect(lambda: self.delete_category_requested.emit(category_id))
                     menu.addAction(delete_action)
         else:
-            # 无选中项，显示添加根分类
             add_root_action = Action(FluentIcon.ADD, '添加根分类')
             add_root_action.triggered.connect(lambda: self.add_category_requested.emit(None))
             menu.addAction(add_root_action)
         
         menu.exec(self.mapToGlobal(pos))
     
-    def get_selected_category_id(self) -> Optional[str]:
-        """获取当前选中的分类ID"""
-        item = self.currentItem()
-        if item:
-            return item.data(0, Qt.ItemDataRole.UserRole)
-        return None
-    
-    def highlight_categories(self, category_ids: List[str]):
-        """
-        高亮并展开指定的分类
-        
-        Args:
-            category_ids: 需要高亮的分类ID列表
-        """
-        from ....styles import get_text_primary, get_accent_color, get_text_secondary
+    def select_category(self, category_id: str):
+        """选中指定分类"""
+        if category_id in self.category_items:
+            item = self.category_items[category_id]
+            self.setCurrentItem(item)
+            self.scrollToItem(item)
 
+    def highlight_categories(self, category_ids: List[str]):
+        """高亮并展开指定的分类"""
+        from ....styles import get_text_primary, get_accent_color, get_text_secondary
         text_primary = get_text_primary()
         text_secondary = get_text_secondary()
         accent_color = get_accent_color()
-        
-        # 将输入列表转为集合以获得更好的查找性能
         highlight_set = set(category_ids) if category_ids else set()
 
-        # 1. 遍历所有项，根据是否命中搜索词设置样式
         for cid, item in self.category_items.items():
             widget = self.itemWidget(item, 0)
             if not widget:
                 continue
-            
             is_matched = cid in highlight_set
-            
             for child in widget.findChildren(QLabel):
                 if child.text() == "":
                     continue
-                    
                 if is_matched:
-                    # 命中的分类：橙色加粗
                     child.setStyleSheet(f"background: transparent; border: none; font-weight: bold; color: {accent_color};")
                 else:
-                    # 未命中的分类：且如果有搜索词，则变暗
                     color = text_secondary if category_ids else text_primary
                     child.setStyleSheet(f"background: transparent; border: none; font-weight: normal; color: {color};")
-            
-            # 如果匹配，则展开父级
             if is_matched:
                 parent = item.parent()
                 while parent:
@@ -301,10 +236,9 @@ class CategoryTreeWidget(TreeWidget):
                     parent = parent.parent()
     
     def clear_highlights(self):
-        """清除所有高亮样式，恢复到主文字颜色"""
+        """清除所有高亮样式"""
         from ....styles import get_text_primary
         text_primary = get_text_primary()
-        
         for item in self.category_items.values():
             widget = self.itemWidget(item, 0)
             if widget:
@@ -312,9 +246,98 @@ class CategoryTreeWidget(TreeWidget):
                     if child.text() != "":
                         child.setStyleSheet(f"background: transparent; border: none; font-weight: normal; color: {text_primary};")
 
+
+class CategoryTreeWidget(QWidget):
+    """分类树容器组件 - 包含顶部控制按钮和树视图"""
+    
+    category_selected = Signal(str)
+    add_category_requested = Signal(str)
+    edit_category_requested = Signal(str)
+    delete_category_requested = Signal(str)
+    
+    def __init__(self, category_manager: CategoryManager, user_manager: Optional['UserManager'] = None, parent=None):
+        super().__init__(parent)
+        self.category_manager = category_manager
+        self.user_manager = user_manager
+        
+        self._init_ui()
+        self._connect_signals()
+
+    def _init_ui(self):
+        """初始化 UI"""
+        from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout
+        from qfluentwidgets import TransparentToolButton, StrongBodyLabel
+        from ....styles import get_text_secondary
+        
+        from ....styles.constants.icons import ICON_SIZES
+        from ....styles.constants.components import COMPONENT_STYLES
+        
+        btn_size = COMPONENT_STYLES["button"]["height_sm"] # 28
+        icon_size = ICON_SIZES["sm"] # 16
+
+        self.main_layout = QVBoxLayout(self)
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
+        self.main_layout.setSpacing(4)
+
+        # 1. 顶部工具栏
+        self.toolbar_layout = QHBoxLayout()
+        self.toolbar_layout.setContentsMargins(4, 0, 4, 0)
+        self.toolbar_layout.setSpacing(2)
+
+        self.title_label = StrongBodyLabel("分类")
+        self.title_label.setStyleSheet(f"color: {get_text_secondary()}; font-weight: bold;")
+        self.toolbar_layout.addWidget(self.title_label)
+        self.toolbar_layout.addStretch()
+
+        # 展开按钮（对应展开全部）
+        self.expand_btn = TransparentToolButton(FluentIcon.DOWN, self)
+        self.expand_btn.setToolTip("展开全部")
+        self.expand_btn.setFixedSize(btn_size, btn_size)
+        self.expand_btn.setIconSize(QSize(icon_size, icon_size))
+        self.toolbar_layout.addWidget(self.expand_btn)
+
+        # 收起按钮（对应收起全部）
+        self.collapse_btn = TransparentToolButton(FluentIcon.UP, self)
+        self.collapse_btn.setToolTip("收起全部")
+        self.collapse_btn.setFixedSize(btn_size, btn_size)
+        self.collapse_btn.setIconSize(QSize(icon_size, icon_size))
+        self.toolbar_layout.addWidget(self.collapse_btn)
+
+        self.main_layout.addLayout(self.toolbar_layout)
+
+        # 2. 内部树视图
+        self.tree = InternalCategoryTree(self.category_manager, self.user_manager, self)
+        self.main_layout.addWidget(self.tree)
+
+    def _connect_signals(self):
+        """信号转发和处理"""
+        self.expand_btn.clicked.connect(self.tree.expandAll)
+        self.collapse_btn.clicked.connect(self.tree.collapseAll)
+        
+        # 转发 InternalCategoryTree 的信号
+        self.tree.category_selected.connect(self.category_selected.emit)
+        self.tree.add_category_requested.connect(self.add_category_requested.emit)
+        self.tree.edit_category_requested.connect(self.edit_category_requested.emit)
+        self.tree.delete_category_requested.connect(self.delete_category_requested.emit)
+
+    # 代理常用的 TreeWidget 方法到内部树
+    def load_categories(self):
+        self.tree.load_categories()
+
     def select_category(self, category_id: str):
-        """选中指定分类"""
-        if category_id in self.category_items:
-            item = self.category_items[category_id]
-            self.setCurrentItem(item)
-            self.scrollToItem(item)
+        self.tree.select_category(category_id)
+
+    def highlight_categories(self, category_ids: List[str]):
+        self.tree.highlight_categories(category_ids)
+
+    def clear_highlights(self):
+        self.tree.clear_highlights()
+
+    def get_selected_category_id(self) -> Optional[str]:
+        return self.tree.get_selected_category_id()
+
+    def expandAll(self):
+        self.tree.expandAll()
+
+    def collapseAll(self):
+        self.tree.collapseAll()

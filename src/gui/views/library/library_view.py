@@ -68,15 +68,6 @@ class LibraryView(BasePageView):
 
         toolbar.addSpacing(10)
 
-        # 展开/收缩按钮
-        self.expand_btn = PushButton(FluentIcon.UP, '展开全部')
-        self.expand_btn.clicked.connect(self.category_tree.expandAll)
-        toolbar.addWidget(self.expand_btn)
-
-        self.collapse_btn = PushButton(FluentIcon.DOWN, '收缩全部')
-        self.collapse_btn.clicked.connect(self.category_tree.collapseAll)
-        toolbar.addWidget(self.collapse_btn)
-
         toolbar.addSpacing(10)
 
         # 刷新按钮

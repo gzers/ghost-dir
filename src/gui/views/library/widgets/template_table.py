@@ -148,7 +148,7 @@ class TemplateTableWidget(TableWidget):
             QTableWidget::item {{
                 color: {text_primary};
                 border: none;
-                padding-left: 8px;
+                padding: 0 8px;
             }}
         """
         setCustomStyleSheet(self, qss, qss)
@@ -185,12 +185,18 @@ class TemplateTableWidget(TableWidget):
         self.setRowCount(len(templates))
         for i, template in enumerate(templates):
             # 0. 复选框容器
+            from PySide6.QtWidgets import QSizePolicy
             cb_container = QWidget()
             cb_layout = QHBoxLayout(cb_container)
+            # 确保容器背景透明，避免遮挡选中效果
+            cb_container.setStyleSheet("background: transparent; border: none;")
             cb = CheckBox()
+            # 移除 CheckBox 可能存在的默认文字空间干扰
+            cb.setText("")
             cb_layout.addWidget(cb)
             cb_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
             cb_layout.setContentsMargins(0, 0, 0, 0)
+            cb_layout.setSpacing(0)
             self.setCellWidget(i, 0, cb_container)
             self.checkboxes[i] = cb
             
@@ -205,28 +211,34 @@ class TemplateTableWidget(TableWidget):
             # 1. 名称
             name_item = QTableWidgetItem(template.name)
             name_item.setData(Qt.ItemDataRole.UserRole, template.id)
+            name_item.setTextAlignment(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)
             self.setItem(i, 1, name_item)
             
             # 2. 源路径
             src_item = QTableWidgetItem(template.default_src)
+            src_item.setTextAlignment(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)
             self.setItem(i, 2, src_item)
             
             # 3. 目标路径
             target = getattr(template, 'default_target', None) or '(使用全局默认)'
             target_item = QTableWidgetItem(target)
+            target_item.setTextAlignment(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)
             self.setItem(i, 3, target_item)
             
             # 4. 描述
             desc = template.description or ''
             desc_item = QTableWidgetItem(desc)
+            desc_item.setTextAlignment(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)
             self.setItem(i, 4, desc_item)
             
             # 5. 类型 - 使用 QLabel 作为 cell widget 以确保完美居中
             from PySide6.QtWidgets import QLabel
             type_text = '自定义' if template.is_custom else '官方'
             type_container = QWidget()
+            type_container.setStyleSheet("background: transparent; border: none;")
             type_layout = QHBoxLayout(type_container)
             type_label = QLabel(type_text)
+            type_label.setStyleSheet("background: transparent; border: none;")
             type_layout.addWidget(type_label)
             type_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
             type_layout.setContentsMargins(0, 0, 0, 0)
@@ -234,16 +246,19 @@ class TemplateTableWidget(TableWidget):
             
             # 6. 操作按钮
             btn_container = QWidget()
+            btn_container.setStyleSheet("background: transparent; border: none;")
             btn_layout = QHBoxLayout(btn_container)
-            btn_layout.setContentsMargins(4, 0, 4, 0)
+            btn_layout.setContentsMargins(0, 0, 0, 0)
             btn_layout.setSpacing(4)
             
             edit_btn = TransparentToolButton(FluentIcon.EDIT, btn_container)
             edit_btn.setToolTip('编辑')
+            edit_btn.setFixedSize(32, 32) # 固定大小有助于居中平衡
             edit_btn.clicked.connect(lambda checked=False, tid=template.id: self.edit_template_requested.emit(tid))
             
             del_btn = TransparentToolButton(FluentIcon.DELETE, btn_container)
             del_btn.setToolTip('删除')
+            del_btn.setFixedSize(32, 32)
             del_btn.clicked.connect(lambda checked=False, tid=template.id: self.delete_template_requested.emit(tid))
             
             btn_layout.addWidget(edit_btn)
