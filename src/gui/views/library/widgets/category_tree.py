@@ -2,7 +2,7 @@
 分类树组件
 显示分类树结构
 """
-from typing import Optional
+from typing import Optional, List
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QTreeWidget, QTreeWidgetItem, QMenu, QLabel
 from PySide6.QtGui import QAction

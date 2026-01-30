@@ -14,6 +14,9 @@ from qfluentwidgets import (
     InfoBar, InfoBarPosition
 )
 from ...components import CategorySelector
+from src.data.template_manager import TemplateManager
+from src.data.category_manager import CategoryManager
+from src.data.model import Template
 
 
 class TemplateEditDialog(MessageBoxBase):
