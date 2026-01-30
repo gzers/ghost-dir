@@ -666,7 +666,12 @@ class CategoryManagerDialog(MessageBoxBase):
             t("library.help_notes_4")
         )
         
-        MessageBox(t("library.btn_help"), help_content, self).exec()
+        msg = MessageBox(t("library.btn_help"), help_content, self)
+        # 仅保留确认按钮
+        msg.cancelButton.hide()
+        # 限制按钮宽度并居中 (MessageBox 默认已包含 stretch)
+        msg.yesButton.setFixedWidth(120)
+        msg.exec()
     
     # ========== 工具方法 ==========
     
