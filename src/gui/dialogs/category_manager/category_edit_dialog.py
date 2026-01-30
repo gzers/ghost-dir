@@ -9,12 +9,13 @@ from PySide6.QtWidgets import (
     QLabel
 )
 from qfluentwidgets import (
-    MessageBoxBase, SubtitleLabel, LineEdit, ComboBox,
+    MessageBoxBase, SubtitleLabel, LineEdit,
     PushButton, SpinBox, FluentIcon, TransparentToolButton,
     InfoBar, InfoBarPosition, BodyLabel
 )
 from src.data.model import CategoryNode
 from src.data.category_manager import CategoryManager
+from ...components.category_selector import CategorySelector
 from ...i18n import t
 from ...styles import format_required_label
 
@@ -71,11 +72,10 @@ class CategoryEditDialog(MessageBoxBase):
         self.nameEdit.setFixedWidth(CONTENT_WIDTH)
         form_layout.addRow(self.nameLabel, self.nameEdit)
         
-        # 父分类
+        # 父分类 - 使用新的树形选择器
         self.parentLabel = BodyLabel(t("library.label_parent_category"), self)
-        self.parentCombo = ComboBox(self)
+        self.parentCombo = CategorySelector(self, only_leaf=False, root_visible=True)
         self.parentCombo.setFixedWidth(CONTENT_WIDTH)
-        self.parentCombo.setPlaceholderText(t("library.placeholder_parent_category"))
         form_layout.addRow(self.parentLabel, self.parentCombo)
         
         # 排序权重
@@ -106,36 +106,20 @@ class CategoryEditDialog(MessageBoxBase):
         elif self.mode == "create" and self.target_parent_id:
             target_pid = self.target_parent_id
 
-        # 1. 加载根分类选项
-        self.parentCombo.addItem(t("library.label_root_category"), None)
-        if target_pid is None:
-            self.parentCombo.setCurrentIndex(0)
+        # 构建排除列表（不能选自己及子孙）
+        exclude_ids = []
+        if self.mode == "edit" and self.category:
+            exclude_ids.append(self.category.id)
+            descendants = self.category_manager._get_all_descendants(self.category.id)
+            exclude_ids.extend([d.id for d in descendants])
         
-        # 2. 迭代并加载其他分类
-        for category in self.category_manager.get_all_categories():
-            # 编辑模式下，不能选择自己作为父分类
-            if self.mode == "edit" and self.category and category.id == self.category.id:
-                continue
-            
-            # 不能选择自己的子孙分类作为父分类
-            if self.mode == "edit" and self.category:
-                descendants = self.category_manager._get_all_descendants(self.category.id)
-                if any(d.id == category.id for d in descendants):
-                    continue
-            
-            # 显示分类层级
-            depth = category.get_depth(self.category_manager.categories)
-            indent = "  " * (depth - 1)
-            display_name = f"{indent}{category.name}"
-            
-            # 添加项
-            self.parentCombo.addItem(display_name, category.id)
-            
-            # 实时检查并选中
-            if target_pid is not None and str(category.id) == str(target_pid):
-                self.parentCombo.setCurrentIndex(self.parentCombo.count() - 1)
+        # 配置树形选择器
+        self.parentCombo.set_manager(self.category_manager, exclude_ids=exclude_ids)
         
-        # 3. 如果是编辑模式，填充基本信息
+        # 设置初始选中值
+        self.parentCombo.set_value(target_pid)
+        
+        # 填充基本信息
         if self.mode == "edit" and self.category:
             self.nameEdit.setText(self.category.name)
             self.orderSpin.setValue(self.category.order)
@@ -164,7 +148,7 @@ class CategoryEditDialog(MessageBoxBase):
             return False
         
         # 获取父分类ID
-        parent_id = self.parentCombo.currentData()
+        parent_id = self.parentCombo.get_value()
         
         # 如果选择了父分类，验证是否可以添加子分类
         if parent_id and self.mode == "create":
@@ -218,14 +202,14 @@ class CategoryEditDialog(MessageBoxBase):
         if self.mode == "edit" and self.category:
             # 更新现有分类
             self.category.name = self.nameEdit.text().strip()
-            self.category.parent_id = self.parentCombo.currentData()
+            self.category.parent_id = self.parentCombo.get_value()
             self.category.order = self.orderSpin.value()
             return self.category
         else:
             # 创建新分类
             # 直接从输入框和父分类获取数据
             name = self.nameEdit.text().strip()
-            parent_id = self.parentCombo.currentData()
+            parent_id = self.parentCombo.get_value()
             
             # 生成 ID：清理名称中的非法字符
             import re

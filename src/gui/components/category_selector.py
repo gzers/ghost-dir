@@ -17,11 +17,21 @@ from src.data.model import CategoryNode
 class CategoryTreeDropdown(QFrame):
     """分类树下拉框"""
     
-    item_selected = Signal(str, str)  # category_id, category_name
+    item_selected = Signal(object, str)  # category_id, category_name (id 可能是 None 表示根)
     
-    def __init__(self, category_manager: CategoryManager, parent=None):
+    def __init__(
+        self, 
+        category_manager: CategoryManager, 
+        only_leaf: bool = True,
+        root_visible: bool = False,
+        exclude_ids: Optional[list] = None,
+        parent=None
+    ):
         super().__init__(parent)
         self.category_manager = category_manager
+        self.only_leaf = only_leaf
+        self.root_visible = root_visible
+        self.exclude_ids = exclude_ids or []
         self.category_items = {}
         self.setObjectName("CategoryTreeDropdown")
         
@@ -111,6 +121,21 @@ class CategoryTreeDropdown(QFrame):
         self.tree.clear()
         self.category_items.clear()
         
+        # 如果需要显示根分类
+        if self.root_visible:
+            from ..styles import get_text_secondary
+            root_item = QTreeWidgetItem(self.tree)
+            root_item.setData(0, Qt.ItemDataRole.UserRole, None)
+            from ...gui.i18n import t
+            root_name = t("library.label_root_category")
+            # 如果翻译缺失，回退到默认文案
+            if "[Missing:" in root_name:
+                root_name = "无 (根分类)"
+            root_item.setText(0, root_name)
+            # 强调条装饰
+            root_item.setForeground(0, self.palette().link())
+            root_item.setToolTip(0, "点击选择此项作为根分类")
+        
         root_categories = self.category_manager.get_category_tree()
         
         for category in sorted(root_categories, key=lambda x: x.order):
@@ -120,6 +145,10 @@ class CategoryTreeDropdown(QFrame):
     
     def _add_category_item(self, category: CategoryNode, parent_item: Optional[QTreeWidgetItem] = None):
         """添加分类项"""
+        # 递归检查排除列表（如果分类本身或其祖先在排除列表中，则不显示）
+        if category.id in self.exclude_ids:
+            return
+
         if parent_item:
             item = QTreeWidgetItem(parent_item)
         else:
@@ -129,18 +158,21 @@ class CategoryTreeDropdown(QFrame):
         item.setText(0, category.name)
         self.category_items[category.id] = item
         
-        # 检查是否为叶子节点
+        # 检查是否可选择
         all_categories = list(self.category_manager.categories.values())
         is_leaf = category.is_leaf(all_categories)
         
-        if not is_leaf:
-            # 非叶子节点：禁用选择
-            item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsSelectable)
-            item.setToolTip(0, "此分类包含子分类，请选择具体的子分类")
-            item.setForeground(0, self.palette().placeholderText())
+        if self.only_leaf:
+            if not is_leaf:
+                # 仅叶子模式：非叶子节点不可选
+                item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsSelectable)
+                item.setToolTip(0, "此分类包含子分类，请选择具体的子分类")
+                item.setForeground(0, self.palette().placeholderText())
+            else:
+                item.setToolTip(0, "点击选择此分类")
         else:
-            # 叶子节点：可选择
-            item.setToolTip(0, "点击选择此分类")
+            # 全节点模式：所有节点皆可选
+            item.setToolTip(0, f"点击选择 '{category.name}'")
         
         # 递归添加子分类
         children = self.category_manager.get_children(category.id)
@@ -150,7 +182,13 @@ class CategoryTreeDropdown(QFrame):
     def _on_item_clicked(self, item: QTreeWidgetItem, column: int):
         """树项被点击"""
         category_id = item.data(0, Qt.ItemDataRole.UserRole)
-        if category_id and self.category_manager.is_leaf(category_id):
+        
+        # 判定是否可选
+        selectable = True
+        if self.only_leaf and category_id is not None:
+            selectable = self.category_manager.is_leaf(category_id)
+        
+        if selectable:
             category_name = item.text(0)
             self.item_selected.emit(category_id, category_name)
             self.hide()
@@ -159,10 +197,13 @@ class CategoryTreeDropdown(QFrame):
 class CategorySelector(QWidget):
     """分类选择器组件（带下拉树形视图）"""
     
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, only_leaf: bool = True, root_visible: bool = False):
         super().__init__(parent)
         self.category_manager = None
         self.dropdown = None
+        self.only_leaf = only_leaf
+        self.root_visible = root_visible
+        self.exclude_ids = []
         self.selected_category_id = None
         self.selected_category_name = None
         
@@ -190,15 +231,22 @@ class CategorySelector(QWidget):
             return True
         return super().eventFilter(obj, event)
 
-    def set_manager(self, category_manager: CategoryManager):
+    def set_manager(self, category_manager: CategoryManager, exclude_ids: Optional[list] = None):
         """设置分类管理器"""
         self.category_manager = category_manager
+        self.exclude_ids = exclude_ids or []
         
         # 创建下拉框
         if self.dropdown:
             self.dropdown.deleteLater()
         
-        self.dropdown = CategoryTreeDropdown(self.category_manager, self)
+        self.dropdown = CategoryTreeDropdown(
+            self.category_manager, 
+            only_leaf=self.only_leaf,
+            root_visible=self.root_visible,
+            exclude_ids=self.exclude_ids,
+            parent=self
+        )
         self.dropdown.item_selected.connect(self._on_category_selected)
     
     def _show_dropdown(self):
@@ -231,9 +279,20 @@ class CategorySelector(QWidget):
         if self.dropdown:
             self.dropdown.load_categories()
     
-    def set_value(self, category_id: str):
+    def set_value(self, category_id: Optional[str]):
         """设置选中的分类 ID"""
-        if not category_id or not self.category_manager:
+        if category_id is None:
+            if self.root_visible:
+                from ...gui.i18n import t
+                root_name = t("library.label_root_category")
+                if "[Missing:" in root_name:
+                    root_name = "无 (根分类)"
+                self.selected_category_id = None
+                self.selected_category_name = root_name
+                self.lineEdit.setText(root_name)
+            return
+
+        if not self.category_manager:
             return
         
         category = self.category_manager.get_category_by_id(category_id)

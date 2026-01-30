@@ -8,7 +8,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QFormLayout, QListWidget, QL
 from qfluentwidgets import MessageBoxBase, SubtitleLabel, BodyLabel, InfoBar, InfoBarPosition
 from src.data.model import Template
 from src.data.category_manager import CategoryManager
-from .category_selector import CategorySelectorTree
+from ...components import CategorySelector
 
 
 class BatchMoveDialog(MessageBoxBase):
@@ -55,7 +55,8 @@ class BatchMoveDialog(MessageBoxBase):
         category_label.setStyleSheet("font-weight: bold;")
         
         # 分类选择器（树形）
-        self.categorySelector = CategorySelectorTree(self.category_manager, self)
+        self.categorySelector = CategorySelector(self, only_leaf=True)
+        self.categorySelector.set_manager(self.category_manager)
         
         # 添加到布局
         self.viewLayout.addWidget(self.titleLabel)
@@ -74,7 +75,7 @@ class BatchMoveDialog(MessageBoxBase):
     
     def validate(self) -> bool:
         """验证输入"""
-        if not self.categorySelector.get_selected_category_id():
+        if not self.categorySelector.get_value():
             InfoBar.warning(
                 title='验证失败',
                 content='请选择目标分类（只能选择叶子分类）',
@@ -90,4 +91,4 @@ class BatchMoveDialog(MessageBoxBase):
     
     def get_target_category_id(self) -> str:
         """获取目标分类ID"""
-        return self.categorySelector.get_selected_category_id()
+        return self.categorySelector.get_value()
