@@ -1,7 +1,8 @@
 from typing import List, Dict
 from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QGuiApplication
 from PySide6.QtWidgets import QTableWidgetItem, QHeaderView, QWidget, QHBoxLayout
-from qfluentwidgets import TableWidget, FluentIcon, RoundMenu, Action, CheckBox, TransparentToolButton, setCustomStyleSheet
+from qfluentwidgets import TableWidget, FluentIcon, RoundMenu, Action, CheckBox, TransparentToolButton, setCustomStyleSheet, InfoBar, InfoBarPosition
 from src.data.model import Template
 from ....styles import (
     get_font_style, get_text_primary, apply_transparent_style, 
@@ -320,6 +321,25 @@ class TemplateTableWidget(TableWidget):
         if not template_id: return
         
         menu = RoundMenu(parent=self)
+        
+        # 复制动作
+        if item and item.text():
+            copy_action = Action(FluentIcon.COPY, '复制')
+            def copy_text():
+                QGuiApplication.clipboard().setText(item.text())
+                InfoBar.success(
+                    title="已复制",
+                    content=f"内容: {item.text()[:20]}...",
+                    orient=Qt.Orientation.Horizontal,
+                    isClosable=True,
+                    position=InfoBarPosition.TOP,
+                    duration=2000,
+                    parent=self.window()
+                )
+            copy_action.triggered.connect(copy_text)
+            menu.addAction(copy_action)
+            menu.addSeparator()
+
         edit_action = Action(FluentIcon.EDIT, '编辑')
         edit_action.setEnabled(self.allow_operations)
         edit_action.triggered.connect(lambda: self.edit_template_requested.emit(template_id))
