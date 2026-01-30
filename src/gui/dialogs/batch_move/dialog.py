@@ -4,10 +4,11 @@
 """
 from typing import List
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QFormLayout, QListWidget, QListWidgetItem
-from qfluentwidgets import MessageBoxBase, SubtitleLabel, ComboBox, BodyLabel, InfoBar, InfoBarPosition
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QFormLayout, QListWidget, QListWidgetItem, QLabel
+from qfluentwidgets import MessageBoxBase, SubtitleLabel, BodyLabel, InfoBar, InfoBarPosition
 from src.data.model import Template
 from src.data.category_manager import CategoryManager
+from .category_selector import CategorySelectorTree
 
 
 class BatchMoveDialog(MessageBoxBase):
@@ -44,50 +45,39 @@ class BatchMoveDialog(MessageBoxBase):
         
         # 模板列表
         self.templateList = QListWidget(self)
-        self.templateList.setFixedHeight(150)
+        self.templateList.setFixedHeight(120)
         for template in self.templates:
             item = QListWidgetItem(f"{template.name} ({template.default_src})")
             self.templateList.addItem(item)
         
-        # 表单
-        form_widget = QWidget()
-        form_layout = QFormLayout(form_widget)
-        form_layout.setSpacing(12)
+        # 分类选择标签
+        category_label = BodyLabel('目标分类*:', self)
+        category_label.setStyleSheet("font-weight: bold;")
         
-        # 目标分类选择
-        self.categoryCombo = ComboBox(self)
-        self.categoryCombo.setFixedWidth(300)
-        self.categoryCombo.setPlaceholderText('选择目标分类')
-        
-        # 只显示叶子分类
-        for category in self.category_manager.get_all_categories():
-            if self.category_manager.is_leaf(category.id):
-                depth = category.get_depth(self.category_manager.categories)
-                indent = "  " * (depth - 1)
-                display_name = f"{indent}{category.name}"
-                self.categoryCombo.addItem(display_name, category.id)
-        
-        form_layout.addRow('目标分类*:', self.categoryCombo)
+        # 分类选择器（树形）
+        self.categorySelector = CategorySelectorTree(self.category_manager, self)
         
         # 添加到布局
         self.viewLayout.addWidget(self.titleLabel)
         self.viewLayout.addWidget(self.descLabel)
         self.viewLayout.addWidget(self.templateList)
-        self.viewLayout.addWidget(form_widget)
+        self.viewLayout.addSpacing(8)
+        self.viewLayout.addWidget(category_label)
+        self.viewLayout.addWidget(self.categorySelector)
         
         # 按钮文本
         self.yesButton.setText('移动')
         self.cancelButton.setText('取消')
         
         # 设置对话框大小
-        self.widget.setMinimumWidth(450)
+        self.widget.setMinimumWidth(500)
     
     def validate(self) -> bool:
         """验证输入"""
-        if not self.categoryCombo.currentData():
+        if not self.categorySelector.get_selected_category_id():
             InfoBar.warning(
                 title='验证失败',
-                content='请选择目标分类',
+                content='请选择目标分类（只能选择叶子分类）',
                 orient=Qt.Orientation.Horizontal,
                 isClosable=True,
                 position=InfoBarPosition.TOP,
@@ -100,4 +90,4 @@ class BatchMoveDialog(MessageBoxBase):
     
     def get_target_category_id(self) -> str:
         """获取目标分类ID"""
-        return self.categoryCombo.currentData()
+        return self.categorySelector.get_selected_category_id()
