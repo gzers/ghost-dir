@@ -96,7 +96,7 @@ class TemplateEditDialog(MessageBoxBase):
         form_layout.addRow(self.srcLabel, src_widget)
         
         # 目标路径
-        self.targetLabel = BodyLabel('目标路径:', self)
+        self.targetLabel = BodyLabel('目标路径', self)
         target_widget = QWidget()
         target_layout = QHBoxLayout(target_widget)
         target_layout.setContentsMargins(0, 0, 0, 0)
@@ -120,7 +120,7 @@ class TemplateEditDialog(MessageBoxBase):
         form_layout.addRow(self.categoryLabel, self.categoryCombo)
         
         # 描述
-        self.descLabel = BodyLabel('描述:', self)
+        self.descLabel = BodyLabel('描述', self)
         self.descEdit = TextEdit(self)
         self.descEdit.setPlaceholderText('输入模板描述（可选）')
         self.descEdit.setFixedHeight(80)

@@ -75,7 +75,7 @@ class CategoryEditDialog(MessageBoxBase):
         form_layout.addRow(self.nameLabel, self.nameEdit)
         
         # 父分类
-        self.parentLabel = BodyLabel(f'{t("library.label_parent_category")}:', self)
+        self.parentLabel = BodyLabel(t("library.label_parent_category"), self)
         self.parentCombo = ComboBox(self)
         self.parentCombo.setFixedWidth(CONTENT_WIDTH)
         self.parentCombo.setPlaceholderText(t("library.placeholder_parent_category"))
@@ -99,11 +99,11 @@ class CategoryEditDialog(MessageBoxBase):
         icon_layout.addWidget(self.iconLabel)
         icon_layout.addStretch()
         
-        self.iconTitleLabel = BodyLabel(f'{t("library.label_icon")}:', self)
+        self.iconTitleLabel = BodyLabel(t("library.label_icon"), self)
         form_layout.addRow(self.iconTitleLabel, icon_widget)
         
         # 排序权重
-        self.orderLabel = BodyLabel(f'{t("library.label_order")}:', self)
+        self.orderLabel = BodyLabel(t("library.label_order"), self)
         self.orderSpin = SpinBox(self)
         self.orderSpin.setRange(0, 999)
         self.orderSpin.setValue(0)

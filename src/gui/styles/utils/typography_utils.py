@@ -68,18 +68,6 @@ def format_required_label(text: str) -> str:
     Returns:
         包含 HTML 样式的字符串
     """
-    from ..constants.spacing import SPACING_SCALE
-    
-    # 获取设计系统中的 xs 级间距 (目前定义为 4px)
-    # 为了解决 Qt Rich Text 对 margin 支持不佳的问题，改用 &nbsp; 配合 padding
-    spacing = SPACING_SCALE["xs"]
-    
-    # 规范：红色标星，使用 inline-block 模拟间距
-    # 注意：Qt 对某些 CSS 属性支持有限，这里使用 padding-left 确保在 QLabel 中生效
-    star_style = (
-        f"color: #EF4444; "
-        f"font-weight: bold; "
-        f"padding-left: {spacing}px;"
-    )
-    star_html = f'<span style="{star_style}">*</span>'
+    # 规范：红色标星，使用 &nbsp; 在文字和星号之间创建固定间距
+    star_html = '&nbsp;<span style="color: #EF4444; font-weight: bold;">*</span>'
     return f"{text}{star_html}"
