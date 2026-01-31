@@ -29,6 +29,9 @@ class SignalBus(QObject):
     # 分类变更信号
     categories_changed = Signal()
 
+    # 配置变更信号
+    config_changed = Signal(str, object)  # key, value
+
     # 主题变更信号
     # 主题变更信号
     theme_changed = Signal(str)  # theme_name (light/dark/system)

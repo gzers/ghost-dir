@@ -42,4 +42,10 @@ SETTINGS_TEXTS = {
     "startup_library": "模版库",
     "startup_changed": "设置已更新",
     "startup_changed_msg": "首启动页面已设置为 {page}",
+    
+    # 视图模式
+    "view_mode": "默认展示视图",
+    "view_mode_desc": "设置进入‘已连接’页面时默认显示的视图模式",
+    "view_list": "列表视图",
+    "view_category": "分类视图",
 }

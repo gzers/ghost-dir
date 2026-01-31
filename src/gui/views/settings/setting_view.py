@@ -15,6 +15,7 @@ from PySide6.QtCore import Qt
 from .widgets.theme_color_card import ThemeColorCard
 from .widgets.theme_card import ThemeCard
 from .widgets.startup_card import StartupCard
+from .widgets.link_view_card import LinkViewCard
 from .widgets.target_root_card import TargetRootCard
 from .widgets.log_folder_card import LogFolderCard
 
@@ -85,6 +86,10 @@ class SettingView(BasePageView):
         # 首次打开功能
         self.startupCard = StartupCard(self.user_manager, self.startupGroup)
         self.startupGroup.addSettingCard(self.startupCard)
+
+        # 默认视图设置
+        self.linkViewCard = LinkViewCard(self.user_manager, self.startupGroup)
+        self.startupGroup.addSettingCard(self.linkViewCard)
 
         expand_layout.addWidget(self.startupGroup)
 

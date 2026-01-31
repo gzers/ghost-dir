@@ -21,6 +21,11 @@ COMMON_TEXTS = {
     "no": "否",
     "ok": "好的",
     "loading": "加载中...",
+    "startup_page_desc": "选择进入程序后显示的第一个页面",
+    "startup_wizard": "引导页面",
+    "startup_connected": "已连接页面",
+    "startup_library": "模版库页面",
+    
     "success": "成功",
     "failed": "失败",
     "partial_success": "部分成功",

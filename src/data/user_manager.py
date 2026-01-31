@@ -10,7 +10,7 @@ from dataclasses import asdict
 from ..data.model import UserLink, Category, Template
 from ..common.config import (
     USER_DATA_FILE, DEFAULT_CATEGORY,
-    DEFAULT_TARGET_ROOT, DEFAULT_THEME, DEFAULT_THEME_COLOR, DEFAULT_STARTUP_PAGE
+    DEFAULT_TARGET_ROOT, DEFAULT_THEME, DEFAULT_THEME_COLOR, DEFAULT_STARTUP_PAGE, DEFAULT_LINK_VIEW
 )
 
 
@@ -30,6 +30,7 @@ class UserManager:
         self.theme: str = DEFAULT_THEME                      # 主题：light/dark/system
         self.theme_color: str = DEFAULT_THEME_COLOR          # 主题色
         self.startup_page: str = DEFAULT_STARTUP_PAGE        # 首次打开：wizard/connected/library
+        self.default_link_view: str = DEFAULT_LINK_VIEW      # 默认视图：list/category
         
         self._ensure_data_dir()
         self._load_data()
@@ -79,6 +80,7 @@ class UserManager:
             self.theme = data.get('theme', DEFAULT_THEME)      # 主题
             self.theme_color = data.get('theme_color', DEFAULT_THEME_COLOR)  # 主题色
             self.startup_page = data.get('startup_page', DEFAULT_STARTUP_PAGE)  # 首次打开
+            self.default_link_view = data.get('default_link_view', DEFAULT_LINK_VIEW)  # 默认视图
             
             # 确保有默认分类
             if not any(c.name == DEFAULT_CATEGORY for c in self.categories):
@@ -109,6 +111,8 @@ class UserManager:
             data['theme_color'] = DEFAULT_THEME_COLOR
         if 'startup_page' not in data:
             data['startup_page'] = DEFAULT_STARTUP_PAGE
+        if 'default_link_view' not in data:
+            data['default_link_view'] = DEFAULT_LINK_VIEW
 
         return data
     
@@ -136,7 +140,8 @@ class UserManager:
                 'default_target_root': self.default_target_root,
                 'theme': self.theme,
                 'theme_color': self.theme_color,
-                'startup_page': self.startup_page
+                'startup_page': self.startup_page,
+                'default_link_view': self.default_link_view
             }
 
             with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
@@ -386,6 +391,25 @@ class UserManager:
     def get_startup_page(self) -> str:
         """获取首启动页面"""
         return self.startup_page
+
+    def set_default_link_view(self, view: str) -> bool:
+        """设置默认连接视图：list/category"""
+        if view not in ['list', 'category']:
+            return False
+        try:
+            self.default_link_view = view
+            self._save_data()
+            # 发射配置变更信号
+            from ..common.signals import signal_bus
+            signal_bus.config_changed.emit("default_link_view", view)
+            return True
+        except Exception as e:
+            print(f"设置默认连接视图时出错: {e}")
+            return False
+
+    def get_default_link_view(self) -> str:
+        """获取默认连接视图"""
+        return self.default_link_view
 
     def set_theme_color(self, color: str) -> bool:
         """设置主题色"""

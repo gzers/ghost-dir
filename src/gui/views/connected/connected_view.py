@@ -46,6 +46,12 @@ class ConnectedView(BasePageView):
         # 设置页面内容（层级 3）
         self._setup_content()
 
+        # 核心逻辑：读取配置设置初始视图（必须在 _setup_content 之后，确保 category_tree 已生成）
+        default_view = self.user_manager.get_default_link_view()
+        self.view_pivot.setCurrentItem(default_view)
+        # 手动触发布局切换信号，确保界面同步
+        self._on_view_pivot_changed(default_view)
+
         # 连接信号
         self._connect_signals()
 
@@ -145,7 +151,6 @@ class ConnectedView(BasePageView):
         self.view_pivot = Pivot()
         self.view_pivot.addItem("list", t("connected.view_list"))
         self.view_pivot.addItem("category", t("connected.view_category"))
-        self.view_pivot.setCurrentItem("category") # 默认选分类视图
         
         # 刷新按钮
         self.refresh_btn = ToolButton(FluentIcon.SYNC)
@@ -195,7 +200,23 @@ class ConnectedView(BasePageView):
         # 全局信号
         signal_bus.data_refreshed.connect(self._load_data)
         signal_bus.categories_changed.connect(self._load_data)
+        signal_bus.config_changed.connect(self._on_config_changed)
 
+    def _on_config_changed(self, key: str, value: object):
+        """配置变更回调"""
+        if key == "default_link_view":
+            self.view_pivot.setCurrentItem(str(value))
+            # 显式触发布局切换，因为 setCurrentItem 可能不触发信号
+            self._on_view_pivot_changed(str(value))
+            
+    def showEvent(self, event):
+        """页面显示事件"""
+        super().showEvent(event)
+        # 每次切回页面时，根据最新配置同步一次 Pivot 状态
+        default_view = self.user_manager.get_default_link_view()
+        self.view_pivot.setCurrentItem(default_view)
+        self._on_view_pivot_changed(default_view)
+    
     def _load_data(self):
         """加载数据"""
         # 强制重载磁盘最新数据
@@ -220,19 +241,31 @@ class ConnectedView(BasePageView):
         # 刷新表格显示
         self._on_category_selected(getattr(self, 'current_category_id', "all"))
     
-    def _on_view_pivot_changed(self, route_key: str):
-        """视图切换"""
+    def _on_view_pivot_changed(self, item_or_key):
+        """视图切换（支持手动字符串调用或信号对象触发）"""
+        # 防御性提取 route_key
+        if isinstance(item_or_key, str):
+            route_key = item_or_key
+        else:
+            # 如果是 PivotItem 对象，尝试提取 routeKey 属性
+            # 注意：qfluentwidgets 的 PivotItem 通常将 routeKey 存储在内部
+            route_key = getattr(item_or_key, 'routeKey', "")
+            if not route_key and hasattr(item_or_key, 'objectName'):
+                route_key = item_or_key.objectName()
+
         if route_key == "list":
             # 列表视图
             self.category_tree.hide()
             self.splitter.setSizes([0, 1000])
             self.view_stack.setCurrentIndex(1)
+            # 列表视图下默认显示“全部”连接
             self._on_category_selected("all")
         else:
             # 分类视图
             self.category_tree.show()
             self.splitter.setSizes([250, 750])
             self.view_stack.setCurrentIndex(0)
+            # 恢复到之前选中的分类或默认选“全部”
             self._on_category_selected(getattr(self, 'current_category_id', "all"))
 
     def _on_category_selected(self, category_id: str):
