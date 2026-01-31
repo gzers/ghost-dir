@@ -9,7 +9,7 @@ from qfluentwidgets import PushButton, TransparentToolButton, FluentIcon
 from .base_table import BaseTableWidget
 from ...data.model import UserLink, LinkStatus
 from ...common.config import format_size
-from ..i18n import get_status_text
+from ..i18n import get_status_text, get_category_text
 
 
 class LinkTable(BaseTableWidget):
@@ -27,22 +27,26 @@ class LinkTable(BaseTableWidget):
     
     def _setup_columns(self):
         """配置列结构与拉伸模式"""
-        self.setColumnCount(5)
-        self.setHorizontalHeaderLabels(["", "软件信息", "状态", "占用空间", "操作"])
+        self.setColumnCount(6)
+        self.setHorizontalHeaderLabels(["", "软件信息", "分类", "状态", "占用空间", "操作"])
         
         header = self.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)
         self.setColumnWidth(0, 48)  # 标准复选框宽度
         
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        
         header.setSectionResizeMode(2, QHeaderView.ResizeMode.Fixed)
-        self.setColumnWidth(2, 120)
+        self.setColumnWidth(2, 120)  # 分类列宽度
         
         header.setSectionResizeMode(3, QHeaderView.ResizeMode.Fixed)
-        self.setColumnWidth(3, 120)
+        self.setColumnWidth(3, 100)
         
         header.setSectionResizeMode(4, QHeaderView.ResizeMode.Fixed)
-        self.setColumnWidth(4, 180) # 调窄操作列，保持紧凑
+        self.setColumnWidth(4, 100)
+        
+        header.setSectionResizeMode(5, QHeaderView.ResizeMode.Fixed)
+        self.setColumnWidth(5, 180) # 调窄操作列，保持紧凑
 
         # 手动触发表头复选框位置更新
         self._update_header_checkbox_pos()
@@ -73,7 +77,13 @@ class LinkTable(BaseTableWidget):
         name_item.setTextAlignment(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)
         self.setItem(row, 1, name_item)
 
-        # 2. 状态 (使用可视化的 StatusBadge)
+        # 2. 分类 (标准化文案)
+        cat_text = get_category_text(link.category)
+        cat_item = QTableWidgetItem(f"[{cat_text}]")
+        cat_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.setItem(row, 2, cat_item)
+
+        # 3. 状态 (使用可视化的 StatusBadge)
         from .status_badge import StatusBadge
         status_widget = QWidget()
         status_widget.setStyleSheet("background: transparent; border: none;")
@@ -83,17 +93,17 @@ class LinkTable(BaseTableWidget):
         badge = StatusBadge(link.status)
         status_layout.addWidget(badge)
         status_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.setCellWidget(row, 2, status_widget)
+        self.setCellWidget(row, 3, status_widget)
         
-        # 3. 占用空间
+        # 4. 占用空间
         size_text = format_size(link.last_known_size) if link.last_known_size > 0 else "未计算"
         size_item = QTableWidgetItem(size_text)
         size_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.setItem(row, 3, size_item)
+        self.setItem(row, 4, size_item)
         
-        # 4. 操作按钮
+        # 5. 操作按钮
         action_widget = self._create_action_buttons(link)
-        self.setCellWidget(row, 4, action_widget)
+        self.setCellWidget(row, 5, action_widget)
 
     def _create_action_buttons(self, link: UserLink) -> QWidget:
         """创建操作按钮组"""

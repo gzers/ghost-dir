@@ -14,7 +14,7 @@ from ...views.wizard.widgets.scan_result_card import ScanResultCard
 from ....core.scanner import SmartScanner
 from ....data.template_manager import TemplateManager
 from ....data.user_manager import UserManager
-from ...i18n import t
+from ...i18n import t, get_category_text
 from ...styles import apply_font_style
 
 
@@ -143,19 +143,13 @@ class ScanFlowDialog(MessageBoxBase):
         self.result_subtitle.setText(t("wizard.scan_complete_detail", count=len(discovered)))
         
         if discovered:
-            # 🆕 获取分类名称映射
-            cat_map = {}
-            if self.category_manager:
-                cat_map = {
-                    c.id: c.name 
-                    for c in self.category_manager.get_all_categories()
-                }
-
+            # 记录：不再在此处手动构建 cat_map，统一走 get_category_text (配置驱动+智能降级)
+            
             # 加载卡片
             for template in discovered:
                 # 🆕 增强型映射：尝试 category_id，回退到 category 字段
                 cat_id = getattr(template, 'category_id', getattr(template, 'category', ''))
-                cat_name = cat_map.get(cat_id, "未分类")
+                cat_name = get_category_text(cat_id)
                 
                 card = ScanResultCard(template, category_name=cat_name)
                 # 连接选中状态，用于实时更新底部按钮

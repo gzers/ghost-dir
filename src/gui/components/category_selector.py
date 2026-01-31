@@ -9,9 +9,9 @@ from PySide6.QtWidgets import (
     QLineEdit, QPushButton, QHBoxLayout, QFrame
 )
 from PySide6.QtGui import QCursor
-from qfluentwidgets import LineEdit, TransparentToolButton, FluentIcon, setCustomStyleSheet, TreeWidget
 from src.data.category_manager import CategoryManager
 from src.data.model import CategoryNode
+from src.gui.i18n import t, get_category_text
 
 
 class CategoryTreeDropdown(QFrame):
@@ -155,7 +155,11 @@ class CategoryTreeDropdown(QFrame):
             item = QTreeWidgetItem(self.tree)
         
         item.setData(0, Qt.ItemDataRole.UserRole, category.id)
-        item.setText(0, category.name)
+        
+        # 核心修复：使用公共获取函数，兼顾配置名称与多语言
+        display_name = get_category_text(category.id)
+        item.setText(0, display_name)
+        
         self.category_items[category.id] = item
         
         # 检查是否可选择
@@ -189,8 +193,8 @@ class CategoryTreeDropdown(QFrame):
             selectable = self.category_manager.is_leaf(category_id)
         
         if selectable:
-            category_name = item.text(0)
-            self.item_selected.emit(category_id, category_name)
+            display_name = get_category_text(category_id)
+            self.item_selected.emit(category_id, display_name)
             self.hide()
 
 
@@ -297,9 +301,10 @@ class CategorySelector(QWidget):
         
         category = self.category_manager.get_category_by_id(category_id)
         if category:
+            display_name = get_category_text(category_id)
             self.selected_category_id = category_id
-            self.selected_category_name = category.name
-            self.lineEdit.setText(category.name)
+            self.selected_category_name = display_name
+            self.lineEdit.setText(display_name)
     
     def get_value(self) -> Optional[str]:
         """获取当前选中的分类 ID"""

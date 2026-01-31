@@ -50,6 +50,14 @@ CATEGORY_TEXTS = {
     "media": "影音娱乐",
     "office": "办公软件",
     "other": "其他",
+    
+    # 细分与扫描向导常用词条
+    "dev_tools": "开发工具",
+    "cloud_storage": "云空间",
+    "games": "游戏",
+    "platforms": "游戏平台",
+    "editors": "编辑器",
+    "tools": "工具",
 }
 
 ERROR_TEXTS = {

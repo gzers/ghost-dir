@@ -109,6 +109,42 @@ box-shadow: 0 8px 16px rgba(0, 0, 0, 0.14);
 box-shadow: 0 16px 32px rgba(0, 0, 0, 0.18);
 ```
 
+## 状态徽章规范 (StatusBadge)
+
+状态徽章用于直观展示连接实体的生命周期状态。
+
+### 1. 视觉配色与语义
+
+| 状态代号 (Code) | 状态名称 | 语义 | 颜色 (Hex/RGBA) | 图标 (Fluent) |
+| :--- | :--- | :--- | :--- | :--- |
+| `disconnected` | **未连接** | 实体在 C 盘，是个普通文件夹 | `#E74C3C` (20% Opacity BG) | `\uf111` (警告/红) |
+| `connected` | **已连接** | 实体在 D 盘且通过 Junction 接通 | `#27AE60` (20% Opacity BG) | `\uf111` (链接/绿) |
+| `ready` | **就绪** | 实体在 D 盘，但 C 盘连接点缺失 | `#F39C12` (20% Opacity BG) | `\uf111` (同步/黄) |
+| `invalid` | **失效** | 路径配置错误或物理文件丢失 | `#95A5A6` (20% Opacity BG) | `\uf111` (禁用/灰) |
+
+### 2. 布局规范
+
+- **圆角**: 4px
+- **内边距**: `4px 8px`
+- **层级**: 在列表视图中建议靠右放置，在表格视图中建议居中。
+
+## 文案与国际化规范
+
+为确保系统语言表达的一致性与地道感，所有 UI 组件必须遵循以下规范：
+
+### 1. 强制使用公共 Getter
+禁止在业务代码中直接使用字符串拼接或手动构造 `t()` 函数路径。必须使用 `src.gui.i18n` 提供的公共获取函数：
+- **分类文案**：使用 `get_category_text(id_or_name)`。
+- **状态文案**：使用 `get_status_text(code)`。
+
+### 2. 映射逻辑收口 (优先级标准)
+显示文案的获取必须严格遵循以下优先级：
+1. **实时配置展示名 (Persistent Config)**：优先从 `categories.json` 中检索用户手动定义的 `name` 字段。
+2. **i18n 智能翻译 (Logic Fallback)**：如果 ID 未在配置中持久化（如扫描过程中的临时 ID），则通过 `get_category_text` 进行分段解析。
+3. **原始 ID 透明展示 (Safe Fallback)**：作为最后手段。
+
+UI 层只需负责“传入原始 ID”并展示结果，严禁在业务视图中编写任何静态文案转换代码。
+
 ## 参考资料
 
 - [Microsoft Fluent Design System](https://fluent2.microsoft.design/)

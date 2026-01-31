@@ -7,6 +7,7 @@ from src.data.template_manager import TemplateManager
 from src.data.user_manager import UserManager
 from src.data.category_manager import CategoryManager
 from ...components import CategorySelector
+from src.gui.i18n import get_category_text
 
 class TemplateTabWidget(QWidget):
     """从模版库选择标签页"""
@@ -76,10 +77,9 @@ class TemplateTabWidget(QWidget):
     def _load_templates(self):
         self.templateList.clear()
         templates = self.template_manager.get_all_templates()
-        # 兼容性修复：从 get_all_categories 获取分类映射
-        all_cats = {c.id: c.name for c in self.user_manager.get_all_categories()}
         for template in templates:
-            cat_name = all_cats.get(template.category_id, "未知分类")
+            # 记录：不再在此处手动构建映射，统一走 get_category_text
+            cat_name = get_category_text(template.category_id)
             item = QListWidgetItem(f"{template.name} ({cat_name})")
             item.setData(Qt.ItemDataRole.UserRole, template)
             self.templateList.addItem(item)
@@ -87,9 +87,8 @@ class TemplateTabWidget(QWidget):
     def _on_search_changed(self, text: str):
         self.templateList.clear()
         templates = self.template_manager.search_templates(text) if text else self.template_manager.get_all_templates()
-        all_cats = {c.id: c.name for c in self.user_manager.get_all_categories()}
         for template in templates:
-            cat_name = all_cats.get(template.category_id, "未知分类")
+            cat_name = get_category_text(template.category_id)
             item = QListWidgetItem(f"{template.name} ({cat_name})")
             item.setData(Qt.ItemDataRole.UserRole, template)
             self.templateList.addItem(item)

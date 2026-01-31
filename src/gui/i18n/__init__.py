@@ -54,21 +54,60 @@ def get_status_text(status: str) -> str:
 
 def get_category_text(category: str) -> str:
     """
-    获取分类文案
+    获取分类文案 (标准化公共实现)
+    优先级: 实时配置名称 > i18n 翻译 > 智能全路径匹配 > 智能拆分降级 > 原值
     
     Args:
-        category: 分类值
+        category: 分类 ID 或名称
     
     Returns:
-        分类文案
+        最终显示的文案
     """
-    # 先尝试从分类字典获取
-    category_key = category.lower().replace(" ", "_")
-    text = _i18n.get(f"category.{category_key}")
+    if not category:
+        return t("category.uncategorized")
+        
+    # 1. 优先从 CategoryManager 获取实时配置的名称 (解决拓展性)
+    try:
+        from src.data.user_manager import UserManager
+        cm = UserManager().category_manager
+        cat_node = cm.get_category_by_id(category)
+        if cat_node and cat_node.name:
+            return cat_node.name
+    except:
+        pass # 兜底逻辑
+        
+    # 2. 内部映射表：处理早期硬编码代号或常见变体
+    INTERNAL_MAP = {
+        "all": "all",
+        "全部": "all",
+        "uncategorized": "uncategorized",
+        "未分类": "uncategorized",
+    }
     
-    # 如果没有找到,返回原值
-    if text.startswith("[Missing:"):
+    clean_cat = category.lower().strip()
+    key_suffix = INTERNAL_MAP.get(clean_cat, clean_cat.replace(" ", "_"))
+    
+    # 3. 尝试全路径/标准翻译
+    text = t(f"category.{key_suffix}")
+    
+    # 4. 智能拆分匹配：支持处理 "dev_tools.editors" 这种复合扫描 ID
+    if (text.startswith("[Missing:") or text == f"category.{key_suffix}") and "." in key_suffix:
+        segments = key_suffix.split(".")
+        first_segment = segments[0]
+        parent_text = t(f"category.{first_segment}")
+        
+        if not (parent_text.startswith("[Missing:") or parent_text == f"category.{first_segment}"):
+            # 如果父类有翻译，尝试组合子类
+            sub_segment = segments[-1]
+            sub_text = t(f"category.{sub_segment}")
+            if not (sub_text.startswith("[Missing:") or sub_text == f"category.{sub_segment}"):
+                return f"{parent_text} ({sub_text})"
+            return parent_text
+
+    # 5. 最终兜底：返回原值
+    if text.startswith("[Missing:") or text == f"category.{key_suffix}":
         return category
+        
     return text
 
 

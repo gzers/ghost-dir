@@ -10,6 +10,8 @@ from ....styles import (
     apply_font_style, apply_muted_text_style, apply_badge_style,
     get_spacing, get_radius, get_icon_size, get_icon_background
 )
+from src.gui.i18n import get_category_text
+
 
 class TemplateCard(Card):
     """模版卡片组件"""
@@ -57,7 +59,8 @@ class TemplateCard(Card):
         self.main_layout.addLayout(header_layout)
 
         # 分类
-        self.category_label = BodyLabel(f"分类: {self.template.category}")
+        cat_display = get_category_text(self.template.category_id)
+        self.category_label = BodyLabel(f"分类: {cat_display}")
         self.main_layout.addWidget(self.category_label)
 
         # 路径

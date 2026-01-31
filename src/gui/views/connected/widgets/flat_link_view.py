@@ -4,14 +4,15 @@
 """
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QListWidget, 
-    QListWidgetItem, QStyledItemDelegate
+    QListWidgetItem, QStyledItemDelegate, QGraphicsOpacityEffect
 )
 from PySide6.QtCore import Qt, QSize, Signal
 from PySide6.QtGui import QPainter, QIcon
 from qfluentwidgets import BodyLabel, CaptionLabel, TransparentToolButton, FluentIcon
-from .....data.model import UserLink, LinkStatus
-from .....data.user_manager import UserManager
-from ....i18n import t
+from src.data.model import UserLink, LinkStatus
+from src.data.user_manager import UserManager
+from src.gui.i18n import t, get_category_text
+from src.gui.components.status_badge import StatusBadge
 
 class FlatLinkView(QListWidget):
     """智能列表视图 - 极简/宽屏模式"""
@@ -85,20 +86,41 @@ class LinkItemWidget(QWidget):
         
         # 信息区
         info_layout = QVBoxLayout()
-        info_layout.setSpacing(2)
+        info_layout.setSpacing(4)
+        
+        # 第一行：名称 + 分类
+        title_layout = QHBoxLayout()
         self.name_label = BodyLabel(self.link.name, self)
+        
+        cat_name = get_category_text(self.link.category)
+        self.category_label = CaptionLabel(f"[{cat_name}]", self)
+        
+        # 使用 QGraphicsOpacityEffect 实现透明度
+        op = QGraphicsOpacityEffect(self.category_label)
+        op.setOpacity(0.7)
+        self.category_label.setGraphicsEffect(op)
+        
+        title_layout.addWidget(self.name_label)
+        title_layout.addWidget(self.category_label)
+        title_layout.addStretch()
+        
+        # 第二行：路径
         self.path_label = CaptionLabel(self.link.target_path, self)
         self.path_label.setToolTip(self.link.target_path)
-        info_layout.addWidget(self.name_label)
+        
+        path_op = QGraphicsOpacityEffect(self.path_label)
+        path_op.setOpacity(0.6)
+        self.path_label.setGraphicsEffect(path_op)
+        
+        info_layout.addLayout(title_layout)
         info_layout.addWidget(self.path_label)
         layout.addLayout(info_layout)
         
         layout.addStretch(1)
         
-        # 状态徽章 (简单文本模拟，之后可以完善)
-        status_text = t(f"connected.{self.link.status.value}")
-        self.status_label = CaptionLabel(status_text, self)
-        layout.addWidget(self.status_label)
+        # 状态徽章 (标准可视化组件)
+        self.status_badge = StatusBadge(self.link.status, self)
+        layout.addWidget(self.status_badge)
         
         # 操作按钮组
         self.setup_actions(layout)
