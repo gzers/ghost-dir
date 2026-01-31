@@ -167,7 +167,7 @@ class UserManager:
         """删除连接"""
         try:
             self.links = [l for l in self.links if l.id != link_id]
-            self.save_data()
+            self._save_data()
             return True
             
         except Exception as e:
@@ -263,16 +263,15 @@ class UserManager:
     
     def get_all_categories(self) -> List[Category]:
         """获取所有分类"""
-        # 尝试从 CategoryManager 获取树形分类并转换为平铺列表，以保持兼容性
+        # 优先尝试从 CategoryManager 获取最新的树形分类并转换为平铺列表
         try:
             from .category_manager import CategoryManager
             cm = CategoryManager()
             nodes = cm.get_all_categories()
             if nodes:
-                # 过滤掉系统内置分类或者转换
-                return [Category(id=n.id, name=n.name, icon=n.icon) for n in nodes]
-        except Exception as e:
-            # print(f"从 CategoryManager 获取分类失败: {e}")
+                # 转换所有节点为 Category 对象，支持 UI 层的 name/id 访问
+                return [Category(id=n.id, name=n.name, icon=getattr(n, 'icon', None)) for n in nodes]
+        except Exception:
             pass
             
         return self.categories

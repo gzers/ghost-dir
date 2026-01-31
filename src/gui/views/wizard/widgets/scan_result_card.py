@@ -12,7 +12,7 @@ from qfluentwidgets import (
 
 from ....components import Card
 from ....styles import (
-    apply_font_style, apply_badge_style,
+    apply_font_style, apply_badge_style, apply_accent_badge_style,
     get_spacing, get_radius, apply_muted_text_style, get_icon_background
 )
 
@@ -24,9 +24,10 @@ class ScanResultCard(Card):
     ignore_requested = Signal(str)  # template_id
     import_requested = Signal(str)  # template_id
 
-    def __init__(self, template, parent=None):
+    def __init__(self, template, category_name: str = "未分类", parent=None):
         super().__init__(parent)
         self.template = template
+        self.category_name = category_name
         self._init_ui()
         self._refresh_content_styles()
 
@@ -65,7 +66,7 @@ class ScanResultCard(Card):
         self.main_layout.addLayout(info_layout, stretch=1)
 
         # 分类标签
-        self.category_badge = BodyLabel(self.template.category)
+        self.category_badge = BodyLabel(self.category_name)
         self.main_layout.addWidget(self.category_badge)
 
         # 操作按钮
@@ -86,7 +87,7 @@ class ScanResultCard(Card):
         """刷新文字样式"""
         apply_font_style(self.name_label, weight="semibold")
         apply_muted_text_style(self.path_label, size="sm")
-        apply_badge_style(self.category_badge, status="info")
+        apply_accent_badge_style(self.category_badge)
 
     def _on_ignore_clicked(self):
         """忽略按钮点击"""

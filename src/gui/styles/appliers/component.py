@@ -66,6 +66,30 @@ def apply_badge_style(widget, status: str = "invalid"):
     """
     widget.setStyleSheet(style)
 
+def apply_accent_badge_style(widget):
+    """应用强调色背景的徽章样式 (标准按钮强调色)"""
+    color = color_utils.get_accent_color()
+    radius = spacing_utils.get_radius("sm")
+    
+    # 为组件设置对象名
+    if not widget.objectName():
+        widget.setObjectName(f"accent_badge_{id(widget)}")
+    obj_name = widget.objectName()
+    
+    # 强调色背景，白色文字，半透明边缘感
+    style = f"""
+        #{obj_name} {{
+            background-color: {color};
+            color: white;
+            border-radius: {radius}px;
+            padding: 3px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }}
+    """
+    widget.setStyleSheet(style)
+
 def apply_font_style(
     widget,
     size: str = "md",

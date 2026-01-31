@@ -116,6 +116,12 @@ class LinkItemWidget(QWidget):
             btn.clicked.connect(lambda: self.action_clicked.emit(self.link.id, "disconnect"))
             layout.addWidget(btn)
         
+        # 编辑按钮
+        edit_btn = TransparentToolButton(FluentIcon.EDIT, self)
+        edit_btn.setToolTip("编辑记录")
+        edit_btn.clicked.connect(lambda: self.action_clicked.emit(self.link.id, "edit"))
+        layout.addWidget(edit_btn)
+
         # 更多/删除按钮
         del_btn = TransparentToolButton(FluentIcon.DELETE, self)
         del_btn.setToolTip("移除记录")

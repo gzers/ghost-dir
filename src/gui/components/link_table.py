@@ -121,6 +121,12 @@ class LinkTable(BaseTableWidget):
             btn.clicked.connect(lambda: self.action_clicked.emit(link.id, "reconnect"))
             layout.addWidget(btn)
         
+        # 通用编辑按钮
+        edit_btn = TransparentToolButton(FluentIcon.EDIT, widget)
+        edit_btn.setToolTip("编辑连接信息")
+        edit_btn.clicked.connect(lambda: self.action_clicked.emit(link.id, "edit"))
+        layout.addWidget(edit_btn)
+        
         # 通用删除按钮
         del_btn = TransparentToolButton(FluentIcon.DELETE, widget)
         del_btn.setToolTip("删除链接记录")

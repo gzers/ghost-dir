@@ -58,5 +58,5 @@ __all__ = [
     'get_status_icon', 'apply_icon_style', 'get_icon_state_style',
     'create_icon_with_text',
     # 组件相关
-    'apply_card_style', 'apply_badge_style', 'get_content_width',
+    'apply_card_style', 'apply_badge_style', 'apply_accent_badge_style', 'get_content_width',
 ]

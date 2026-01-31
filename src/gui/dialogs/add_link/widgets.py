@@ -72,6 +72,7 @@ class TemplateTabWidget(QWidget):
     def _load_templates(self):
         self.templateList.clear()
         templates = self.template_manager.get_all_templates()
+        # 兼容性修复：从 get_all_categories 获取分类映射
         all_cats = {c.id: c.name for c in self.user_manager.get_all_categories()}
         for template in templates:
             cat_name = all_cats.get(template.category_id, "未知分类")
@@ -100,22 +101,22 @@ class TemplateTabWidget(QWidget):
         target_path = "D:\\" + source_path[3:]
         self.targetEdit.setText(target_path)
         
-        # 根据 category_id 寻找分类名称
-        all_cats = {c.id: c.name for c in self.user_manager.get_all_categories()}
-        cat_name = all_cats.get(template.category_id, "")
-        index = self.categoryCombo.findText(cat_name)
+        # 使用 category_id 精准匹配 ComboBox 项
+        index = self.categoryCombo.findData(template.category_id)
         if index >= 0:
             self.categoryCombo.setCurrentIndex(index)
 
     def refresh_categories(self):
-        current_text = self.categoryCombo.currentText()
+        current_id = self.categoryCombo.currentData()
         self.categoryCombo.clear()
         categories = self.user_manager.get_all_categories()
         for category in categories:
-            self.categoryCombo.addItem(category.name)
-        index = self.categoryCombo.findText(current_text)
-        if index >= 0:
-            self.categoryCombo.setCurrentIndex(index)
+            self.categoryCombo.addItem(category.name, category.id)
+        
+        if current_id:
+            index = self.categoryCombo.findData(current_id)
+            if index >= 0:
+                self.categoryCombo.setCurrentIndex(index)
 
 class CustomTabWidget(QWidget):
     """自定义标签页"""
@@ -164,11 +165,13 @@ class CustomTabWidget(QWidget):
         self.refresh_categories()
 
     def refresh_categories(self):
-        current_text = self.customCategoryCombo.currentText()
+        current_id = self.customCategoryCombo.currentData()
         self.customCategoryCombo.clear()
         categories = self.user_manager.get_all_categories()
         for category in categories:
-            self.customCategoryCombo.addItem(category.name)
-        index = self.customCategoryCombo.findText(current_text)
-        if index >= 0:
-            self.customCategoryCombo.setCurrentIndex(index)
+            self.customCategoryCombo.addItem(category.name, category.id)
+            
+        if current_id:
+            index = self.customCategoryCombo.findData(current_id)
+            if index >= 0:
+                self.customCategoryCombo.setCurrentIndex(index)

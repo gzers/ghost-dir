@@ -66,4 +66,14 @@ CONNECTED_TEXTS = {
     "refresh_size_complete": "计算完成 ✓",
     "refresh_size_result": "已更新 {count} 个连接的空间统计",
     "refresh_size_empty": "没有需要统计的连接",
+    
+    # 编辑链接
+    "edit_link": "编辑连接",
+    "link_name": "软件名称",
+    "link_name_placeholder": "请输入软件名称",
+    "category": "所属分类",
+    "source_path": "源路径",
+    "target_path": "目标路径",
+    "confirm_remove_title": "确认移除",
+    "confirm_remove_msg": "确定要移除选中的 {count} 个连接吗？\n这不会删除实际文件。",
 }

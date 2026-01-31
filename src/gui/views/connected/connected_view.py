@@ -15,9 +15,9 @@ from ....core.scanner import SmartScanner
 from ....core.transaction import TransactionManager
 from ....core.safety import ProcessGuard
 from ....common.signals import signal_bus
-from ...components import BasePageView, LinkTable, CategoryTreeWidget
+from ...components import BasePageView, LinkTable, CategoryTreeWidget, BatchToolbar
 from ...styles import apply_transparent_style
-from .widgets import BatchToolbar, FlatLinkView
+from .widgets import FlatLinkView
 
 
 class ConnectedView(BasePageView):
@@ -112,7 +112,8 @@ class ConnectedView(BasePageView):
         content_layout.addWidget(self.splitter, 1)
 
         # 批量操作工具栏组件（在最下方，但不占用剩余空间，除非需要）
-        self.batch_toolbar = BatchToolbar()
+        self.batch_toolbar = BatchToolbar(self)
+        self.batch_toolbar.set_mode("connected")
         content_layout.addWidget(self.batch_toolbar)
         self.batch_toolbar.hide()
 
@@ -128,13 +129,8 @@ class ConnectedView(BasePageView):
         # 扫描（透明按钮）
         self.scan_btn = TransparentPushButton(FluentIcon.SEARCH, t("connected.scan_apps"))
         
-        # 批量移除（透明按钮，默认禁用）
-        self.batch_remove_btn = TransparentPushButton(FluentIcon.DELETE, t("connected.batch_remove"))
-        self.batch_remove_btn.setEnabled(False)
-
         toolbar.addWidget(self.add_btn)
         toolbar.addWidget(self.scan_btn)
-        toolbar.addWidget(self.batch_remove_btn)
 
         # 弹簧撑开中间
         toolbar.addStretch(1)
@@ -172,7 +168,6 @@ class ConnectedView(BasePageView):
         # 工具栏操作按钮
         self.add_btn.clicked.connect(self._on_add_link)
         self.scan_btn.clicked.connect(self._on_scan)
-        self.batch_remove_btn.clicked.connect(self._on_batch_remove)
         
         # 搜索与切换
         self.search_edit.textChanged.connect(self._on_search_changed)
@@ -193,6 +188,7 @@ class ConnectedView(BasePageView):
         # 批量操作工具栏信号
         self.batch_toolbar.batch_establish_clicked.connect(self._on_batch_establish)
         self.batch_toolbar.batch_disconnect_clicked.connect(self._on_batch_disconnect)
+        self.batch_toolbar.batch_remove_clicked.connect(self._on_batch_remove)
         self.batch_toolbar.clear_selection_clicked.connect(self.category_link_table.clear_selection)
         self.batch_toolbar.clear_selection_clicked.connect(self.list_view.clear_selection)
 
@@ -283,14 +279,22 @@ class ConnectedView(BasePageView):
     
     def _on_batch_remove(self):
         """批量移除连接"""
-        selected_ids = self.category_view.get_selected_links()
+        # 从当前活动的视图获取选中的 ID
+        if self.view_stack.currentIndex() == 0:
+            selected_ids = self.category_link_table.get_selected_links()
+        else:
+            selected_ids = self.list_view.get_selected_links()
+            
         if not selected_ids:
             return
         
         # 确认
+        title = t("connected.confirm_remove_title")
+        message = t("connected.confirm_remove_msg", count=len(selected_ids))
+        
         reply = MessageBox(
-            "确认删除",
-            f"确定要删除 {len(selected_ids)} 个连接吗？\n这不会删除实际文件。",
+            title,
+            message,
             self
         ).exec()
         
@@ -303,7 +307,10 @@ class ConnectedView(BasePageView):
         
         # 刷新数据
         self._load_data()
-        self.category_view.clear_selection()
+        
+        # 清除选中
+        self.category_link_table.clear_selection()
+        self.list_view.clear_selection()
 
     def _on_links_selected(self, selected_ids: list):
         """连接选中事件"""
@@ -327,6 +334,8 @@ class ConnectedView(BasePageView):
             self._disconnect_link(link)
         elif action == "delete":
             self._delete_link(link)
+        elif action == "edit":
+            self._edit_link(link)
 
     def _establish_link(self, link):
         """建立连接"""
@@ -392,9 +401,21 @@ class ConnectedView(BasePageView):
             self.user_manager.remove_link(link.id)
             self._load_data()
 
+    def _edit_link(self, link):
+        """编辑链接"""
+        from ...dialogs import EditLinkDialog
+        
+        dialog = EditLinkDialog(link, self)
+        dialog.link_updated.connect(self._load_data)
+        dialog.exec()
+
     def _on_batch_establish(self):
         """批量建立连接"""
-        selected_ids = self.category_view.get_selected_links()
+        if self.view_stack.currentIndex() == 0:
+            selected_ids = self.category_link_table.get_selected_links()
+        else:
+            selected_ids = self.list_view.get_selected_links()
+            
         if not selected_ids:
             return
 
@@ -441,7 +462,8 @@ class ConnectedView(BasePageView):
 
         # 刷新数据
         self._load_data()
-        self.category_view.clear_selection()
+        self.category_link_table.clear_selection()
+        self.list_view.clear_selection()
 
         # 显示结果
         if failed_items:
@@ -453,7 +475,11 @@ class ConnectedView(BasePageView):
 
     def _on_batch_disconnect(self):
         """批量断开连接"""
-        selected_ids = self.category_view.get_selected_links()
+        if self.view_stack.currentIndex() == 0:
+            selected_ids = self.category_link_table.get_selected_links()
+        else:
+            selected_ids = self.list_view.get_selected_links()
+            
         if not selected_ids:
             return
 
@@ -500,7 +526,8 @@ class ConnectedView(BasePageView):
 
         # 刷新数据
         self._load_data()
-        self.category_view.clear_selection()
+        self.category_link_table.clear_selection()
+        self.list_view.clear_selection()
 
         # 显示结果
         if failed_items:
@@ -520,9 +547,9 @@ class ConnectedView(BasePageView):
 
     def _on_scan(self):
         """扫描本机应用"""
-        from ...dialogs import ScanWizardDialog
+        from ...dialogs import ScanFlowDialog
 
-        dialog = ScanWizardDialog(self)
+        dialog = ScanFlowDialog(self.category_manager, self)
         dialog.scan_completed.connect(self._on_scan_completed)
         dialog.exec()
 

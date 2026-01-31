@@ -13,7 +13,7 @@ from src.data.user_manager import UserManager
 from src.data.template_manager import TemplateManager
 from src.data.category_manager import CategoryManager
 from src.data.model import Template, CategoryNode
-from ...components import BasePageView, CategoryTreeWidget
+from ...components import BasePageView, CategoryTreeWidget, BatchToolbar
 from .widgets import TemplateTableWidget
 from ...dialogs import (
     CategoryEditDialog, TemplateEditDialog, TemplatePreviewDialog,
@@ -74,12 +74,6 @@ class LibraryView(BasePageView):
         self.refresh_btn = PushButton(FluentIcon.SYNC, '刷新')
         self.refresh_btn.clicked.connect(self._on_refresh_clicked)
         toolbar.addWidget(self.refresh_btn)
-
-        # 批量删除按钮
-        self.batch_delete_btn = PushButton(FluentIcon.DELETE, '批量删除')
-        self.batch_delete_btn.clicked.connect(self._on_batch_delete_clicked)
-        self.batch_delete_btn.setEnabled(False)  # 默认禁用
-        toolbar.addWidget(self.batch_delete_btn)
 
         toolbar.addStretch()
 
@@ -161,9 +155,15 @@ class LibraryView(BasePageView):
         content_layout.addWidget(self.splitter, 1)
         
         # 应用透明背景并隐藏分割线条（黑条）
+        self.splitter.setStyleSheet("QSplitter::handle { background: transparent; border: none; }")
         from ...styles import apply_transparent_style
         apply_transparent_style(self.splitter)
-        self.splitter.setStyleSheet("QSplitter::handle { background: transparent; border: none; }")
+        
+        # 4. 添加批量操作工具栏
+        self.batch_toolbar = BatchToolbar(self)
+        self.batch_toolbar.set_mode("library")
+        self.batch_toolbar.hide()
+        content_layout.addWidget(self.batch_toolbar)
 
     def _connect_signals(self):
         """连接信号"""
@@ -178,6 +178,10 @@ class LibraryView(BasePageView):
         self.template_table.edit_template_requested.connect(self._on_edit_template_requested)
         self.template_table.delete_template_requested.connect(self._on_delete_template_requested)
         self.template_table.checked_changed.connect(self._on_checked_count_changed)
+        
+        # 底部工具栏信号
+        self.batch_toolbar.batch_delete_clicked.connect(self._on_batch_delete_clicked)
+        self.batch_toolbar.clear_selection_clicked.connect(lambda: self.template_table._on_clear_selection())
         
         # 全局信号
         from ....common.signals import signal_bus
@@ -723,13 +727,11 @@ class LibraryView(BasePageView):
 
     def _on_checked_count_changed(self, count: int):
         """勾选数量改变"""
-        self.batch_delete_btn.setEnabled(count > 0)
-        
-        # 如果需要，可以在按钮文字上显示数量
         if count > 0:
-            self.batch_delete_btn.setText(f'批量删除 ({count})')
+            self.batch_toolbar.update_count(count)
+            self.batch_toolbar.show()
         else:
-            self.batch_delete_btn.setText('批量删除')
+            self.batch_toolbar.hide()
 
     # ========== 辅助方法 ==========
 

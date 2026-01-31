@@ -16,7 +16,6 @@ class LinkCommandBar(QWidget):
     
     # 信号
     add_link_clicked = Signal()        # 新建链接
-    batch_remove_clicked = Signal()    # 批量移除
     search_changed = Signal(str)       # 搜索文本改变
     view_changed = Signal(int)         # 视图切换 (0=列表, 1=分类)
     refresh_clicked = Signal()         # 刷新
@@ -35,11 +34,8 @@ class LinkCommandBar(QWidget):
         
         # 左侧：操作按钮
         self.add_btn = PushButton(FluentIcon.ADD, t("connected.add_link"))
-        self.batch_remove_btn = PushButton(FluentIcon.DELETE, t("connected.batch_remove"))
-        self.batch_remove_btn.setEnabled(False)  # 默认禁用
         
         layout.addWidget(self.add_btn)
-        layout.addWidget(self.batch_remove_btn)
         
         layout.addStretch()
         
@@ -75,18 +71,10 @@ class LinkCommandBar(QWidget):
     def _connect_signals(self):
         """连接信号"""
         self.add_btn.clicked.connect(self.add_link_clicked)
-        self.batch_remove_btn.clicked.connect(self.batch_remove_clicked)
         self.search_box.textChanged.connect(self.search_changed)
         self.refresh_btn.clicked.connect(self.refresh_clicked)
     
-    def set_batch_remove_enabled(self, enabled: bool):
-        """
-        设置批量移除按钮状态
-        
-        Args:
-            enabled: 是否启用
-        """
-        self.batch_remove_btn.setEnabled(enabled)
+
     
     def get_search_text(self) -> str:
         """获取搜索文本"""

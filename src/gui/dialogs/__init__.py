@@ -9,7 +9,8 @@ from .batch_move import BatchMoveDialog
 from .export_dialog import ExportDialog
 from .import_dialog import ImportDialog  # 注意：这里我们避开 Python 关键字 import
 from .add_link import AddLinkDialog
-from .scan_wizard import ScanWizardDialog
+from .edit_link import EditLinkDialog
+from .scan_wizard import ScanWizardDialog, ScanFlowDialog
 
 # 导出映射，方便直接使用 import 和 export 名称但不冲突
 # 在外部使用：from src.gui.dialogs import ImportDialog, ExportDialog
@@ -25,5 +26,7 @@ __all__ = [
     'ExportDialog',
     'ImportDialog',
     'AddLinkDialog',
+    'EditLinkDialog',
     'ScanWizardDialog',
+    'ScanFlowDialog',
 ]

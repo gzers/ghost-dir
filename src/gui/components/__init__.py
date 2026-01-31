@@ -10,6 +10,7 @@ from .progress_indicator import ProgressIndicator
 from .category_selector import CategorySelector
 from .category_tree import CategoryTreeWidget
 from .base_table import BaseTableWidget
+from .batch_toolbar import BatchToolbar
 
 __all__ = [
     "BasePageView",
@@ -20,4 +21,5 @@ __all__ = [
     "CategorySelector",
     "CategoryTreeWidget",
     "BaseTableWidget",
+    "BatchToolbar",
 ]

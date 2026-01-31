@@ -9,7 +9,7 @@ from ....data.user_manager import UserManager
 from ....data.template_manager import TemplateManager
 from ....core.scanner import SmartScanner
 from ...components import BasePageView
-from .widgets import ScanProgressCard, ScanWorker, ScanResultCard
+from .widgets import ScanProgressCard, ScanWorker
 
 
 class WizardView(BasePageView):
@@ -65,55 +65,17 @@ class WizardView(BasePageView):
         self.scan_progress.cancel_clicked.connect(self._on_cancel_clicked)
 
     def _on_scan_clicked(self):
-        """开始扫描"""
-        self.scan_progress.start_scanning()
-
-        # 清空之前的结果
-        self.discovered_templates.clear()
-        for card in self.scan_result_cards.values():
-            card.deleteLater()
-        self.scan_result_cards.clear()
-
-        # 开始扫描（在后台线程中进行，不会阻塞 UI）
-        self.worker = ScanWorker(self.scanner)
-        self.worker.finished.connect(self._on_scan_finished)
-        self.worker.error.connect(self._on_scan_error)
-        self.worker.start()
-
-    def _on_scan_finished(self, discovered):
-        """扫描完成"""
-        self.discovered_templates = discovered
-
-        # 显示结果
-        if discovered:
-            # 创建结果卡片
-            selected_count = 0
-            content_layout = self.get_content_layout()
-
-            for template in discovered:
-                card = ScanResultCard(template)
-                card.selected_changed.connect(self._on_selection_changed)
-                card.import_requested.connect(self._on_single_import)
-                card.ignore_requested.connect(self._on_ignore_template)
-
-                # 插入到 stretch 之前
-                content_layout.insertWidget(
-                    content_layout.count() - 1,
-                    card
-                )
-                self.scan_result_cards[template.id] = card
-                if card.is_selected():
-                    selected_count += 1
-
-            self.get_scroll_area().setVisible(True)
-            self.scan_progress.scan_finished(len(discovered), selected_count)
-        else:
-            self.get_scroll_area().setVisible(False)
-            self.scan_progress.scan_finished(0, 0)
-
-    def _on_scan_error(self, error_msg):
-        """扫描出错"""
-        self.scan_progress.scan_error(error_msg)
+        """开始扫描 - 统一流程"""
+        from ...dialogs import ScanFlowDialog
+        
+        # 弹出统一的全功能扫描对话框
+        dialog = ScanFlowDialog(self.template_manager.category_manager, self)
+        if dialog.exec():
+            # 通知链接列表刷新
+            signal_bus.links_changed.emit()
+            
+        # 刷新进度卡片状态（复位）
+        self.scan_progress.reset()
 
     def _on_selection_changed(self, template_id, selected):
         """选择状态改变"""
