@@ -217,21 +217,34 @@ class TemplateManager:
         return None
     
     def search_templates(self, keyword: str) -> List[Template]:
-        """搜索模版"""
+        """搜索模版（支持名称、ID、以及所属分类名称）"""
         keyword = keyword.lower()
         results = []
         
-        for template in self.templates.values():
-            if (keyword in template.name.lower() or 
-                keyword in template.id.lower() or
-                keyword in template.category.lower()):
+        # 预先获取分类 ID 到名称的映射，以便支持按分类名搜索
+        cat_map = {}
+        if self.category_manager:
+            cat_map = {c.id: c.name.lower() for c in self.category_manager.get_all_categories()}
+        
+        for template in self.get_all_templates():
+            # 基础字段匹配
+            match = (keyword in template.name.lower() or 
+                    keyword in template.id.lower())
+            
+            # 分类名匹配
+            if not match and self.category_manager:
+                cat_name = cat_map.get(template.category_id, "")
+                if keyword in cat_name:
+                    match = True
+                    
+            if match:
                 results.append(template)
         
         return results
     
-    def get_templates_by_category(self, category: str) -> List[Template]:
-        """根据分类获取模版"""
-        return [t for t in self.templates.values() if t.category == category]
+    def get_templates_by_category(self, category_id: str) -> List[Template]:
+        """根据分类 ID 获取模版"""
+        return [t for t in self.get_all_templates() if t.category_id == category_id]
     
     def expand_path(self, path: str) -> str:
         """
@@ -259,10 +272,10 @@ class TemplateManager:
         return os.path.exists(expanded_path)
     
     def get_all_categories(self) -> List[str]:
-        """获取所有分类"""
+        """获取所有使用过的分类 ID"""
         categories = set()
-        for template in self.templates.values():
-            categories.add(template.category)
+        for template in self.get_all_templates():
+            categories.add(template.category_id)
         return sorted(list(categories))
     
     # ========== API 集成预留方法 ==========

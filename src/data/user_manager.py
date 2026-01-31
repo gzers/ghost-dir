@@ -39,6 +39,10 @@ class UserManager:
         from ..common.config import CONFIG_FILE
         CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
 
+    def reload(self):
+        """重新从磁盘加载最新数据，用于多实例同步"""
+        self._load_data()
+
     def _load_data(self):
         """加载用户数据"""
         from ..common.config import CONFIG_FILE
@@ -152,7 +156,7 @@ class UserManager:
                 return False
             
             self.links.append(link)
-            self.save_data()
+            self._save_data()
             return True
             
         except Exception as e:
@@ -177,7 +181,7 @@ class UserManager:
                 if l.id == link.id:
                     link.updated_at = datetime.now().isoformat()
                     self.links[i] = link
-                    self.save_data()
+                    self._save_data()
                     return True
             
             print(f"连接不存在: {link.id}")
@@ -198,9 +202,9 @@ class UserManager:
         """获取所有连接"""
         return self.links
     
-    def get_links_by_category(self, category: str) -> List[UserLink]:
-        """根据分类获取连接"""
-        return [l for l in self.links if l.category == category]
+    def get_links_by_category(self, category_id: str) -> List[UserLink]:
+        """根据分类 ID 获取连接"""
+        return [l for l in self.links if l.category == category_id]
     
     def update_link_size(self, link_id: str, size: int) -> bool:
         """更新连接的空间大小缓存"""
@@ -221,7 +225,7 @@ class UserManager:
                 return False
             
             self.categories.append(category)
-            self.save_data()
+            self._save_data()
             return True
             
         except Exception as e:
@@ -243,7 +247,7 @@ class UserManager:
                     link.category = DEFAULT_CATEGORY
             
             self.categories = [c for c in self.categories if c.id != category_id]
-            self.save_data()
+            self._save_data()
             return True
             
         except Exception as e:

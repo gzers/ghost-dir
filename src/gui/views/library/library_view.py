@@ -13,8 +13,8 @@ from src.data.user_manager import UserManager
 from src.data.template_manager import TemplateManager
 from src.data.category_manager import CategoryManager
 from src.data.model import Template, CategoryNode
-from ...components import BasePageView
-from .widgets import CategoryTreeWidget, TemplateTableWidget
+from ...components import BasePageView, CategoryTreeWidget
+from .widgets import TemplateTableWidget
 from ...dialogs import (
     CategoryEditDialog, TemplateEditDialog, TemplatePreviewDialog,
     BatchMoveDialog, ExportDialog, ImportDialog, CategoryManagerDialog

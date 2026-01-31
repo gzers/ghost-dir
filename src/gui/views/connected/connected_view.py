@@ -2,7 +2,7 @@
 主控制台视图
 页面主体 - 负责布局和协调各组件
 """
-from PySide6.QtWidgets import QSplitter, QWidget
+from PySide6.QtWidgets import QSplitter, QWidget, QStackedWidget
 from PySide6.QtCore import Qt
 import os
 from qfluentwidgets import PushButton, ToolButton, FluentIcon, MessageBox
@@ -15,9 +15,9 @@ from ....core.scanner import SmartScanner
 from ....core.transaction import TransactionManager
 from ....core.safety import ProcessGuard
 from ....common.signals import signal_bus
-from ...components import BasePageView
-from .widgets.category_tree import CategoryTree
-from .widgets.batch_toolbar import BatchToolbar
+from ...components import BasePageView, LinkTable, CategoryTreeWidget
+from ...styles import apply_transparent_style
+from .widgets import BatchToolbar, FlatLinkView
 
 
 class ConnectedView(BasePageView):
@@ -28,18 +28,22 @@ class ConnectedView(BasePageView):
         super().__init__(
             parent=parent,
             title=t("connected.title"),
-
-            show_toolbar=False,
-            enable_scroll=True,
-            content_padding=False
+            show_toolbar=True,      # 层级 2：启用工具栏
+            enable_scroll=False,    # 不需要滚动，内容区自适应
+            content_padding=False   # 内容铺满
         )
 
         # 初始化数据管理器
         self.user_manager = UserManager()
         self.template_manager = TemplateManager()
+        from ....data.category_manager import CategoryManager
+        self.category_manager = CategoryManager()
         self.scanner = SmartScanner(self.template_manager, self.user_manager)
 
-        # 设置页面内容
+        # 设置工具栏（层级 2）
+        self._setup_toolbar()
+
+        # 设置页面内容（层级 3）
         self._setup_content()
 
         # 连接信号
@@ -49,73 +53,148 @@ class ConnectedView(BasePageView):
         self._load_data()
 
     def _setup_content(self):
-        """设置页面内容"""
-        # 获取内容容器
-        content_container = self.get_content_container()
+        """设置页面内容（层级 3）"""
+        content_layout = self.get_content_layout()
 
-        # 清空默认布局，使用 Splitter
-        content_layout = content_container.layout()
-        if content_layout:
-            # 保留 stretch，清空其他控件
-            while content_layout.count() > 1:
-                item = content_layout.takeAt(0)
-                if item.widget():
-                    item.widget().deleteLater()
+        # 创建分割器
+        self.splitter = QSplitter(Qt.Orientation.Horizontal)
+        
+        # 左侧：通用分类树容器 (CategoryTreeWidget)
+        self.category_tree = CategoryTreeWidget(self.category_manager, self.user_manager)
+        self.category_tree.setMinimumWidth(200)
+        self.category_tree.setMaximumWidth(400)
+        
+        # 右侧：主展示堆栈
+        self.view_stack = QStackedWidget()
+        
+        # 视图堆栈包含：分类视图 B（用于左树右表模式）和全量列表视图 A
+        # 这里为了满足用户“分类视图下有侧边栏，列表视图下无侧边栏”的要求，
+        # 我们让 QSplitter 的第一个部件是侧边栏，第二个是堆栈。
+        
+        # 默认：分类视图对应的表格 (Index 0)
+        self.category_link_table = LinkTable()
+        self.view_stack.addWidget(self.category_link_table)
+        
+        # 智能列表视图 A (Index 1)
+        self.list_view = FlatLinkView()
+        self.view_stack.addWidget(self.list_view)
+        
+        self.splitter.addWidget(self.category_tree)
+        self.splitter.addWidget(self.view_stack)
+        
+        # 设置分割比例（1:3）
+        self.splitter.setStretchFactor(0, 1)
+        self.splitter.setStretchFactor(1, 3)
+        
+        # 应用 LibraryView 风格的样式优化：隐藏分割线手柄黑条
+        self.splitter.setStyleSheet("QSplitter::handle { background: transparent; border: none; }")
+        apply_transparent_style(self.splitter)
+        
+        # 彻底解决高度撑满问题：移除 BasePageView 默认添加的所有底部弹簧
+        main_layout = self.layout()
+        
+        # 1. 移除内容布局末尾的弹簧
+        for i in range(content_layout.count() - 1, -1, -1):
+            item = content_layout.itemAt(i)
+            if item and item.spacerItem():
+                content_layout.removeItem(item)
+        
+        # 2. 移除主布局末尾的弹簧
+        if main_layout:
+            for i in range(main_layout.count() - 1, -1, -1):
+                item = main_layout.itemAt(i)
+                if item and item.spacerItem():
+                    main_layout.removeItem(item)
 
-        # 主内容区：左树右表
-        splitter = QSplitter(Qt.Orientation.Horizontal)
+        # 3. 设置最高拉伸优先级
+        from PySide6.QtWidgets import QSizePolicy
+        self.splitter.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        content_layout.addWidget(self.splitter, 1)
 
-        # 左侧：分类树组件
-        self.category_tree = CategoryTree()
-        splitter.addWidget(self.category_tree)
-
-        # 右侧：连接表格
-        self.link_table = LinkTable()
-        splitter.addWidget(self.link_table)
-
-        splitter.setStretchFactor(0, 1)
-        splitter.setStretchFactor(1, 3)
-
-        content_layout.insertWidget(0, splitter)
-
-        # 批量操作工具栏组件（默认隐藏）
+        # 批量操作工具栏组件（在最下方，但不占用剩余空间，除非需要）
         self.batch_toolbar = BatchToolbar()
-        content_layout.insertWidget(1, self.batch_toolbar)
+        content_layout.addWidget(self.batch_toolbar)
         self.batch_toolbar.hide()
 
-        # 添加右侧工具栏按钮
-        self._setup_right_toolbar()
+    def _setup_toolbar(self):
+        """设置统一工具栏（层级 2）"""
+        from qfluentwidgets import PrimaryPushButton, SearchLineEdit, Pivot, TransparentPushButton
+        toolbar = self.get_toolbar_layout()
 
-    def _setup_right_toolbar(self):
-        """设置右侧工具栏"""
-        toolbar = self.get_right_toolbar_layout()
-
-        self.add_btn = PushButton(FluentIcon.ADD, t("connected.add_link"))
-        self.scan_btn = PushButton(FluentIcon.SEARCH, t("connected.scan_apps"))
-        self.refresh_size_btn = PushButton(FluentIcon.SYNC, t("connected.refresh_size"))
-        self.refresh_btn = ToolButton(FluentIcon.SYNC)
+        # --- 左侧操作区 ---
+        # 新增链接（主按钮）
+        self.add_btn = PrimaryPushButton(FluentIcon.ADD, t("connected.add_link"))
+        
+        # 扫描（透明按钮）
+        self.scan_btn = TransparentPushButton(FluentIcon.SEARCH, t("connected.scan_apps"))
+        
+        # 批量移除（透明按钮，默认禁用）
+        self.batch_remove_btn = TransparentPushButton(FluentIcon.DELETE, t("connected.batch_remove"))
+        self.batch_remove_btn.setEnabled(False)
 
         toolbar.addWidget(self.add_btn)
         toolbar.addWidget(self.scan_btn)
-        toolbar.addWidget(self.refresh_size_btn)
+        toolbar.addWidget(self.batch_remove_btn)
+
+        # 弹簧撑开中间
+        toolbar.addStretch(1)
+
+        # --- 右侧功能区 ---
+        # 搜索框
+        self.search_edit = SearchLineEdit()
+        self.search_edit.setPlaceholderText(t("connected.search_placeholder"))
+        self.search_edit.setMaximumWidth(300)
+        
+        # 视图切换器
+        self.view_pivot = Pivot()
+        self.view_pivot.addItem("list", t("connected.view_list"))
+        self.view_pivot.addItem("category", t("connected.view_category"))
+        self.view_pivot.setCurrentItem("category") # 默认选分类视图
+        
+        # 刷新按钮
+        self.refresh_btn = ToolButton(FluentIcon.SYNC)
+        self.refresh_btn.setToolTip(t("connected.refresh_status"))
+
+        toolbar.addWidget(self.search_edit)
+        toolbar.addSpacing(8)
+        toolbar.addWidget(self.view_pivot)
         toolbar.addWidget(self.refresh_btn)
+
+        # 额外右侧工具区域（BasePageView 提供的右测布局）
+        right_toolbar = self.get_right_toolbar_layout()
+        self.refresh_size_btn = ToolButton(FluentIcon.SYNC)
+        self.refresh_size_btn.setToolTip(t("connected.refresh_size"))
+        # 只有在高度压缩时可能需要这个，暂时放着或保持为空以保持简洁
+        # right_toolbar.addWidget(self.refresh_size_btn)
 
     def _connect_signals(self):
         """连接信号"""
-        # 按钮点击
+        # 工具栏操作按钮
         self.add_btn.clicked.connect(self._on_add_link)
         self.scan_btn.clicked.connect(self._on_scan)
-        self.refresh_size_btn.clicked.connect(self._on_refresh_size)
-        self.refresh_btn.clicked.connect(self._load_data)
-
+        self.batch_remove_btn.clicked.connect(self._on_batch_remove)
+        
+        # 搜索与切换
+        self.search_edit.textChanged.connect(self._on_search_changed)
+        self.view_pivot.currentItemChanged.connect(self._on_view_pivot_changed)
+        self.refresh_btn.clicked.connect(self._refresh_status)
+        
+        # 分类树信号
+        self.category_tree.category_selected.connect(self._on_category_selected)
+        
         # 表格信号
-        self.link_table.link_selected.connect(self._on_links_selected)
-        self.link_table.action_clicked.connect(self._on_action_clicked)
+        self.category_link_table.link_selected.connect(self._on_links_selected)
+        self.category_link_table.action_clicked.connect(self._on_action_clicked)
+
+        # 列表视图信号
+        self.list_view.link_selected.connect(self._on_links_selected)
+        self.list_view.action_clicked.connect(self._on_action_clicked)
 
         # 批量操作工具栏信号
         self.batch_toolbar.batch_establish_clicked.connect(self._on_batch_establish)
         self.batch_toolbar.batch_disconnect_clicked.connect(self._on_batch_disconnect)
-        self.batch_toolbar.clear_selection_clicked.connect(self.link_table.clear_selection)
+        self.batch_toolbar.clear_selection_clicked.connect(self.category_link_table.clear_selection)
+        self.batch_toolbar.clear_selection_clicked.connect(self.list_view.clear_selection)
 
         # 全局信号
         signal_bus.data_refreshed.connect(self._load_data)
@@ -123,12 +202,108 @@ class ConnectedView(BasePageView):
 
     def _load_data(self):
         """加载数据"""
+        # 强制重载磁盘最新数据
+        self.user_manager.reload()
+        
         # 加载分类树
         self.category_tree.load_categories()
-
-        # 加载连接表格
+        
+        # 默认选中“全部”并触发加载
+        self.category_tree.select_category("all")
+        self._on_category_selected("all")
+        
+        # 刷新状态
+        self._refresh_status()
+    
+    def _refresh_status(self):
+        """刷新所有连接的状态"""
         links = self.user_manager.get_all_links()
-        self.link_table.load_links(links)
+        for link in links:
+            _ = link.status
+        
+        # 刷新表格显示
+        self._on_category_selected(getattr(self, 'current_category_id', "all"))
+    
+    def _on_view_pivot_changed(self, route_key: str):
+        """视图切换"""
+        if route_key == "list":
+            # 列表视图
+            self.category_tree.hide()
+            self.splitter.setSizes([0, 1000])
+            self.view_stack.setCurrentIndex(1)
+            self._on_category_selected("all")
+        else:
+            # 分类视图
+            self.category_tree.show()
+            self.splitter.setSizes([250, 750])
+            self.view_stack.setCurrentIndex(0)
+            self._on_category_selected(getattr(self, 'current_category_id', "all"))
+
+    def _on_category_selected(self, category_id: str):
+        """分类树节点被选中"""
+        self.current_category_id = category_id
+        
+        if category_id == "all":
+            links = self.user_manager.get_all_links()
+        else:
+            # 兼容性修复：现在全部按 ID 过滤
+            links = self.user_manager.get_links_by_category(category_id)
+            
+        # 同时同步数据到两个视图
+        self.category_link_table.load_links(links)
+        self.list_view.load_links(links)
+    
+    def _on_view_changed(self, index: int):
+        """视图切换"""
+        self.view_stack.setCurrentIndex(index)
+    
+    def _on_search_changed(self, text: str):
+        """搜索文本改变"""
+        search_text = text.strip().lower()
+        category_name = getattr(self, 'current_category', "全部")
+        
+        # 1. 获取基础数据集（基于分类）
+        if category_name == "全部":
+            base_links = self.user_manager.get_all_links()
+        else:
+            base_links = self.user_manager.get_links_by_category(category_name)
+            
+        # 2. 应用搜索过滤
+        if not search_text:
+            filtered_links = base_links
+        else:
+            filtered_links = [
+                link for link in base_links 
+                if search_text in link.name.lower() or search_text in link.target_path.lower()
+            ]
+            
+        # 3. 更新视图
+        self.category_link_table.load_links(filtered_links)
+        self.list_view.load_links(filtered_links)
+    
+    def _on_batch_remove(self):
+        """批量移除连接"""
+        selected_ids = self.category_view.get_selected_links()
+        if not selected_ids:
+            return
+        
+        # 确认
+        reply = MessageBox(
+            "确认删除",
+            f"确定要删除 {len(selected_ids)} 个连接吗？\n这不会删除实际文件。",
+            self
+        ).exec()
+        
+        if not reply:
+            return
+        
+        # 执行删除
+        for link_id in selected_ids:
+            self.user_manager.remove_link(link_id)
+        
+        # 刷新数据
+        self._load_data()
+        self.category_view.clear_selection()
 
     def _on_links_selected(self, selected_ids: list):
         """连接选中事件"""
@@ -219,7 +394,7 @@ class ConnectedView(BasePageView):
 
     def _on_batch_establish(self):
         """批量建立连接"""
-        selected_ids = self.link_table.get_selected_links()
+        selected_ids = self.category_view.get_selected_links()
         if not selected_ids:
             return
 
@@ -266,7 +441,7 @@ class ConnectedView(BasePageView):
 
         # 刷新数据
         self._load_data()
-        self.link_table.clear_selection()
+        self.category_view.clear_selection()
 
         # 显示结果
         if failed_items:
@@ -278,7 +453,7 @@ class ConnectedView(BasePageView):
 
     def _on_batch_disconnect(self):
         """批量断开连接"""
-        selected_ids = self.link_table.get_selected_links()
+        selected_ids = self.category_view.get_selected_links()
         if not selected_ids:
             return
 
@@ -325,7 +500,7 @@ class ConnectedView(BasePageView):
 
         # 刷新数据
         self._load_data()
-        self.link_table.clear_selection()
+        self.category_view.clear_selection()
 
         # 显示结果
         if failed_items:

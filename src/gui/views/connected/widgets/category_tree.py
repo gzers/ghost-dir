@@ -3,6 +3,7 @@
 左侧分类导航树
 """
 from PySide6.QtWidgets import QTreeWidgetItem
+from PySide6.QtCore import Signal
 from qfluentwidgets import TreeWidget
 from .....data.user_manager import UserManager
 
@@ -10,10 +11,29 @@ from .....data.user_manager import UserManager
 class CategoryTree(TreeWidget):
     """分类树组件"""
     
+    # 信号
+    category_selected = Signal(str)  # 分类被选中，发送分类名称
+    
     def __init__(self, parent=None):
         super().__init__(parent)
         self.user_manager = UserManager()
         self._init_ui()
+        self._connect_signals()
+    
+    def _connect_signals(self):
+        """连接信号"""
+        self.itemClicked.connect(self._on_item_clicked)
+    
+    def _on_item_clicked(self, item, column):
+        """树节点被点击"""
+        # 提取分类名称（去掉计数部分）
+        text = item.text(0)
+        if " (" in text:
+            category_name = text.split(" (")[0]
+        else:
+            category_name = text
+        
+        self.category_selected.emit(category_name)
     
     def _init_ui(self):
         """初始化 UI"""

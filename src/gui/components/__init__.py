@@ -8,6 +8,8 @@ from .card_header import CardHeader
 from .link_table import LinkTable
 from .progress_indicator import ProgressIndicator
 from .category_selector import CategorySelector
+from .category_tree import CategoryTreeWidget
+from .base_table import BaseTableWidget
 
 __all__ = [
     "BasePageView",
@@ -16,4 +18,6 @@ __all__ = [
     "LinkTable",
     "ProgressIndicator",
     "CategorySelector",
+    "CategoryTreeWidget",
+    "BaseTableWidget",
 ]

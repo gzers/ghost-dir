@@ -116,9 +116,15 @@ class ScanWizardDialog(MessageBoxBase):
             # 显示结果
             self.resultWidget.show()
             
+            # 获取分类名称映射
+            cat_map = {}
+            if self.scanner.template_manager.category_manager:
+                cat_map = {c.id: c.name for c in self.scanner.template_manager.category_manager.get_all_categories()}
+
             # 创建复选框
             for template in discovered:
-                checkbox = CheckBox(f"{template.name} ({template.category})")
+                cat_name = cat_map.get(getattr(template, 'category_id', ''), "未分类")
+                checkbox = CheckBox(f"{template.name} ({cat_name})")
                 checkbox.setChecked(True)
                 self.checkboxes[template.id] = checkbox
                 self.checkboxLayout.addWidget(checkbox)

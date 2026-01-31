@@ -2,6 +2,7 @@
 智能扫描器
 自动发现可管理的软件
 """
+import os
 from typing import List
 from ..data.model import Template, UserLink
 from ..data.template_manager import TemplateManager
@@ -26,31 +27,36 @@ class SmartScanner:
     def scan(self) -> List[Template]:
         """
         扫描本机，发现可管理的软件
+        支持：1. 存在于模板库中的原始目录 2. C 盘已经建立的 Junction 连接点
         
         Returns:
             发现的模版列表
         """
         discovered = []
         existing_paths = {link.source_path for link in self.user_manager.get_all_links()}
+        from .link_opt import is_junction
         
         for template in self.template_manager.get_all_templates():
             # 🆕 v7.4: 过滤已忽略的模版
             if self.user_manager.is_ignored(template.id):
                 continue
                 
-            # 🆕 v7.4: 过滤已手动添加的模版（基于 template_id）
+            # 🆕 v7.4: 过滤已经在库中的模版（基于 template_id）
             if self.user_manager.has_link_for_template(template.id):
                 continue
 
             # 展开环境变量
             expanded_path = self.template_manager.expand_path(template.default_src)
             
-            # 检查路径是否存在且源路径未被管理（双重检查）
-            if (self.template_manager.validate_template_path(template) and 
-                expanded_path not in existing_paths):
+            # 校验逻辑：
+            # 1. 如果路径是 Junction，说明可能已经手动建立过连接，属于“已建立链接”的自动导入
+            # 2. 如果路径是普通目录且存在，属于“待迁移”的软件扫描
+            if (os.path.exists(expanded_path) and expanded_path not in existing_paths):
+                # 标记该模板发现时是否已经是连接状态，方便后续 import 处理
+                setattr(template, '_auto_detected_junction', is_junction(expanded_path))
                 discovered.append(template)
         
-        print(f"扫描完成，发现 {len(discovered)} 个可管理的软件")
+        print(f"扫描完成，发现 {len(discovered)} 个个通过或待管理的软件")
         return discovered
     
     def import_templates(self, templates: List[Template], target_drive: str = "D:\\") -> int:
@@ -65,19 +71,30 @@ class SmartScanner:
             成功导入的数量
         """
         success_count = 0
+        from .link_opt import get_junction_target
         
         for template in templates:
             try:
                 # 创建用户连接
                 source_path = self.template_manager.expand_path(template.default_src)
-                target_path = target_drive + source_path[3:]  # C:\xxx -> D:\xxx
+                
+                # 语义优化：如果探测到已经是 Junction，说明已经建立过链接，自动读取其目标路径
+                is_manual_junction = getattr(template, '_auto_detected_junction', False)
+                if is_manual_junction:
+                    target_path = get_junction_target(source_path) or (target_drive + source_path[3:])
+                else:
+                    # 普通扫描导入，默认生成映射路径
+                    target_path = target_drive + source_path[3:]  # C:\xxx -> D:\xxx
+                
+                # 获取分类（同步到分类树）
+                cat_id = getattr(template, 'category_id', 'uncategorized')
                 
                 link = UserLink(
                     id=str(uuid.uuid4()),
                     name=template.name,
                     source_path=source_path,
                     target_path=target_path,
-                    category=template.category,
+                    category=cat_id,
                     template_id=template.id,
                     icon=template.icon
                 )

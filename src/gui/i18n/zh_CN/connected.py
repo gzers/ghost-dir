@@ -9,8 +9,20 @@ CONNECTED_TEXTS = {
     "refresh_size": "刷新统计",
     "batch_establish": "批量建立连接",
     "batch_disconnect": "批量断开连接",
+    "batch_remove": "批量移除",
     "clear_selection": "清除选择",
     "selected_count": "已选择 {count} 项",
+    
+    # 视图切换
+    "view_list": "列表视图",
+    "view_category": "分类视图",
+    "search_placeholder": "搜索软件名称...",
+    
+    # 状态文案
+    "status_connected": "正常",
+    "status_invalid": "失效",
+    "status_ready": "就绪",
+    "status_disconnected": "未连接",
     
     # 操作按钮
     "establish": "建立连接",

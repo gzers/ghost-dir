@@ -45,7 +45,7 @@ class ActionButtonGroup(QWidget):
             
         elif self.status == LinkStatus.CONNECTED:
             # 已连接:显示"断开连接"按钮
-            disconnect_btn = PushButton(FluentIcon.DISCONNECT, t("connected.disconnect"))
+            disconnect_btn = PushButton(FluentIcon.CLOSE, t("connected.disconnect"))
             disconnect_btn.clicked.connect(self.disconnect_clicked.emit)
             layout.addWidget(disconnect_btn)
             

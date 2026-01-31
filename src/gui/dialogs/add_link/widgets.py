@@ -72,16 +72,20 @@ class TemplateTabWidget(QWidget):
     def _load_templates(self):
         self.templateList.clear()
         templates = self.template_manager.get_all_templates()
+        all_cats = {c.id: c.name for c in self.user_manager.get_all_categories()}
         for template in templates:
-            item = QListWidgetItem(f"{template.name} ({template.category})")
+            cat_name = all_cats.get(template.category_id, "未知分类")
+            item = QListWidgetItem(f"{template.name} ({cat_name})")
             item.setData(Qt.ItemDataRole.UserRole, template)
             self.templateList.addItem(item)
 
     def _on_search_changed(self, text: str):
         self.templateList.clear()
         templates = self.template_manager.search_templates(text) if text else self.template_manager.get_all_templates()
+        all_cats = {c.id: c.name for c in self.user_manager.get_all_categories()}
         for template in templates:
-            item = QListWidgetItem(f"{template.name} ({template.category})")
+            cat_name = all_cats.get(template.category_id, "未知分类")
+            item = QListWidgetItem(f"{template.name} ({cat_name})")
             item.setData(Qt.ItemDataRole.UserRole, template)
             self.templateList.addItem(item)
 
@@ -96,7 +100,10 @@ class TemplateTabWidget(QWidget):
         target_path = "D:\\" + source_path[3:]
         self.targetEdit.setText(target_path)
         
-        index = self.categoryCombo.findText(template.category)
+        # 根据 category_id 寻找分类名称
+        all_cats = {c.id: c.name for c in self.user_manager.get_all_categories()}
+        cat_name = all_cats.get(template.category_id, "")
+        index = self.categoryCombo.findText(cat_name)
         if index >= 0:
             self.categoryCombo.setCurrentIndex(index)
 
