@@ -73,15 +73,15 @@ class LinkTable(BaseTableWidget):
         name_item.setTextAlignment(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)
         self.setItem(row, 1, name_item)
 
-        # 2. 状态 (封装容器确保居中)
+        # 2. 状态 (使用可视化的 StatusBadge)
+        from .status_badge import StatusBadge
         status_widget = QWidget()
         status_widget.setStyleSheet("background: transparent; border: none;")
         status_layout = QHBoxLayout(status_widget)
         status_layout.setContentsMargins(0, 0, 0, 0)
-        status_text = get_status_text(link.status.value)
-        from qfluentwidgets import BodyLabel
-        label = BodyLabel(status_text)
-        status_layout.addWidget(label)
+        
+        badge = StatusBadge(link.status)
+        status_layout.addWidget(badge)
         status_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.setCellWidget(row, 2, status_widget)
         

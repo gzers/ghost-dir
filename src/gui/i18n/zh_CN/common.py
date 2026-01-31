@@ -4,7 +4,7 @@
 """
 
 COMMON_TEXTS = {
-    """通用操作文案"""
+    # 通用操作文案
     "confirm": "确定",
     "cancel": "取消",
     "save": "保存",
@@ -30,7 +30,7 @@ COMMON_TEXTS = {
 }
 
 STATUS_TEXTS = {
-    """状态文案"""
+    # 状态文案
     "disconnected": "未连接",
     "connected": "已连接",
     "ready": "就绪",
@@ -40,7 +40,7 @@ STATUS_TEXTS = {
 }
 
 CATEGORY_TEXTS = {
-    """分类文案"""
+    # 分类文案
     "all": "全部",
     "uncategorized": "未分类",
     "game": "游戏",
@@ -53,7 +53,7 @@ CATEGORY_TEXTS = {
 }
 
 ERROR_TEXTS = {
-    """错误消息"""
+    # 错误消息
     "permission_denied": "权限不足",
     "file_not_found": "文件不存在",
     "path_invalid": "路径无效",
@@ -63,7 +63,7 @@ ERROR_TEXTS = {
 }
 
 DIALOG_TEXTS = {
-    """对话框标题"""
+    # 对话框标题
     "add_link_title": "新增连接",
     "edit_link_title": "编辑连接",
     "category_manager_title": "分类管理",
