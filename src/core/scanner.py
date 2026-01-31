@@ -87,7 +87,8 @@ class SmartScanner:
                     target_path = target_drive + source_path[3:]  # C:\xxx -> D:\xxx
                 
                 # 获取分类（同步到分类树）
-                cat_id = getattr(template, 'category_id', 'uncategorized')
+                # 兼容性修复：优先取 category_id，回滚到 category，最后才是 uncategorized
+                cat_id = getattr(template, 'category_id', getattr(template, 'category', 'uncategorized'))
                 
                 link = UserLink(
                     id=str(uuid.uuid4()),

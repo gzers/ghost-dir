@@ -1,10 +1,12 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QListWidget, QListWidgetItem
 from PySide6.QtCore import Qt, Signal
 from qfluentwidgets import (
-    BodyLabel, LineEdit, PushButton, ComboBox, CheckBox
+    BodyLabel, LineEdit, PushButton, CheckBox
 )
 from src.data.template_manager import TemplateManager
 from src.data.user_manager import UserManager
+from src.data.category_manager import CategoryManager
+from ...components import CategorySelector
 
 class TemplateTabWidget(QWidget):
     """从模版库选择标签页"""
@@ -53,11 +55,13 @@ class TemplateTabWidget(QWidget):
         details_layout.addWidget(BodyLabel("目标路径:"))
         details_layout.addWidget(self.targetEdit)
         
-        self.categoryCombo = ComboBox()
+        self.categorySelector = CategorySelector()
+        self.category_manager = CategoryManager()
+        self.categorySelector.set_manager(self.category_manager)
         
         # 分类选择行
         category_layout = QHBoxLayout()
-        category_layout.addWidget(self.categoryCombo)
+        category_layout.addWidget(self.categorySelector)
         
         self.manageCategoryBtn = PushButton("管理分类")
         self.manageCategoryBtn.clicked.connect(self.manage_categories_requested.emit)
@@ -101,22 +105,13 @@ class TemplateTabWidget(QWidget):
         target_path = "D:\\" + source_path[3:]
         self.targetEdit.setText(target_path)
         
-        # 使用 category_id 精准匹配 ComboBox 项
-        index = self.categoryCombo.findData(template.category_id)
-        if index >= 0:
-            self.categoryCombo.setCurrentIndex(index)
+        # 使用 category_id 精准匹配 (回显 ID)
+        cat_id = getattr(template, 'category_id', getattr(template, 'category', 'uncategorized'))
+        self.categorySelector.set_value(cat_id)
 
     def refresh_categories(self):
-        current_id = self.categoryCombo.currentData()
-        self.categoryCombo.clear()
-        categories = self.user_manager.get_all_categories()
-        for category in categories:
-            self.categoryCombo.addItem(category.name, category.id)
-        
-        if current_id:
-            index = self.categoryCombo.findData(current_id)
-            if index >= 0:
-                self.categoryCombo.setCurrentIndex(index)
+        """刷新分类列表"""
+        self.categorySelector.refresh()
 
 class CustomTabWidget(QWidget):
     """自定义标签页"""
@@ -146,10 +141,12 @@ class CustomTabWidget(QWidget):
         layout.addWidget(BodyLabel("目标路径 (D 盘):"))
         layout.addWidget(self.customTargetEdit)
         
-        self.customCategoryCombo = ComboBox()
+        self.customCategorySelector = CategorySelector()
+        self.category_manager = CategoryManager()
+        self.customCategorySelector.set_manager(self.category_manager)
         
         custom_category_layout = QHBoxLayout()
-        custom_category_layout.addWidget(self.customCategoryCombo)
+        custom_category_layout.addWidget(self.customCategorySelector)
         
         self.customManageCategoryBtn = PushButton("管理分类")
         self.customManageCategoryBtn.clicked.connect(self.manage_categories_requested.emit)
@@ -165,13 +162,5 @@ class CustomTabWidget(QWidget):
         self.refresh_categories()
 
     def refresh_categories(self):
-        current_id = self.customCategoryCombo.currentData()
-        self.customCategoryCombo.clear()
-        categories = self.user_manager.get_all_categories()
-        for category in categories:
-            self.customCategoryCombo.addItem(category.name, category.id)
-            
-        if current_id:
-            index = self.customCategoryCombo.findData(current_id)
-            if index >= 0:
-                self.customCategoryCombo.setCurrentIndex(index)
+        """刷新分类列表"""
+        self.customCategorySelector.refresh()

@@ -116,10 +116,10 @@ class UserManager:
         """创建默认数据"""
         self.links = []
         self.categories = [
-            Category(id=str(uuid.uuid4()), name="游戏"),
-            Category(id=str(uuid.uuid4()), name="浏览器"),
-            Category(id=str(uuid.uuid4()), name="社交"),
-            Category(id=str(uuid.uuid4()), name=DEFAULT_CATEGORY),
+            Category(id="games", name="游戏"),
+            Category(id="browsers", name="浏览器"),
+            Category(id="social", name="社交"),
+            Category(id="uncategorized", name=DEFAULT_CATEGORY),
         ]
         self._save_data()
     
@@ -243,8 +243,8 @@ class UserManager:
             
             # 将该分类下的连接移到默认分类
             for link in self.links:
-                if link.category == category.name:
-                    link.category = DEFAULT_CATEGORY
+                if link.category == category_id:
+                    link.category = "uncategorized"
             
             self.categories = [c for c in self.categories if c.id != category_id]
             self._save_data()

@@ -74,12 +74,12 @@ class AddLinkDialog(MessageBoxBase):
             name = self.templateTab.nameEdit.text().strip()
             source = self.templateTab.sourceEdit.text().strip()
             target = self.templateTab.targetEdit.text().strip()
-            category = self.templateTab.categoryCombo.currentText()
+            category = self.templateTab.categorySelector.get_value() or "uncategorized"
         else:  # 自定义添加
             name = self.customTab.customNameEdit.text().strip()
             source = self.customTab.customSourceEdit.text().strip()
             target = self.customTab.customTargetEdit.text().strip()
-            category = self.customTab.customCategoryCombo.currentText()
+            category = self.customTab.customCategorySelector.get_value() or "uncategorized"
         
         # 验证
         if not name or not source or not target:

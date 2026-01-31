@@ -3,8 +3,10 @@
 """
 from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout
 from PySide6.QtCore import Signal
-from qfluentwidgets import MessageBoxBase, LineEdit, BodyLabel, ComboBox, PushButton
+from qfluentwidgets import MessageBoxBase, LineEdit, BodyLabel, PushButton
 from ....data.user_manager import UserManager
+from ....data.category_manager import CategoryManager
+from ...components import CategorySelector
 from ....data.model import UserLink
 from ...i18n import t
 
@@ -48,15 +50,12 @@ class EditLinkDialog(MessageBoxBase):
         layout.addWidget(self.targetEdit)
         
         # 分类
-        self.categoryCombo = ComboBox()
-        category_row = QHBoxLayout()
-        category_row.addWidget(self.categoryCombo)
+        self.categorySelector = CategorySelector()
+        self.category_manager = CategoryManager()
+        self.categorySelector.set_manager(self.category_manager)
         
         layout.addWidget(BodyLabel(t("connected.category")))
-        layout.addLayout(category_row)
-        
-        # 刷新并填充分类
-        self._refresh_categories()
+        layout.addWidget(self.categorySelector)
         
         # 按钮
         self.yesButton.setText(t("common.save"))
@@ -64,12 +63,7 @@ class EditLinkDialog(MessageBoxBase):
         
         self.widget.setMinimumWidth(500)
 
-    def _refresh_categories(self):
-        """加载分类列表"""
-        self.categoryCombo.clear()
-        categories = self.user_manager.get_all_categories()
-        for cat in categories:
-            self.categoryCombo.addItem(cat.name, cat.id)
+    # 移除旧的 _refresh_categories，CategorySelector 自带管理功能
 
     def _load_data(self):
         """加载现有数据"""
@@ -77,15 +71,13 @@ class EditLinkDialog(MessageBoxBase):
         self.sourceEdit.setText(self.link.source_path)
         self.targetEdit.setText(self.link.target_path)
         
-        # 匹配分类
-        index = self.categoryCombo.findText(self.link.category)
-        if index >= 0:
-            self.categoryCombo.setCurrentIndex(index)
+        # 匹配分类 (回显 ID)
+        self.categorySelector.set_value(self.link.category)
 
     def validate(self):
         """提交验证"""
         name = self.nameEdit.text().strip()
-        category = self.categoryCombo.currentText()
+        category = self.categorySelector.get_value() or "uncategorized"
         
         if not name:
             return False

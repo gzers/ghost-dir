@@ -9,6 +9,7 @@ from ....data.user_manager import UserManager
 from ....data.template_manager import TemplateManager
 from ....core.scanner import SmartScanner
 from ...components import BasePageView
+from ....common.signals import signal_bus
 from .widgets import ScanProgressCard, ScanWorker
 
 
@@ -72,7 +73,7 @@ class WizardView(BasePageView):
         dialog = ScanFlowDialog(self.template_manager.category_manager, self)
         if dialog.exec():
             # 通知链接列表刷新
-            signal_bus.links_changed.emit()
+            signal_bus.data_refreshed.emit()
             
         # 刷新进度卡片状态（复位）
         self.scan_progress.reset()
