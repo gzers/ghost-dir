@@ -3,7 +3,7 @@
 组装所有文案模块
 """
 from .common import COMMON_TEXTS, STATUS_TEXTS, CATEGORY_TEXTS, ERROR_TEXTS, DIALOG_TEXTS
-from .console import CONSOLE_TEXTS
+from .connected import CONNECTED_TEXTS
 from .wizard import WIZARD_TEXTS
 from .library import LIBRARY_TEXTS
 from .help import HELP_TEXTS
@@ -17,7 +17,7 @@ TEXTS = {
     "category": CATEGORY_TEXTS,
     "error": ERROR_TEXTS,
     "dialog": DIALOG_TEXTS,
-    "console": CONSOLE_TEXTS,
+    "connected": CONNECTED_TEXTS,
     "wizard": WIZARD_TEXTS,
     "library": LIBRARY_TEXTS,
     "help": HELP_TEXTS,

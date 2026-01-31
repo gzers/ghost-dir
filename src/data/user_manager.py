@@ -29,7 +29,7 @@ class UserManager:
         self.default_target_root: str = DEFAULT_TARGET_ROOT  # 默认仓库路径
         self.theme: str = DEFAULT_THEME                      # 主题：light/dark/system
         self.theme_color: str = DEFAULT_THEME_COLOR          # 主题色
-        self.startup_page: str = DEFAULT_STARTUP_PAGE        # 首次打开：wizard/console/library
+        self.startup_page: str = DEFAULT_STARTUP_PAGE        # 首次打开：wizard/connected/library
         
         self._ensure_data_dir()
         self._load_data()
@@ -369,8 +369,8 @@ class UserManager:
         return self.theme
 
     def set_startup_page(self, page: str) -> bool:
-        """设置首启动页面：wizard/console/library"""
-        if page not in ['wizard', 'console', 'library']:
+        """设置首启动页面：wizard/connected/library"""
+        if page not in ['wizard', 'connected', 'library']:
             return False
         try:
             self.startup_page = page

@@ -49,7 +49,7 @@ DEFAULT_THEME = "system"  # 可选值: "light", "dark", "system"
 DEFAULT_THEME_COLOR = "system"  # 可选值: "system" 或 十六进制颜色值如 "#009FAA"
 
 # 启动页默认值
-DEFAULT_STARTUP_PAGE = "wizard"  # 可选值: "wizard", "console", "library"
+DEFAULT_STARTUP_PAGE = "wizard"  # 可选值: "wizard", "connected", "library"
 
 # ========== 主题和颜色选项配置 ==========
 # 这些配置定义了 UI 组件中的可选项
@@ -78,7 +78,7 @@ THEME_COLOR_OPTIONS = [
 # 启动页选项
 STARTUP_PAGE_OPTIONS = [
     {"value": "wizard", "i18n_key": "settings.startup_wizard"},
-    {"value": "console", "i18n_key": "settings.startup_console"},
+    {"value": "connected", "i18n_key": "settings.startup_connected"},
     {"value": "library", "i18n_key": "settings.startup_library"},
 ]
 

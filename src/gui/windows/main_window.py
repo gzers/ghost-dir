@@ -10,7 +10,7 @@ from qfluentwidgets import (
     setCustomStyleSheet, isDarkTheme, Theme
 )
 from PySide6.QtCore import Qt, QSize, QTimer
-from ..views.console import ConsoleView
+from ..views.connected import ConnectedView
 from ..views.wizard import WizardView
 from ..views.library import LibraryView
 from ..views.help import HelpView
@@ -32,7 +32,7 @@ class MainWindow(FluentWindow):
         self.user_manager = user_manager
 
         # 创建视图
-        self.console_view = ConsoleView(self)
+        self.connected_view = ConnectedView(self)
         self.wizard_view = WizardView(self)
         self.library_view = LibraryView(self)
         self.help_view = HelpView(self)
@@ -64,7 +64,7 @@ class MainWindow(FluentWindow):
     def _init_navigation(self):
         """初始化导航栏"""
         # 设置 objectName
-        self.console_view.setObjectName("consoleView")
+        self.connected_view.setObjectName("connectedView")
         self.wizard_view.setObjectName("wizardView")
         self.library_view.setObjectName("libraryView")
         self.help_view.setObjectName("helpView")
@@ -81,7 +81,7 @@ class MainWindow(FluentWindow):
         
         # 2. 我的连接
         self.addSubInterface(
-            self.console_view,
+            self.connected_view,
             FluentIcon.IOT,
             "我的连接",
             position=NavigationItemPosition.TOP
@@ -114,7 +114,7 @@ class MainWindow(FluentWindow):
         startup_page = self.user_manager.get_startup_page() if self.user_manager else "wizard"
         page_map = {
             "wizard": self.wizard_view,
-            "console": self.console_view,
+            "connected": self.connected_view,
             "library": self.library_view
         }
         self.switchTo(page_map.get(startup_page, self.wizard_view))

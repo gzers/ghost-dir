@@ -1,8 +1,8 @@
 """
-主控制台页面文案
+已连接页面文案
 """
 
-CONSOLE_TEXTS = {
+CONNECTED_TEXTS = {
     "title": "我的连接",
     "add_link": "新增连接",
     "scan_apps": "扫描本机应用",

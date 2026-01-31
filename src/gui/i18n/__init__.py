@@ -9,7 +9,7 @@
     text = t("common.confirm")  # "确定"
     
     # 带参数的文案
-    text = t("console.selected_count", count=5)  # "已选择 5 项"
+    text = t("connected.selected_count", count=5)  # "已选择 5 项"
 """
 from .manager import I18nManager
 from .zh_CN import TEXTS
@@ -33,7 +33,7 @@ def t(key: str, **kwargs) -> str:
     Example:
         >>> t("common.confirm")
         "确定"
-        >>> t("console.msg_establish_success", name="Chrome")
+        >>> t("connected.msg_establish_success", name="Chrome")
         "已成功建立连接:Chrome"
     """
     return _i18n.get(key, **kwargs)

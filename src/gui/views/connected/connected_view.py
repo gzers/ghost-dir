@@ -20,14 +20,15 @@ from .widgets.category_tree import CategoryTree
 from .widgets.batch_toolbar import BatchToolbar
 
 
-class ConsoleView(BasePageView):
-    """主控制台视图"""
+class ConnectedView(BasePageView):
+    """已连接视图 - 管理所有连接状态"""
 
     def __init__(self, parent=None):
-        """初始化控制台视图"""
+        """初始化已连接视图"""
         super().__init__(
             parent=parent,
-            title=t("console.title"),
+            title=t("connected.title"),
+
             show_toolbar=False,
             enable_scroll=True,
             content_padding=False
@@ -89,9 +90,9 @@ class ConsoleView(BasePageView):
         """设置右侧工具栏"""
         toolbar = self.get_right_toolbar_layout()
 
-        self.add_btn = PushButton(FluentIcon.ADD, t("console.add_link"))
-        self.scan_btn = PushButton(FluentIcon.SEARCH, t("console.scan_apps"))
-        self.refresh_size_btn = PushButton(FluentIcon.SYNC, t("console.refresh_size"))
+        self.add_btn = PushButton(FluentIcon.ADD, t("connected.add_link"))
+        self.scan_btn = PushButton(FluentIcon.SEARCH, t("connected.scan_apps"))
+        self.refresh_size_btn = PushButton(FluentIcon.SYNC, t("connected.refresh_size"))
         self.refresh_btn = ToolButton(FluentIcon.SYNC)
 
         toolbar.addWidget(self.add_btn)
