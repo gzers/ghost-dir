@@ -15,10 +15,20 @@ from ..common.config import (
 
 
 class UserManager:
-    """用户数据管理器"""
+    """用户数据管理器 (单例)"""
+    _instance = None
+    _initialized = False
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(UserManager, cls).__new__(cls)
+        return cls._instance
     
     def __init__(self):
         """初始化用户数据管理器"""
+        if UserManager._initialized:
+            return
+        
         self.data_file = USER_DATA_FILE
         self.links: List[UserLink] = []
         self.categories: List[Category] = []
@@ -91,6 +101,8 @@ class UserManager:
             
             print(f"已加载 {len(self.links)} 个连接，{len(self.categories)} 个分类")
             print(f"已加载 {len(self.custom_templates)} 个自定义模版")
+            
+            UserManager._initialized = True
             
         except Exception as e:
             print(f"加载用户数据时出错: {e}")
