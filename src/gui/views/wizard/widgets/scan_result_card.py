@@ -66,7 +66,9 @@ class ScanResultCard(Card):
         self.main_layout.addLayout(info_layout, stretch=1)
 
         # 分类标签
-        self.category_badge = BodyLabel(self.category_name)
+        from src.gui.i18n import get_category_text
+        display_name = get_category_text(self.category_name)
+        self.category_badge = BodyLabel(display_name)
         self.main_layout.addWidget(self.category_badge)
 
         # 操作按钮

@@ -6,8 +6,9 @@ from qfluentwidgets import (
 from src.data.template_manager import TemplateManager
 from src.data.user_manager import UserManager
 from src.data.category_manager import CategoryManager
-from ...components import CategorySelector
+from ...components import CategorySelector, ValidatedLineEdit
 from src.gui.i18n import get_category_text
+from src.common.validators import PathValidator, NameValidator
 
 class TemplateTabWidget(QWidget):
     """从模版库选择标签页"""
@@ -41,17 +42,20 @@ class TemplateTabWidget(QWidget):
         # 详情区域
         details_layout = QVBoxLayout()
         
-        self.nameEdit = LineEdit()
+        self.nameEdit = ValidatedLineEdit()
+        self.nameEdit.addValidator(NameValidator())
         self.nameEdit.setPlaceholderText("名称")
         details_layout.addWidget(BodyLabel("名称:"))
         details_layout.addWidget(self.nameEdit)
         
-        self.sourceEdit = LineEdit()
+        self.sourceEdit = ValidatedLineEdit()
+        self.sourceEdit.addValidator(PathValidator())
         self.sourceEdit.setPlaceholderText("源路径 (C 盘)")
         details_layout.addWidget(BodyLabel("源路径:"))
         details_layout.addWidget(self.sourceEdit)
         
-        self.targetEdit = LineEdit()
+        self.targetEdit = ValidatedLineEdit()
+        self.targetEdit.addValidator(PathValidator())
         self.targetEdit.setPlaceholderText("目标路径 (D 盘)")
         details_layout.addWidget(BodyLabel("目标路径:"))
         details_layout.addWidget(self.targetEdit)
@@ -100,8 +104,12 @@ class TemplateTabWidget(QWidget):
         # 填充
         self.nameEdit.setText(template.name)
         source_path = self.template_manager.expand_path(template.default_src)
+        # 使用 PathValidator 标准化路径回显
+        source_path = PathValidator().normalize(source_path)
         self.sourceEdit.setText(source_path)
+        
         target_path = "D:\\" + source_path[3:]
+        target_path = PathValidator().normalize(target_path)
         self.targetEdit.setText(target_path)
         
         # 使用 category_id 精准匹配 (回显 ID)
@@ -125,17 +133,20 @@ class CustomTabWidget(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 20, 0, 0)
         
-        self.customNameEdit = LineEdit()
+        self.customNameEdit = ValidatedLineEdit()
+        self.customNameEdit.addValidator(NameValidator())
         self.customNameEdit.setPlaceholderText("软件名称")
         layout.addWidget(BodyLabel("名称:"))
         layout.addWidget(self.customNameEdit)
         
-        self.customSourceEdit = LineEdit()
+        self.customSourceEdit = ValidatedLineEdit()
+        self.customSourceEdit.addValidator(PathValidator())
         self.customSourceEdit.setPlaceholderText("C:\\...")
         layout.addWidget(BodyLabel("源路径 (C 盘):"))
         layout.addWidget(self.customSourceEdit)
         
-        self.customTargetEdit = LineEdit()
+        self.customTargetEdit = ValidatedLineEdit()
+        self.customTargetEdit.addValidator(PathValidator())
         self.customTargetEdit.setPlaceholderText("D:\\...")
         layout.addWidget(BodyLabel("目标路径 (D 盘):"))
         layout.addWidget(self.customTargetEdit)

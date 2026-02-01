@@ -84,6 +84,11 @@ class AddLinkDialog(MessageBoxBase):
         # 验证
         if not name or not source or not target:
             return False
+            
+        # 标准化路径
+        from src.common.validators import PathValidator
+        source = PathValidator().normalize(source)
+        target = PathValidator().normalize(target)
         
         # 创建连接
         link = UserLink(

@@ -79,7 +79,7 @@ class LinkTable(BaseTableWidget):
 
         # 2. 分类 (标准化文案)
         cat_text = get_category_text(link.category)
-        cat_item = QTableWidgetItem(f"[{cat_text}]")
+        cat_item = QTableWidgetItem(cat_text)
         cat_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
         self.setItem(row, 2, cat_item)
 

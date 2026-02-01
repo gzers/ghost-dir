@@ -13,11 +13,12 @@ from qfluentwidgets import (
     PushButton, TextEdit, FluentIcon, TransparentToolButton,
     InfoBar, InfoBarPosition, BodyLabel
 )
-from ...components import CategorySelector
+from ...components import CategorySelector, ValidatedLineEdit
 from ...styles import format_required_label
 from src.data.template_manager import TemplateManager
 from src.data.category_manager import CategoryManager
 from src.data.model import Template
+from src.common.validators import PathValidator, NameValidator
 
 
 class TemplateEditDialog(MessageBoxBase):
@@ -71,7 +72,8 @@ class TemplateEditDialog(MessageBoxBase):
         
         # 模板名称
         self.nameLabel = BodyLabel(format_required_label('模板名称'), self)
-        self.nameEdit = LineEdit(self)
+        self.nameEdit = ValidatedLineEdit(self)
+        self.nameEdit.addValidator(NameValidator())
         self.nameEdit.setPlaceholderText('输入模板名称')
         self.nameEdit.setFixedWidth(CONTENT_WIDTH)
         form_layout.addRow(self.nameLabel, self.nameEdit)
@@ -83,7 +85,8 @@ class TemplateEditDialog(MessageBoxBase):
         src_layout.setContentsMargins(0, 0, 0, 0)
         src_layout.setSpacing(8)
         
-        self.srcEdit = LineEdit(self)
+        self.srcEdit = ValidatedLineEdit(self)
+        self.srcEdit.addValidator(PathValidator())
         self.srcEdit.setPlaceholderText('C:\\路径\\到\\源文件夹 (支持环境变量)')
         # 自动计算宽度：CONTENT_WIDTH - 按钮宽度(60) - 间距(8) = 312
         self.srcEdit.setFixedWidth(CONTENT_WIDTH - 68)
@@ -102,7 +105,8 @@ class TemplateEditDialog(MessageBoxBase):
         target_layout.setContentsMargins(0, 0, 0, 0)
         target_layout.setSpacing(8)
         
-        self.targetEdit = LineEdit(self)
+        self.targetEdit = ValidatedLineEdit(self)
+        self.targetEdit.addValidator(PathValidator())
         self.targetEdit.setPlaceholderText('D:\\路径\\到\\目标文件夹 (可选，留空使用全局默认)')
         self.targetEdit.setFixedWidth(CONTENT_WIDTH - 68)
         
@@ -146,11 +150,15 @@ class TemplateEditDialog(MessageBoxBase):
         # 2. 如果是编辑模式，填充现有数据
         if self.mode == "edit" and self.template:
             self.nameEdit.setText(self.template.name)
-            self.srcEdit.setText(self.template.default_src)
+            
+            # 使用标准化路径回显
+            source_path = PathValidator().normalize(self.template.default_src)
+            self.srcEdit.setText(source_path)
             
             # 目标路径（可选）
             if hasattr(self.template, 'default_target') and self.template.default_target:
-                self.targetEdit.setText(self.template.default_target)
+                target_path = PathValidator().normalize(self.template.default_target)
+                self.targetEdit.setText(target_path)
             
             # 描述
             if self.template.description:
@@ -183,6 +191,8 @@ class TemplateEditDialog(MessageBoxBase):
             QFileDialog.Option.ShowDirsOnly
         )
         if folder:
+            # 标准化路径
+            folder = PathValidator().normalize(folder)
             self.srcEdit.setText(folder)
     
     def _on_target_browse_clicked(self):
@@ -194,6 +204,8 @@ class TemplateEditDialog(MessageBoxBase):
             QFileDialog.Option.ShowDirsOnly
         )
         if folder:
+            # 标准化路径
+            folder = PathValidator().normalize(folder)
             self.targetEdit.setText(folder)
     
     def validate(self) -> bool:

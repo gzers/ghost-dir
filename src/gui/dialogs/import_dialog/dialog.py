@@ -14,6 +14,7 @@ from qfluentwidgets import (
 import json
 from src.data.template_manager import TemplateManager
 from src.data.category_manager import CategoryManager
+from src.common.validators import PathValidator
 
 
 class ImportDialog(MessageBoxBase):
@@ -124,6 +125,8 @@ class ImportDialog(MessageBoxBase):
             "JSON Files (*.json)"
         )
         if file_path:
+            # 标准化路径，移除 \\?\ 等前缀
+            file_path = PathValidator().normalize(file_path)
             self.import_path = file_path
             self.pathEdit.setText(file_path)
             self._load_preview()

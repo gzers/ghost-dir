@@ -42,6 +42,10 @@ class UserManager:
         self.startup_page: str = DEFAULT_STARTUP_PAGE        # 首次打开：wizard/connected/library
         self.default_link_view: str = DEFAULT_LINK_VIEW      # 默认视图：list/category
         
+        # 集成分类管理器
+        from .category_manager import CategoryManager
+        self.category_manager = CategoryManager()
+        
         self._ensure_data_dir()
         self._load_data()
     

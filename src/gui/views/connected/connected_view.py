@@ -289,22 +289,40 @@ class ConnectedView(BasePageView):
     def _on_search_changed(self, text: str):
         """搜索文本改变"""
         search_text = text.strip().lower()
-        category_name = getattr(self, 'current_category', "全部")
         
-        # 1. 获取基础数据集（基于分类）
-        if category_name == "全部":
+        # 1. 获取当前分类下的基础数据集
+        category_id = getattr(self, 'current_category_id', "all")
+        if category_id == "all":
             base_links = self.user_manager.get_all_links()
         else:
-            base_links = self.user_manager.get_links_by_category(category_name)
+            base_links = self.user_manager.get_links_by_category(category_id)
             
-        # 2. 应用搜索过滤
+        # 2. 应用增强搜索过滤
         if not search_text:
             filtered_links = base_links
         else:
-            filtered_links = [
-                link for link in base_links 
-                if search_text in link.name.lower() or search_text in link.target_path.lower()
-            ]
+            from src.gui.i18n import get_category_text
+            from src.common.validators import PathValidator
+            validator = PathValidator()
+            
+            filtered_links = []
+            for link in base_links:
+                # 匹配名称
+                if search_text in link.name.lower():
+                    filtered_links.append(link)
+                    continue
+                
+                # 匹配显示路径 (清洗后的)
+                display_path = validator.normalize(link.target_path)
+                if search_text in display_path.lower():
+                    filtered_links.append(link)
+                    continue
+                    
+                # 匹配分类显示名称
+                cat_display = get_category_text(link.category).lower()
+                if search_text in cat_display:
+                    filtered_links.append(link)
+                    continue
             
         # 3. 更新视图
         self.category_link_table.load_links(filtered_links)

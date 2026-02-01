@@ -13,6 +13,7 @@ from src.data.model import UserLink, LinkStatus
 from src.data.user_manager import UserManager
 from src.gui.i18n import t, get_category_text
 from src.gui.components.status_badge import StatusBadge
+from src.common.validators import PathValidator
 
 class FlatLinkView(QListWidget):
     """智能列表视图 - 极简/宽屏模式"""
@@ -72,6 +73,8 @@ class LinkItemWidget(QWidget):
     def __init__(self, link: UserLink, parent=None):
         super().__init__(parent)
         self.link = link
+        # 实时标准化路径显示
+        self.display_path = PathValidator().normalize(self.link.target_path)
         self._init_ui()
     
     def _init_ui(self):
@@ -93,7 +96,7 @@ class LinkItemWidget(QWidget):
         self.name_label = BodyLabel(self.link.name, self)
         
         cat_name = get_category_text(self.link.category)
-        self.category_label = CaptionLabel(f"[{cat_name}]", self)
+        self.category_label = CaptionLabel(cat_name, self)
         
         # 使用 QGraphicsOpacityEffect 实现透明度
         op = QGraphicsOpacityEffect(self.category_label)
@@ -101,12 +104,13 @@ class LinkItemWidget(QWidget):
         self.category_label.setGraphicsEffect(op)
         
         title_layout.addWidget(self.name_label)
+        title_layout.addSpacing(4)
         title_layout.addWidget(self.category_label)
         title_layout.addStretch()
         
         # 第二行：路径
-        self.path_label = CaptionLabel(self.link.target_path, self)
-        self.path_label.setToolTip(self.link.target_path)
+        self.path_label = CaptionLabel(self.display_path, self)
+        self.path_label.setToolTip(self.display_path)
         
         path_op = QGraphicsOpacityEffect(self.path_label)
         path_op.setOpacity(0.6)

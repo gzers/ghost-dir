@@ -60,7 +60,7 @@ class TemplateCard(Card):
 
         # 分类
         cat_display = get_category_text(self.template.category_id)
-        self.category_label = BodyLabel(f"分类: {cat_display}")
+        self.category_label = BodyLabel(cat_display)
         self.main_layout.addWidget(self.category_label)
 
         # 路径

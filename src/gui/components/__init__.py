@@ -11,6 +11,7 @@ from .category_selector import CategorySelector
 from .category_tree import CategoryTreeWidget
 from .base_table import BaseTableWidget
 from .batch_toolbar import BatchToolbar
+from .validated_line_edit import ValidatedLineEdit
 
 __all__ = [
     "BasePageView",
@@ -22,4 +23,5 @@ __all__ = [
     "CategoryTreeWidget",
     "BaseTableWidget",
     "BatchToolbar",
+    "ValidatedLineEdit",
 ]

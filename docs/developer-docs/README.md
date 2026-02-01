@@ -27,6 +27,7 @@
 - **[reports/](./development/reports/)** - 实施报告
   - [current/](./development/reports/current/) - 当前报告
   - [archived/](./development/reports/archived/) - 历史报告
+- **[standardization-guide.md](./development/standardization-guide.md)** - 标准化开发规约 (路径/校验/分类)
 
 ### [testing/](./testing/) - 测试文档
 

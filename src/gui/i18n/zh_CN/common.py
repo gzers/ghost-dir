@@ -48,21 +48,6 @@ CATEGORY_TEXTS = {
     # 分类文案
     "all": "全部",
     "uncategorized": "未分类",
-    "game": "游戏",
-    "browser": "浏览器",
-    "social": "社交",
-    "development": "开发工具",
-    "media": "影音娱乐",
-    "office": "办公软件",
-    "other": "其他",
-    
-    # 细分与扫描向导常用词条
-    "dev_tools": "开发工具",
-    "cloud_storage": "云空间",
-    "games": "游戏",
-    "platforms": "游戏平台",
-    "editors": "编辑器",
-    "tools": "工具",
 }
 
 ERROR_TEXTS = {

@@ -2,6 +2,7 @@
 from PySide6.QtWidgets import QFileDialog, QWidget
 from qfluentwidgets import PushSettingCard, FluentIcon
 from ....i18n import t
+from src.common.validators import PathValidator
 
 class TargetRootCard(PushSettingCard):
     """ 默认仓库路径设置卡片 """
@@ -31,6 +32,7 @@ class TargetRootCard(PushSettingCard):
         )
         
         if path:
-            path = path.replace("/", "\\")
+            # 使用 PathValidator 标准化路径，移除 \\?\ 等前缀并统一分隔符
+            path = PathValidator().normalize(path)
             if self.user_manager.set_default_target_root(path):
                 self.setContent(path)
