@@ -48,6 +48,9 @@ class FlatLinkView(QListWidget):
                 border: 1px solid palette(highlight);
             }
         """)
+        
+        # 连接选择变化信号
+        self.itemSelectionChanged.connect(self._on_selection_changed)
 
     def load_links(self, links: list):
         """加载连接列表"""
@@ -65,6 +68,24 @@ class FlatLinkView(QListWidget):
     def clear_selection(self):
         """清除选择"""
         self.clearSelection()
+
+    def _on_selection_changed(self):
+        """处理选择变化并发出业务信号"""
+        selected_ids = []
+        for item in self.selectedItems():
+            widget = self.itemWidget(item)
+            if isinstance(widget, LinkItemWidget):
+                selected_ids.append(widget.link.id)
+        self.link_selected.emit(selected_ids)
+
+    def get_selected_links(self) -> list:
+        """获取当前选中的连接 ID 列表"""
+        selected_ids = []
+        for item in self.selectedItems():
+            widget = self.itemWidget(item)
+            if isinstance(widget, LinkItemWidget):
+                selected_ids.append(widget.link.id)
+        return selected_ids
 
 class LinkItemWidget(QWidget):
     """列表项小部件"""

@@ -181,11 +181,16 @@ class LibraryView(BasePageView):
         
         # 底部工具栏信号
         self.batch_toolbar.batch_delete_clicked.connect(self._on_batch_delete_clicked)
-        self.batch_toolbar.clear_selection_clicked.connect(lambda: self.template_table._on_clear_selection())
+        self.batch_toolbar.clear_selection_clicked.connect(self._clear_all_selection)
         
         # 全局信号
         from ....common.signals import signal_bus
         signal_bus.categories_changed.connect(self._on_categories_changed)
+
+    def _clear_all_selection(self):
+        """清除所有视图的选择并隐藏工具栏"""
+        self.template_table.clear_selection()
+        self.batch_toolbar.hide()
 
 
     def _validate_and_load(self):
@@ -646,6 +651,9 @@ class LibraryView(BasePageView):
             
             # 刷新全库统计
             self._update_count()
+            
+            # 操作完成后清除选择并隐藏工具栏
+            self._clear_all_selection()
             
             InfoBar.success(
                 title='删除成功',

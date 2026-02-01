@@ -194,13 +194,18 @@ class ConnectedView(BasePageView):
         self.batch_toolbar.batch_establish_clicked.connect(self._on_batch_establish)
         self.batch_toolbar.batch_disconnect_clicked.connect(self._on_batch_disconnect)
         self.batch_toolbar.batch_remove_clicked.connect(self._on_batch_remove)
-        self.batch_toolbar.clear_selection_clicked.connect(self.category_link_table.clear_selection)
-        self.batch_toolbar.clear_selection_clicked.connect(self.list_view.clear_selection)
+        self.batch_toolbar.clear_selection_clicked.connect(self._clear_all_selection)
 
         # 全局信号
         signal_bus.data_refreshed.connect(self._load_data)
         signal_bus.categories_changed.connect(self._load_data)
         signal_bus.config_changed.connect(self._on_config_changed)
+
+    def _clear_all_selection(self):
+        """清除所有视图的选择并隐藏工具栏"""
+        self.category_link_table.clear_selection()
+        self.list_view.clear_selection()
+        self.batch_toolbar.hide()
 
     def _on_config_changed(self, key: str, value: object):
         """配置变更回调"""
@@ -359,9 +364,8 @@ class ConnectedView(BasePageView):
         # 刷新数据
         self._load_data()
         
-        # 清除选中
-        self.category_link_table.clear_selection()
-        self.list_view.clear_selection()
+        # 清除选中并隐藏工具栏
+        self._clear_all_selection()
 
     def _on_links_selected(self, selected_ids: list):
         """连接选中事件"""
@@ -513,8 +517,7 @@ class ConnectedView(BasePageView):
 
         # 刷新数据
         self._load_data()
-        self.category_link_table.clear_selection()
-        self.list_view.clear_selection()
+        self._clear_all_selection()
 
         # 显示结果
         if failed_items:
@@ -577,8 +580,7 @@ class ConnectedView(BasePageView):
 
         # 刷新数据
         self._load_data()
-        self.category_link_table.clear_selection()
-        self.list_view.clear_selection()
+        self._clear_all_selection()
 
         # 显示结果
         if failed_items:

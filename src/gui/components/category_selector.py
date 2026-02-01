@@ -5,10 +5,11 @@
 from typing import Optional
 from PySide6.QtCore import Qt, Signal, QEvent
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QTreeWidget, QTreeWidgetItem,
-    QLineEdit, QPushButton, QHBoxLayout, QFrame
+    QWidget, QVBoxLayout, QTreeWidgetItem,
+    QPushButton, QHBoxLayout, QFrame
 )
 from PySide6.QtGui import QCursor
+from qfluentwidgets import LineEdit, TreeWidget, setCustomStyleSheet
 from src.data.category_manager import CategoryManager
 from src.data.model import CategoryNode
 from src.gui.i18n import t, get_category_text
