@@ -192,13 +192,37 @@ class ConnectedView(BasePageView):
     def _on_action_clicked(self, link_id: str, action: str):
         """单项操作"""
         if action == "establish":
-            success, msg = self.connection_service.establish_connection_by_id(link_id) # 假设 Service 增加该方法
-            if success: InfoBar.success("成功", msg, parent=self)
-            else: InfoBar.error("失败", msg, parent=self)
+            success, msg = self.connection_service.establish_connection_by_id(link_id)
+            if success: InfoBar.success(t("common.success"), msg, parent=self)
+            else: InfoBar.error(t("common.error"), msg, parent=self)
         elif action == "disconnect":
             success, msg = self.connection_service.disconnect_connection(link_id)
-            if success: InfoBar.success("成功", msg, parent=self)
-            else: InfoBar.error("失败", msg, parent=self)
+            if success: InfoBar.success(t("common.success"), msg, parent=self)
+            else: InfoBar.error(t("common.error"), msg, parent=self)
+        elif action == "reconnect":
+            success, msg = self.connection_service.reconnect_connection(link_id)
+            if success: InfoBar.success(t("common.success"), msg, parent=self)
+            else: InfoBar.error(t("common.error"), msg, parent=self)
+        elif action == "edit":
+            link = service_bus.user_manager.get_link_by_id(link_id)
+            if link:
+                from src.gui.dialogs.edit_link.dialog import EditLinkDialog
+                dialog = EditLinkDialog(link, self)
+                if dialog.exec():
+                    self._load_data()
+            return # 编辑不需要触发全量刷新，dialog 内部会处理或手动触发
+        elif action == "delete":
+            link = service_bus.user_manager.get_link_by_id(link_id)
+            if not link: return
+            
+            title = t("connected.confirm_remove_title")
+            msg = t("connected.msg_delete_confirm").format(name=link.name)
+            if MessageBox(title, msg, self).exec():
+                service_bus.user_manager.remove_link(link_id)
+                InfoBar.success(t("common.success"), t("connected.batch_remove"), parent=self)
+            else:
+                return # 取消则不刷新
+        
         self._load_data()
 
     def _on_batch_establish(self):

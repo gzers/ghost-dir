@@ -10,6 +10,7 @@ CONNECTED_TEXTS = {
     "batch_establish": "批量建立连接",
     "batch_disconnect": "批量断开连接",
     "batch_remove": "批量移除",
+    "refresh_status": "刷新连接状态",
     "clear_selection": "清除选择",
     "selected_count": "已选择 {count} 项",
     

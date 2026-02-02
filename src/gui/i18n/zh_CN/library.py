@@ -100,4 +100,11 @@ LIBRARY_TEXTS = {
     "stats_category": "{name}: {count} 个模板",
     "stats_search": "搜索结果: {count} 个模板",
     "stats_total": "{categories} 个分类, {templates} 个模板",
+    "add_template_tooltip": "添加新模板",
+    "refresh_success": "模板库已刷新",
+    "export": "导出模板",
+    "import": "导入模板",
+    "manage_categories": "管理分类",
+    "orphaned_warning_title": "发现孤儿模板",
+    "orphaned_warning_content": "检测到 {count} 个模板的实际目录已不存在，涉及目录可能已被手动删除或移动。",
 }

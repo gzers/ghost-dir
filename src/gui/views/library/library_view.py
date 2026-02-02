@@ -202,7 +202,7 @@ class LibraryView(BasePageView):
         """显示更多菜单"""
         menu = RoundMenu(parent=self)
         menu.addAction(Action(FIF.DOWNLOAD, t("library.export"), self, triggered=self._on_export_requested))
-        menu.addAction(Action(FIF.UPLOAD, t("library.import"), self, triggered=self._on_import_clicked))
+        menu.addAction(Action(FIF.UP, t("library.import"), self, triggered=self._on_import_clicked))
         menu.addSeparator()
         menu.addAction(Action(FIF.SETTING, t("library.manage_categories"), self, triggered=self._on_manage_categories))
         
