@@ -167,17 +167,20 @@ class CategoryTreeDropdown(QFrame):
         all_categories = list(self.category_manager.categories.values())
         is_leaf = category.is_leaf(all_categories)
         
+        # 提取或补全全路径信息用于 Tooltip
+        full_path_name = getattr(category, 'full_path_name', "") or display_name
+        
         if self.only_leaf:
             if not is_leaf:
                 # 仅叶子模式：非叶子节点不可选
                 item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsSelectable)
-                item.setToolTip(0, "此分类包含子分类，请选择具体的子分类")
+                item.setToolTip(0, f"[{full_path_name}]\n此分类包含子分类，请选择具体的子分类")
                 item.setForeground(0, self.palette().placeholderText())
             else:
-                item.setToolTip(0, "点击选择此分类")
+                item.setToolTip(0, f"选择分类: {full_path_name}")
         else:
             # 全节点模式：所有节点皆可选
-            item.setToolTip(0, f"点击选择 '{category.name}'")
+            item.setToolTip(0, f"选择分类: {full_path_name}")
         
         # 递归添加子分类
         children = self.category_manager.get_children(category.id)

@@ -119,6 +119,13 @@ class LinkItemWidget(QWidget):
         cat_name = get_category_text(self.link.category)
         self.category_label = CaptionLabel(cat_name, self)
         
+        # 设置分类全路径 Tooltip
+        full_path = getattr(self.link, 'category_path_name', "")
+        if full_path:
+            self.category_label.setToolTip(full_path)
+        else:
+            self.category_label.setToolTip(cat_name)
+        
         # 使用 QGraphicsOpacityEffect 实现透明度
         op = QGraphicsOpacityEffect(self.category_label)
         op.setOpacity(0.7)

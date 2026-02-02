@@ -74,7 +74,7 @@ class ValidatedLineEdit(LineEdit):
         
         # 更新 UI 状态
         if not is_valid:
-            from ...styles import get_error_color
+            from src.gui.styles import get_error_color
             error_color = get_error_color()
             self.setStyleSheet(f"ValidatedLineEdit {{ border: 1px solid {error_color}; border-bottom: 2px solid {error_color}; }}")
         else:
