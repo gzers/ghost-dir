@@ -38,6 +38,7 @@ class ConnectedView(BasePageView):
         self.category_manager = service_bus.category_manager
         
         self.current_category_id: str = "all"
+
         self._state_tooltip: Optional[StateToolTip] = None
 
         # 构建界面
@@ -137,7 +138,7 @@ class ConnectedView(BasePageView):
         signal_bus.data_refreshed.connect(self._load_data)
         signal_bus.config_changed.connect(self._on_config_changed)
 
-    def _load_data(self):
+    def _load_data(self, refresh_size: bool = True):
         """加载数据"""
         view_models = self.connection_service.get_all_links(self.current_category_id)
         
@@ -146,8 +147,8 @@ class ConnectedView(BasePageView):
         self.category_link_table.load_links(view_models)
         self.list_view.load_links(view_models)
         
-        # 触发空间统计
-        if view_models:
+        # 触发空间统计 (仅在需要时)
+        if refresh_size and view_models:
             ids = [vm.id for vm in view_models]
             self.connection_service.calculate_sizes_async(ids, self._on_size_calculated)
 
@@ -157,10 +158,12 @@ class ConnectedView(BasePageView):
             self._state_tooltip.setContent("统计更新完成 ✓")
             self._state_tooltip.setState(True)
             self._state_tooltip = None
-        # 静默更新 UI 即可，无需刷新全表防止性能抖动
-        # 但如果是初次计算，需要一次 load_data 刷新显示大小
-        # 这里简化为：仅当列表可见时刷新
-        self._load_data()
+        
+        # 🆕 重要：这里决不能再次调用 self._load_data()，否则会无限循环
+        # 我们直接调用 load_links 更新 UI 即可
+        view_models = self.connection_service.get_all_links(self.current_category_id)
+        self.category_link_table.load_links(view_models) # 此加载不应再触发线程更新
+        self.list_view.load_links(view_models)
 
     def _on_category_selected(self, category_id: str):
         self.current_category_id = category_id

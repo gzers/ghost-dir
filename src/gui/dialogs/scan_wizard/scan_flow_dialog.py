@@ -13,9 +13,8 @@ from qfluentwidgets import (
 from src.gui.views.wizard.widgets.scan_result_card import ScanResultCard
 from src.core.services.scan_service import SmartScanner
 
-from src.data.template_manager import TemplateManager
-from src.data.user_manager import UserManager
 from src.gui.i18n import t, get_category_text
+from src.core.services.context import service_bus
 from src.gui.styles import apply_font_style
 
 
@@ -42,15 +41,9 @@ class ScanFlowDialog(MessageBoxBase):
         super().__init__(parent)
         
         # 数据准备
-        # 🆕 增强稳健性：如果透传失败，主动实例化并触发加载
-        if not category_manager:
-            from src.data.category_manager import CategoryManager
-            self.category_manager = CategoryManager()
-        else:
-            self.category_manager = category_manager
-            
-        self.template_manager = TemplateManager(category_manager=self.category_manager)
-        self.user_manager = UserManager()
+        self.category_manager = service_bus.category_manager
+        self.template_manager = service_bus.template_manager
+        self.user_manager = service_bus.user_manager
         self.scanner = SmartScanner(self.template_manager, self.user_manager)
         
         self.discovered = []

@@ -187,6 +187,9 @@ class UserManager:
             self._enrich_link_path(link)
             self.links.append(link)
             self._save_data()
+            # 发射全局通知
+            from src.common.signals import signal_bus
+            signal_bus.data_refreshed.emit()
             return True
             
         except Exception as e:
@@ -198,6 +201,9 @@ class UserManager:
         try:
             self.links = [l for l in self.links if l.id != link_id]
             self._save_data()
+            # 发射全局通知
+            from src.common.signals import signal_bus
+            signal_bus.data_refreshed.emit()
             return True
             
         except Exception as e:

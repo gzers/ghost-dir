@@ -69,7 +69,9 @@ class LinkTable(BaseTableWidget):
     def _create_row(self, row: int, link: UserLink):
         """创建表格行细节"""
         # 0. 复选框 (使用基类工厂方法)
-        self.create_checkbox_cell(row)
+        cb = self.create_checkbox_cell(row)
+        # 为复选框绑定 ID，防止排序后索引失效
+        cb.setProperty("link_id", link.id)
         
         # 1. 软件信息
         name_item = QTableWidgetItem(link.name)
@@ -114,22 +116,26 @@ class LinkTable(BaseTableWidget):
         layout.setSpacing(8)
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
+        # 获取状态字符串值进行比较
+        status_val = link.status.value if hasattr(link.status, 'value') else link.status
+        
         # 使用更轻量的按钮样式以匹配视觉
-        if link.status == LinkStatus.DISCONNECTED:
+        if status_val == LinkStatus.DISCONNECTED.value:
             btn = TransparentToolButton(FluentIcon.LINK, widget)
             btn.setToolTip("建立连接")
             btn.clicked.connect(lambda: self.action_clicked.emit(link.id, "establish"))
             layout.addWidget(btn)
-        elif link.status == LinkStatus.CONNECTED:
+        elif status_val == LinkStatus.CONNECTED.value:
             btn = TransparentToolButton(FluentIcon.CLOSE, widget)
             btn.setToolTip("断开连接")
             btn.clicked.connect(lambda: self.action_clicked.emit(link.id, "disconnect"))
             layout.addWidget(btn)
-        elif link.status == LinkStatus.READY:
+        elif status_val == LinkStatus.READY.value:
             btn = TransparentToolButton(FluentIcon.SYNC, widget)
             btn.setToolTip("重新连接")
             btn.clicked.connect(lambda: self.action_clicked.emit(link.id, "reconnect"))
             layout.addWidget(btn)
+
         
         # 通用编辑按钮
         edit_btn = TransparentToolButton(FluentIcon.EDIT, widget)
@@ -146,22 +152,29 @@ class LinkTable(BaseTableWidget):
         return widget
 
     def _on_row_checked_changed(self):
-        """重写基类信号处理，转发业务信号"""
-        super()._on_row_checked_changed()
-        selected_ids = []
-        for row, cb in self.checkboxes.items():
-            if cb.isChecked():
-                id_item = self.item(row, 1) # 这里 ID 存在第 1 列
-                if id_item:
-                    selected_ids.append(id_item.data(Qt.ItemDataRole.UserRole))
+        """处理行勾选状态改变 - 使用绑定数据而非物理索引"""
+        # 注意：此处不再调用 super()._on_row_checked_changed()，因为我们要处理排序兼容性
+        # 计算数量
+        count = sum(1 for cb in self.checkboxes.values() if cb.isChecked())
+        self.checked_changed.emit(count)
+        
+        # 同步表头
+        if self.header_checkbox:
+            self.header_checkbox.blockSignals(True)
+            total = len(self.checkboxes)
+            self.header_checkbox.setChecked(count == total and total > 0)
+            self.header_checkbox.blockSignals(False)
+
+        # 发射业务信号
+        selected_ids = self.get_selected_links()
         self.link_selected.emit(selected_ids)
 
     def get_selected_links(self) -> list:
-        """获取当前勾选的连接 ID 列表"""
+        """获取当前勾选的连接 ID 列表 - 强鲁棒版本"""
         selected_ids = []
-        for row, cb in self.checkboxes.items():
+        for cb in self.checkboxes.values():
             if cb.isChecked():
-                id_item = self.item(row, 1)
-                if id_item:
-                    selected_ids.append(id_item.data(Qt.ItemDataRole.UserRole))
+                lid = cb.property("link_id")
+                if lid:
+                    selected_ids.append(lid)
         return selected_ids

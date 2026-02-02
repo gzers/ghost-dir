@@ -16,12 +16,12 @@ from src.gui.i18n import get_status_text
 class StatusBadge(QWidget):
     """状态徽章组件"""
 
-    def __init__(self, status: LinkStatus, parent=None):
+    def __init__(self, status, parent=None):
         """
         初始化状态徽章
 
         Args:
-            status: 连接状态
+            status: 连接状态 (LinkStatus 枚举或其字符串值)
             parent: 父组件
         """
         super().__init__(parent)
@@ -30,23 +30,24 @@ class StatusBadge(QWidget):
 
     def _init_ui(self):
         """初始化 UI"""
+        status_val = self.status.value if hasattr(self.status, 'value') else self.status
         # 应用标准徽章样式
-        apply_badge_style(self, status=self.status.value)
+        apply_badge_style(self, status=status_val)
 
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0) # apply_badge_style 处理内边距
         layout.setSpacing(get_spacing("xs"))
 
         # 状态图标
-        icon_char = get_status_icon(self.status.value)
+        icon_char = get_status_icon(status_val)
         icon_label = QLabel(icon_char)
         apply_icon_style(icon_label, size="md") # 文字图标也使用图标规范
 
         # 状态文本 - 使用 i18n
         status_colors = get_status_colors()
-        text_label = BodyLabel(get_status_text(self.status.value))
+        text_label = BodyLabel(get_status_text(status_val))
         # 使用状态色作为文本颜色
-        apply_font_style(text_label, color=status_colors[self.status.value])
+        apply_font_style(text_label, color=status_colors[status_val])
         apply_transparent_background_only(text_label)
 
         layout.addWidget(icon_label)

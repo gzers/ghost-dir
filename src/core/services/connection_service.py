@@ -34,6 +34,7 @@ class ConnectionService:
     def __init__(self, user_manager: UserManager):
         self.user_manager = user_manager
         self._async_runners: Dict[str, Any] = {} # 存储异步任务引用
+        self._size_calc_running = False # 🆕 运行标志位
 
     def get_all_links(self, category_id: str = "all") -> List[LinkViewModel]:
         """获取连接列表 ViewModel"""
@@ -76,7 +77,7 @@ class ConnectionService:
         """执行连接事务"""
         # 简化版实现，未来可集成 SafetyEngine
 
-        tm = TransactionEngine(link.source_path, link.target_path, link.id)
+        tm = TransactionEngine(source, target, name)
 
         if tm.establish_link():
             return True, f"已成功建立 {name} 的连接"
@@ -115,7 +116,10 @@ class ConnectionService:
             link = self.user_manager.get_link_by_id(lid)
             if link: links.append(link)
             
-        if not links: return
+        if not links or self._size_calc_running: 
+            return
+        
+        self._size_calc_running = True
 
         from PySide6.QtCore import QThread, Signal
         import os
@@ -136,7 +140,12 @@ class ConnectionService:
         worker.finished.connect(on_finished_callback)
         worker.finished.connect(lambda results: self._on_size_batch_done(results))
         self._async_runners['size_calc'] = worker
+        worker.finished.connect(self._reset_calc_flag)
         worker.start()
+
+    def _reset_calc_flag(self):
+        """重置运行状态"""
+        self._size_calc_running = False
 
     def _on_size_batch_done(self, results: Dict[str, int]):
         """批量更新大小缓存"""
