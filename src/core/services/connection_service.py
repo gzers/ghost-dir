@@ -7,7 +7,9 @@ from dataclasses import dataclass
 from datetime import datetime
 from src.data.user_manager import UserManager
 from src.data.model import UserLink, LinkStatus
-from src.core.transaction import TransactionManager
+from src.core.engine.transaction_engine import TransactionEngine
+
+
 
 
 @dataclass
@@ -72,8 +74,10 @@ class ConnectionService:
 
     def establish_connection(self, source: str, target: str, name: str, category: str) -> Tuple[bool, str]:
         """执行连接事务"""
-        # 简化版实现，未来可集成 ProcessGuard
-        tm = TransactionManager(source, target, name)
+        # 简化版实现，未来可集成 SafetyEngine
+
+        tm = TransactionEngine(link.source_path, link.target_path, link.id)
+
         if tm.establish_link():
             return True, f"已成功建立 {name} 的连接"
         return False, "建立连接失败，请检查路径权限或磁盘占用"
@@ -84,7 +88,8 @@ class ConnectionService:
         if not link:
             return False, "链接不存在"
             
-        tm = TransactionManager(link.source_path, link.target_path, link.id)
+        tm = TransactionEngine(link.source_path, link.target_path, link.id)
+
         if tm.disconnect_link():
             return True, "连接已断开"
             

@@ -11,7 +11,8 @@ from qfluentwidgets import (
 )
 
 from src.gui.views.wizard.widgets.scan_result_card import ScanResultCard
-from src.core.scanner import SmartScanner
+from src.core.services.scan_service import SmartScanner
+
 from src.data.template_manager import TemplateManager
 from src.data.user_manager import UserManager
 from src.gui.i18n import t, get_category_text

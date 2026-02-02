@@ -9,7 +9,9 @@ from PySide6.QtGui import QIcon
 from qfluentwidgets import setTheme, Theme, setThemeColor, SystemThemeListener, setFontFamilies, MessageBox
 from src.common.signals import signal_bus
 from src.utils.admin import ensure_admin
-from src.core.transaction import check_crash_recovery, recover_from_crash
+from src.core.engine.transaction_engine import check_crash_recovery, recover_from_crash
+
+
 from src.common.resource_loader import get_resource_path
 
 

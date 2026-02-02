@@ -34,7 +34,9 @@ class SmartScanner:
         """
         discovered = []
         existing_paths = {link.source_path for link in self.user_manager.get_all_links()}
-        from src.core.link_opt import is_junction
+        from src.core.engine.link_engine import is_junction
+
+
         
         for template in self.template_manager.get_all_templates():
             # 🆕 v7.4: 过滤已忽略的模版
@@ -71,7 +73,9 @@ class SmartScanner:
             成功导入的数量
         """
         success_count = 0
-        from src.core.link_opt import get_junction_target
+        from src.core.engine.link_engine import get_junction_target
+
+
         
         for template in templates:
             try:

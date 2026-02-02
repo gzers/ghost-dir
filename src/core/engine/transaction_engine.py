@@ -9,11 +9,14 @@ from pathlib import Path
 from typing import Optional
 from src.common.config import LOCK_FILE, BLACKLIST_PATHS
 from src.data.model import TransactionRecord
-from src.core.link_opt import create_junction, remove_junction, validate_path
+from src.core.engine.link_engine import create_junction, remove_junction, validate_path
 
 
-class TransactionManager:
-    """事务管理器（支持上下文管理器）"""
+
+
+class TransactionEngine:
+    """事务引擎（支持上下文管理器）"""
+
     
     def __init__(self, source_path: str, target_path: str, link_id: str):
         """
@@ -222,7 +225,8 @@ def recover_from_crash(record: TransactionRecord) -> bool:
     print(f"源路径: {record.source_path}")
     print(f"目标路径: {record.target_path}")
     
-    manager = TransactionManager(
+    manager = TransactionEngine(
+
         record.source_path,
         record.target_path,
         record.link_id

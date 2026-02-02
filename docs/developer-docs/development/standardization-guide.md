@@ -75,3 +75,25 @@ display_name = get_category_text(link.category_id)
 
 - **路径显示**: 显示在 Caption 或 Label 上的路径必须经过标准化, 移除 `\\?\` 等技术前缀。
 - **括号处理**: 除非是特定的 UI 装饰需求, 否则不应在代码中硬编码 `[分类名]` 这种修饰, 应保持显示文案的纯净。
+
+---
+
+## 5. 命名与架构规约 (Naming & Architecture)
+
+### 5.1 模块后缀分类
+为了从文件名和类名直观区分业务层与执行层, 遵循以下后缀规范:
+
+- **Engine 层 (`src/core/engine`)**: 
+    - 文件后缀: `*_engine.py` (如 `link_engine.py`, `transaction_engine.py`)
+    - 类名后缀: `*Engine` (如 `TransactionEngine`, `SafetyEngine`)
+    - **职责**: 负责底层原子操作 (File IO, Junction, Process Kill), 不包含业务判断。
+
+- **Service 层 (`src/core/services`)**:
+    - 文件后缀: `*_service.py` (如 `scan_service.py`, `connection_service.py`)
+    - 类名后缀: `*Service` (如 `ConnectionService`)
+    - **职责**: 负责业务流编排、状态管理、模板过滤。
+
+### 5.2 依赖拓扑
+- **Service** 可以调用 **Engine**。
+- **Engine层** 必须保持纯净, **严禁** 导入 `src.core.services` 或任何 GUI/数据管理层逻辑。
+- 底层原子操作应优先封装在辅助函数或 `*Engine` 静态类中。

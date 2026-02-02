@@ -95,7 +95,8 @@ class CategoryService:
 
     def execute_delete(self, category_id: str, force: bool = False) -> Tuple[bool, str]:
         """执行删除逻辑（原子事务）"""
-        # 注意：此处未来可接入 TransactionManager
+        # 注意：此处未来可接入 TransactionEngine
+
         status, context = self.validate_delete(category_id)
         if status == "ERROR":
             return False, context["message"]

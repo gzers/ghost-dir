@@ -7,8 +7,9 @@ from typing import List, Tuple
 from pathlib import Path
 
 
-class ProcessGuard:
-    """进程卫士类"""
+class SafetyEngine:
+    """进程卫士引擎"""
+
     
     @staticmethod
     def scan_handles(path: str) -> List[Tuple[int, str]]:
