@@ -22,6 +22,8 @@ class TemplateViewModel:
     description: str
     icon: str
     default_src: str
+    default_target: Optional[str] = None
+
     is_valid: bool = True
     is_custom: bool = False
     tags: List[str] = None
@@ -90,6 +92,7 @@ class TemplateService:
             description=t.description or "",
             icon=t.icon or "Folder",
             default_src=t.default_src,
+            default_target=t.default_target,
             is_valid=self.manager.validate_template_path(t),
             is_custom=t.is_custom,
             tags=getattr(t, 'tags', [])

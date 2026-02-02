@@ -94,7 +94,8 @@ class TemplateTableWidget(BaseTableWidget):
             self.setItem(i, 2, src_item)
             
             # 3. 目标路径
-            target = getattr(template, 'default_target', None) or '(使用全局默认)'
+            target = getattr(template, 'default_target', None) or '跟随全局配置'
+
             target_item = QTableWidgetItem(target)
             target_item.setTextAlignment(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)
             target_item.setToolTip(target)
