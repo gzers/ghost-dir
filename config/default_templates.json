@@ -9,7 +9,6 @@
       "default_src": "C:\\Program Files (x86)\\Steam\\steamapps",
       "category_id": "games.platforms",
       "default_target": "D:\\Ghost_Library\\Steam",
-      "icon": "steam.png",
       "description": "Steam 游戏安装目录",
       "category_path_code": "games/platforms",
       "category_path_name": "游戏/游戏平台"
@@ -20,7 +19,6 @@
       "default_src": "%LOCALAPPDATA%\\Google\\Chrome\\User Data",
       "category_id": "browsers",
       "default_target": "D:\\Ghost_Library\\Chrome",
-      "icon": "chrome.png",
       "description": "Chrome 浏览器缓存和用户数据",
       "category_path_code": "browsers",
       "category_path_name": "浏览器"
@@ -31,7 +29,6 @@
       "default_src": "%USERPROFILE%\\Documents\\WeChat Files",
       "category_id": "social.im",
       "default_target": "D:\\Ghost_Library\\WeChat",
-      "icon": "wechat.png",
       "description": "微信聊天记录和文件",
       "category_path_code": "social/im",
       "category_path_name": "社交/即时通讯"
@@ -42,7 +39,6 @@
       "default_src": "%USERPROFILE%\\Documents\\Tencent Files",
       "category_id": "social.im",
       "default_target": "D:\\Ghost_Library\\QQ",
-      "icon": "qq.png",
       "description": "QQ 聊天记录和文件",
       "category_path_code": "social/im",
       "category_path_name": "社交/即时通讯"
@@ -53,7 +49,6 @@
       "default_src": "%USERPROFILE%\\.vscode\\extensions",
       "category_id": "dev_tools.editors",
       "default_target": "D:\\Ghost_Library\\VSCode",
-      "icon": "vscode.png",
       "description": "Visual Studio Code 扩展目录",
       "category_path_code": "dev_tools/editors",
       "category_path_name": "开发工具/编辑器"
@@ -64,7 +59,6 @@
       "default_src": "%USERPROFILE%\\OneDrive",
       "category_id": "cloud_storage",
       "default_target": "D:\\Ghost_Library\\OneDrive",
-      "icon": "onedrive.png",
       "description": "OneDrive 同步文件夹",
       "category_path_code": "cloud_storage",
       "category_path_name": "云存储"
@@ -75,7 +69,6 @@
       "default_src": "C:\\Program Files\\Razer",
       "category_id": "hardware",
       "default_target": "D:\\Software\\Devices\\Razer\\Program Files\\Razer",
-      "icon": null,
       "description": "Razer 核心组件目录",
       "category_path_code": "hardware",
       "category_path_name": "硬件与驱动"
@@ -86,7 +79,6 @@
       "default_src": "C:\\Program Files (x86)\\Razer Chroma SDK",
       "category_id": "hardware",
       "default_target": "D:\\Software\\Devices\\Razer\\Program Files (x86)\\Razer Chroma SDK",
-      "icon": null,
       "description": "雷蛇幻彩灯效 SDK (32位)",
       "category_path_code": "hardware",
       "category_path_name": "硬件与驱动"
@@ -97,7 +89,6 @@
       "default_src": "C:\\Program Files (x86)\\Razer",
       "category_id": "hardware",
       "default_target": "D:\\Software\\Devices\\Razer\\Program Files (x86)\\Razer",
-      "icon": null,
       "description": "Razer 32位应用程序目录",
       "category_path_code": "hardware",
       "category_path_name": "硬件与驱动"
@@ -108,7 +99,6 @@
       "default_src": "C:\\Program Files\\Razer Chroma SDK",
       "category_id": "hardware",
       "default_target": "D:\\Software\\Devices\\Razer\\Program Files\\Razer Chroma SDK",
-      "icon": null,
       "description": "雷蛇幻彩灯效 SDK (64位)",
       "category_path_code": "hardware",
       "category_path_name": "硬件与驱动"
@@ -119,7 +109,6 @@
       "default_src": "C:\\Program Files (x86)\\Yeelight Station",
       "category_id": "hardware",
       "default_target": "D:\\Software\\Devices\\Yeelight Station",
-      "icon": null,
       "description": "Yeelight 智能灯光控制台",
       "category_path_code": "hardware",
       "category_path_name": "硬件与驱动"
@@ -130,7 +119,6 @@
       "default_src": "C:\\Program Files\\Common Files\\Adobe",
       "category_id": "office",
       "default_target": "D:\\Software\\Adobe\\Common\\Common Files",
-      "icon": null,
       "description": "Adobe 共享库文件",
       "category_path_code": "office",
       "category_path_name": "办公软件"
@@ -141,7 +129,6 @@
       "default_src": "C:\\Program Files\\Adobe",
       "category_id": "office",
       "default_target": "D:\\Software\\Adobe\\Common\\Program Files",
-      "icon": null,
       "description": "Adobe 系列软件 64位安装根目录",
       "category_path_code": "office",
       "category_path_name": "办公软件"
@@ -152,7 +139,6 @@
       "default_src": "C:\\Program Files (x86)\\Adobe",
       "category_id": "office",
       "default_target": "D:\\Software\\Adobe\\Common\\Program Files (x86)",
-      "icon": null,
       "description": "Adobe 系列软件 32位安装根目录",
       "category_path_code": "office",
       "category_path_name": "办公软件"
@@ -163,7 +149,6 @@
       "default_src": "D:\\Libraries\\Python\\versions",
       "category_id": "dev_tools",
       "default_target": "D:\\Software\\Develop\\PyEnv-Win\\versions",
-      "icon": null,
       "description": "PyEnv-Win 管理的所有 Python 解释器版本",
       "category_path_code": "dev_tools",
       "category_path_name": "开发工具"
@@ -174,7 +159,6 @@
       "default_src": "%APPDATA%\\ComfyUI",
       "category_id": "dev_tools",
       "default_target": "E:\\Users\\{UserName}\\WorkSpace\\AI\\ComfyUI\\AppData",
-      "icon": null,
       "description": "ComfyUI 的用户设置和扩展插件",
       "category_path_code": "dev_tools",
       "category_path_name": "开发工具"
@@ -185,7 +169,6 @@
       "default_src": "%USERPROFILE%\\Documents\\ComfyUI",
       "category_id": "dev_tools",
       "default_target": "E:\\Users\\{UserName}\\WorkSpace\\AI\\ComfyUI\\Program",
-      "icon": null,
       "description": "ComfyUI 工作流与数据",
       "category_path_code": "dev_tools",
       "category_path_name": "开发工具"
@@ -196,7 +179,6 @@
       "default_src": "C:\\Program Files\\Electronic Arts",
       "category_id": "games.platforms",
       "default_target": "D:\\Games\\EA\\Electronic Arts",
-      "icon": null,
       "description": "EA 平台基础组件",
       "category_path_code": "games/platforms",
       "category_path_name": "游戏/游戏平台"
@@ -207,7 +189,6 @@
       "default_src": "C:\\Program Files\\EA",
       "category_id": "games.platforms",
       "default_target": "D:\\Games\\EA\\EA",
-      "icon": null,
       "description": "EA Desktop 应用程序目录",
       "category_path_code": "games/platforms",
       "category_path_name": "游戏/游戏平台"
@@ -218,7 +199,6 @@
       "default_src": "C:\\Program Files (x86)\\Epic Games",
       "category_id": "games.platforms",
       "default_target": "D:\\Games\\Epic",
-      "icon": null,
       "description": "Epic 游戏平台安装目录",
       "category_path_code": "games/platforms",
       "category_path_name": "游戏/游戏平台"
@@ -229,7 +209,6 @@
       "default_src": "D:\\Drivers",
       "category_id": "user_data",
       "default_target": "E:\\Drivers",
-      "icon": null,
       "description": "驱动安装包备份仓库",
       "category_path_code": "user_data",
       "category_path_name": "个人数据"
@@ -240,7 +219,6 @@
       "default_src": "D:\\Users\\{UserName}\\云盘",
       "category_id": "user_data",
       "default_target": "E:\\Users\\{UserName}\\Drive",
-      "icon": null,
       "description": "同步盘/云盘本地目录",
       "category_path_code": "user_data",
       "category_path_name": "个人数据"
@@ -251,7 +229,6 @@
       "default_src": "D:\\Users\\{UserName}\\主题",
       "category_id": "user_data",
       "default_target": "E:\\Users\\{UserName}\\Theme",
-      "icon": null,
       "description": "壁纸、图标与个性化主题存放地",
       "category_path_code": "user_data",
       "category_path_name": "个人数据"
@@ -262,7 +239,6 @@
       "default_src": "D:\\Users\\{UserName}\\工作区",
       "category_id": "user_data",
       "default_target": "E:\\Users\\{UserName}\\WorkSpace",
-      "icon": null,
       "description": "个人代码与开发项目",
       "category_path_code": "user_data",
       "category_path_name": "个人数据"
@@ -273,7 +249,6 @@
       "default_src": "D:\\Users\\{UserName}\\视频",
       "category_id": "user_data",
       "default_target": "E:\\Users\\{UserName}\\Videos",
-      "icon": null,
       "description": "电影、视频录制存放目录",
       "category_path_code": "user_data",
       "category_path_name": "个人数据"
@@ -284,7 +259,6 @@
       "default_src": "D:\\Users\\{UserName}\\图片",
       "category_id": "user_data",
       "default_target": "E:\\Users\\{UserName}\\Pictures",
-      "icon": null,
       "description": "静态图片与照片存放目录",
       "category_path_code": "user_data",
       "category_path_name": "个人数据"
@@ -295,7 +269,6 @@
       "default_src": "D:\\Users\\{UserName}\\下载",
       "category_id": "user_data",
       "default_target": "E:\\Users\\{UserName}\\Downloads",
-      "icon": null,
       "description": "系统默认下载路径重定向",
       "category_path_code": "user_data",
       "category_path_name": "个人数据"
