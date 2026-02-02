@@ -4,153 +4,172 @@
       "id": "dev_tools.editors",
       "name": "编辑器",
       "parent_id": "dev_tools",
-      "icon": "Edit",
       "order": 0,
-      "is_builtin": true
+      "is_builtin": true,
+      "full_path_code": "dev_tools/editors",
+      "full_path_name": "开发工具/编辑器"
     },
     {
       "id": "social.im",
       "name": "即时通讯",
       "parent_id": "social",
-      "icon": "Message",
       "order": 0,
-      "is_builtin": true
+      "is_builtin": true,
+      "full_path_code": "social/im",
+      "full_path_name": "社交/即时通讯"
     },
     {
       "id": "games.platforms",
       "name": "游戏平台",
       "parent_id": "games",
-      "icon": "Library",
       "order": 0,
-      "is_builtin": true
+      "is_builtin": true,
+      "full_path_code": "games/platforms",
+      "full_path_name": "游戏/游戏平台"
     },
     {
       "id": "media.audio",
       "name": "音频",
       "parent_id": "media",
-      "icon": "MusicNote",
       "order": 0,
-      "is_builtin": true
+      "is_builtin": true,
+      "full_path_code": "media/audio",
+      "full_path_name": "多媒体/音频"
     },
     {
       "id": "cat_5c0c88db",
       "name": "测试子分类2",
       "parent_id": "cat_f6d5607a",
-      "icon": "Folder",
       "order": 0,
-      "is_builtin": true
+      "is_builtin": true,
+      "full_path_code": "cat_f6d5607a/cat_5c0c88db",
+      "full_path_name": "测试分类11/测试子分类2"
     },
     {
       "id": "cat_f6d5607a",
       "name": "测试分类11",
       "parent_id": null,
-      "icon": "Folder",
       "order": 0,
-      "is_builtin": true
+      "is_builtin": true,
+      "full_path_code": "cat_f6d5607a",
+      "full_path_name": "测试分类11"
     },
     {
       "id": "dev_tools",
       "name": "开发工具",
       "parent_id": null,
-      "icon": "Code",
       "order": 1,
-      "is_builtin": true
+      "is_builtin": true,
+      "full_path_code": "dev_tools",
+      "full_path_name": "开发工具"
     },
     {
       "id": "dev_tools.ides",
       "name": "集成开发环境",
       "parent_id": "dev_tools",
-      "icon": "Developer",
       "order": 1,
-      "is_builtin": true
+      "is_builtin": true,
+      "full_path_code": "dev_tools/ides",
+      "full_path_name": "开发工具/集成开发环境"
     },
     {
       "id": "media.video",
       "name": "视频",
       "parent_id": "media",
-      "icon": "Video",
       "order": 1,
-      "is_builtin": true
+      "is_builtin": true,
+      "full_path_code": "media/video",
+      "full_path_name": "多媒体/视频"
     },
     {
       "id": "browsers",
       "name": "浏览器",
       "parent_id": null,
-      "icon": "Globe",
       "order": 2,
-      "is_builtin": true
+      "is_builtin": true,
+      "full_path_code": "browsers",
+      "full_path_name": "浏览器"
     },
     {
       "id": "dev_tools.version_control",
       "name": "版本控制",
       "parent_id": "dev_tools",
-      "icon": "Sync",
       "order": 2,
-      "is_builtin": true
+      "is_builtin": true,
+      "full_path_code": "dev_tools/version_control",
+      "full_path_name": "开发工具/版本控制"
     },
     {
       "id": "social",
       "name": "社交",
       "parent_id": null,
-      "icon": "Chat",
       "order": 3,
-      "is_builtin": true
+      "is_builtin": true,
+      "full_path_code": "social",
+      "full_path_name": "社交"
     },
     {
       "id": "games",
       "name": "游戏",
       "parent_id": null,
-      "icon": "Game",
       "order": 4,
-      "is_builtin": true
+      "is_builtin": true,
+      "full_path_code": "games",
+      "full_path_name": "游戏"
     },
     {
       "id": "cloud_storage",
       "name": "云存储",
       "parent_id": null,
-      "icon": "Cloud",
       "order": 5,
-      "is_builtin": true
+      "is_builtin": true,
+      "full_path_code": "cloud_storage",
+      "full_path_name": "云存储"
     },
     {
       "id": "office",
       "name": "办公软件",
       "parent_id": null,
-      "icon": "Document",
       "order": 6,
-      "is_builtin": true
+      "is_builtin": true,
+      "full_path_code": "office",
+      "full_path_name": "办公软件"
     },
     {
       "id": "media",
       "name": "多媒体",
       "parent_id": null,
-      "icon": "Music",
       "order": 7,
-      "is_builtin": true
+      "is_builtin": true,
+      "full_path_code": "media",
+      "full_path_name": "多媒体"
     },
     {
       "id": "hardware",
       "name": "硬件与驱动",
       "parent_id": null,
-      "icon": "Hardware",
       "order": 7,
-      "is_builtin": true
+      "is_builtin": true,
+      "full_path_code": "hardware",
+      "full_path_name": "硬件与驱动"
     },
     {
       "id": "user_data",
       "name": "个人数据",
       "parent_id": null,
-      "icon": "Folder",
       "order": 8,
-      "is_builtin": true
+      "is_builtin": true,
+      "full_path_code": "user_data",
+      "full_path_name": "个人数据"
     },
     {
       "id": "uncategorized",
       "name": "未分类",
       "parent_id": null,
-      "icon": "Folder",
       "order": 9,
-      "is_builtin": true
+      "is_builtin": true,
+      "full_path_code": "uncategorized",
+      "full_path_name": "未分类"
     }
   ]
 }

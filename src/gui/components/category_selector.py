@@ -278,6 +278,16 @@ class CategorySelector(QWidget):
         self.selected_category_id = category_id
         self.selected_category_name = category_name
         self.lineEdit.setText(category_name)
+        
+        # 设置全路径 Tooltip
+        if self.category_manager and category_id:
+            cat = self.category_manager.get_category_by_id(category_id)
+            if cat and cat.full_path_name:
+                self.lineEdit.setToolTip(cat.full_path_name)
+            else:
+                self.lineEdit.setToolTip(category_name)
+        else:
+            self.lineEdit.setToolTip(category_name)
     
     def refresh(self):
         """刷新分类列表"""
@@ -306,6 +316,12 @@ class CategorySelector(QWidget):
             self.selected_category_id = category_id
             self.selected_category_name = display_name
             self.lineEdit.setText(display_name)
+            
+            # 设置全路径 Tooltip
+            if category.full_path_name:
+                self.lineEdit.setToolTip(category.full_path_name)
+            else:
+                self.lineEdit.setToolTip(display_name)
     
     def get_value(self) -> Optional[str]:
         """获取当前选中的分类 ID"""

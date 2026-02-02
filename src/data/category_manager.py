@@ -500,8 +500,13 @@ class CategoryManager:
 
     def _recursive_update_path(self, node: CategoryNode, parent_path_code: str, parent_path_name: str):
         """递归计算节点路径"""
+        # 计算编码部分：如果子 ID 以 "父ID." 开头，则仅提取后缀以去除冗余
+        node_part_code = node.id
+        if node.parent_id and node.id.startswith(f"{node.parent_id}."):
+            node_part_code = node.id[len(node.parent_id) + 1:]
+            
         if parent_path_code:
-            node.full_path_code = f"{parent_path_code}/{node.id}"
+            node.full_path_code = f"{parent_path_code}/{node_part_code}"
             node.full_path_name = f"{parent_path_name}/{node.name}"
         else:
             node.full_path_code = node.id
