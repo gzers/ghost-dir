@@ -5,7 +5,7 @@
 from typing import List
 from PySide6.QtWidgets import QTableWidgetItem, QHeaderView, QWidget, QHBoxLayout
 from PySide6.QtCore import Qt, Signal
-from qfluentwidgets import PushButton, TransparentToolButton, FluentIcon
+from qfluentwidgets import PushButton, TransparentToolButton, FluentIcon, IndeterminateProgressRing
 from src.gui.components.base_table import BaseTableWidget
 from src.data.model import UserLink, LinkStatus
 from src.common.config import format_size
@@ -103,6 +103,9 @@ class LinkTable(BaseTableWidget):
         size_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
         self.setItem(row, 4, size_item)
         
+        # 记录映射，方便后续动态更新加载状态
+        name_item.setData(Qt.ItemDataRole.UserRole + 1, row) 
+        
         # 5. 操作按钮
         action_widget = self._create_action_buttons(link)
         self.setCellWidget(row, 5, action_widget)
@@ -178,3 +181,30 @@ class LinkTable(BaseTableWidget):
                 if lid:
                     selected_ids.append(lid)
         return selected_ids
+
+    def set_all_sizes_loading(self):
+        """将所有行设置为加载状态"""
+        for row in range(self.rowCount()):
+            self.set_row_size_loading(row, True)
+
+    def set_row_size_loading(self, row: int, is_loading: bool):
+        """设置某一行空间占用列的加载状态"""
+        if is_loading:
+            # 插入进度环
+            loading_container = QWidget()
+            loading_container.setStyleSheet("background: transparent;")
+            layout = QHBoxLayout(loading_container)
+            layout.setContentsMargins(0, 0, 0, 0)
+            layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            
+            ring = IndeterminateProgressRing(loading_container)
+            ring.setFixedSize(16, 16) # 小巧的进度环
+            ring.setStrokeWidth(2)
+            
+            layout.addWidget(ring)
+            self.setCellWidget(row, 4, loading_container)
+        else:
+            # 恢复文字在 _create_row 或动态更新时处理，这里暂时由 load_links 重新加载刷新
+            # 如果需要立即清除，可以设置为空 Item 或按 load_links 逻辑处理
+            # 实际上 load_links 已经重新创建了行，所以通常不需要手动恢复
+            pass

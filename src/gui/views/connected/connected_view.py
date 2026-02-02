@@ -150,6 +150,14 @@ class ConnectedView(BasePageView):
         
         # 触发空间统计 (仅在需要时)
         if refresh_size and view_models:
+            # 🆕 UI 反馈：通知表格进入加载状态
+            self.category_link_table.set_all_sizes_loading()
+            # 注意：FlatLinkView 也需要这个支持，如果它是基于列表的视图
+            if hasattr(self.list_view, 'table'):
+                self.list_view.table.set_all_sizes_loading()
+            elif hasattr(self.list_view, 'set_all_sizes_loading'):
+                 self.list_view.set_all_sizes_loading()
+
             ids = [vm.id for vm in view_models]
             self.connection_service.calculate_sizes_async(ids, self._on_size_calculated)
 

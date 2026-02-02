@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QVBoxLayout, QWidget, QStackedWidget
 from PySide6.QtCore import Qt, Signal, QThread
 from qfluentwidgets import (
     MessageBoxBase, SubtitleLabel, BodyLabel, 
-    ProgressBar, ScrollArea, FluentIcon
+    IndeterminateProgressBar, ScrollArea, FluentIcon
 )
 
 from src.gui.views.wizard.widgets.scan_result_card import ScanResultCard
@@ -82,8 +82,7 @@ class ScanFlowDialog(MessageBoxBase):
         loading_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
         self.loading_title = SubtitleLabel("正在扫描本机应用...")
-        self.progress_bar = ProgressBar()
-        self.progress_bar.setRange(0, 0)
+        self.progress_bar = IndeterminateProgressBar()
         self.progress_bar.setFixedWidth(400)
         self.loading_status = BodyLabel("正在深度检查磁盘，请稍候...")
         apply_font_style(self.loading_status, color="secondary")
@@ -126,8 +125,7 @@ class ScanFlowDialog(MessageBoxBase):
         importing_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
         self.importing_title = SubtitleLabel("正在导入连接...")
-        self.import_progress = ProgressBar()
-        self.import_progress.setRange(0, 0)
+        self.import_progress = IndeterminateProgressBar()
         self.import_progress.setFixedWidth(400)
         self.import_status = BodyLabel("正在同步配置并刷新列表...")
         apply_font_style(self.import_status, color="secondary")
