@@ -110,6 +110,10 @@ class CategoryManager:
             
             # 转换为字典列表，按 order 字段排序
             categories_list = sorted(self.categories.values(), key=lambda x: x.order)
+            
+            # 更新全路径字段
+            self._update_all_full_paths()
+            
             categories_data = [cat.to_dict() for cat in categories_list]
             
             # 保存到文件
@@ -486,6 +490,28 @@ class CategoryManager:
         
         return descendants
     
+    def _update_all_full_paths(self):
+        """递归更新所有分类的全路径编码和名称"""
+        # 获取所有根节点
+        roots = self.get_children(None)
+        
+        for root in roots:
+            self._recursive_update_path(root, "", "")
+
+    def _recursive_update_path(self, node: CategoryNode, parent_path_code: str, parent_path_name: str):
+        """递归计算节点路径"""
+        if parent_path_code:
+            node.full_path_code = f"{parent_path_code}/{node.id}"
+            node.full_path_name = f"{parent_path_name}/{node.name}"
+        else:
+            node.full_path_code = node.id
+            node.full_path_name = node.name
+            
+        # 递归更新子节点
+        children = self.get_children(node.id)
+        for child in children:
+            self._recursive_update_path(child, node.full_path_code, node.full_path_name)
+
     def _clear_depth_cache(self):
         """清除所有深度缓存"""
         for cat in self.categories.values():

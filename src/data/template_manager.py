@@ -75,6 +75,9 @@ class TemplateManager:
                 'source': 'api_cache'
             }
             
+            # 自动补全路径信息
+            self._enrich_template_paths()
+            
             return len(self.templates) > 0
             
         except Exception as e:
@@ -98,12 +101,14 @@ class TemplateManager:
             
             # 加载模版数据
             templates_data = data.get('templates', [])
-            self.templates = {item['id']: Template(**item) for item in templates_data}
+            self.templates = {item['id']: Template.from_dict(item) for item in templates_data}
             self.cache_metadata = {
                 'version': data.get('version', '1.0.0'),
                 'last_updated': data.get('last_updated', ''),
                 'source': 'default_config'
             }
+            # 自动补全路径信息
+            self._enrich_template_paths()
             
             return len(self.templates) > 0
             
@@ -297,6 +302,20 @@ class TemplateManager:
         """检查 API 是否可用（预留）"""
         # TODO: 实现 API 可用性检查
         return False
+
+    def _enrich_template_paths(self):
+        """为所有模板填充分类全路径信息"""
+        if not self.category_manager:
+            return
+            
+        for template in self.templates.values():
+            category = self.category_manager.get_category_by_id(template.category_id)
+            if category:
+                # 确保分类已经有了全路径信息（如果还没保存过可能为空）
+                if not category.full_path_code:
+                    self.category_manager._update_all_full_paths()
+                template.category_path_code = category.full_path_code
+                template.category_path_name = category.full_path_name
     
     # ========== 分类系统集成方法 ==========
     

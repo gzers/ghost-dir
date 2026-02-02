@@ -24,6 +24,8 @@ class CategoryNode:
     parent_id: Optional[str] = None  # 父节点 ID
     order: int = 0                   # 排序权重
     is_builtin: bool = True          # 是否为内置分类
+    full_path_code: str = ""         # 全路径编码 (如: dev_tools/editors)
+    full_path_name: str = ""         # 全路径名称 (如: 开发工具/编辑器)
     _depth: int = -1                 # 缓存深度，-1 表示未计算
     
     def get_depth(self, all_categories: Dict[str, 'CategoryNode']) -> int:
@@ -70,7 +72,9 @@ class CategoryNode:
             "name": self.name,
             "parent_id": self.parent_id,
             "order": self.order,
-            "is_builtin": self.is_builtin
+            "is_builtin": self.is_builtin,
+            "full_path_code": self.full_path_code,
+            "full_path_name": self.full_path_name
         }
 
     @classmethod
@@ -81,7 +85,9 @@ class CategoryNode:
             name=data["name"],
             parent_id=data.get("parent_id"),
             order=data.get("order", 0),
-            is_builtin=data.get("is_builtin", True)
+            is_builtin=data.get("is_builtin", True),
+            full_path_code=data.get("full_path_code", ""),
+            full_path_name=data.get("full_path_name", "")
         )
 
 
@@ -96,6 +102,8 @@ class Template:
     icon: Optional[str] = None             # 图标路径
     is_custom: bool = False                # 是否为用户自定义模版
     description: Optional[str] = None      # 描述
+    category_path_code: str = ""           # 冗余字段：分类全路径编码
+    category_path_name: str = ""           # 冗余字段：分类全路径名称
     created_at: str = field(default_factory=lambda: datetime.now().isoformat())
     updated_at: str = field(default_factory=lambda: datetime.now().isoformat())
 
@@ -110,6 +118,8 @@ class Template:
             "icon": self.icon,
             "is_custom": self.is_custom,
             "description": self.description,
+            "category_path_code": self.category_path_code,
+            "category_path_name": self.category_path_name,
             "created_at": self.created_at,
             "updated_at": self.updated_at
         }
@@ -126,6 +136,8 @@ class Template:
             icon=data.get("icon"),
             is_custom=data.get("is_custom", False),
             description=data.get("description"),
+            category_path_code=data.get("category_path_code", ""),
+            category_path_name=data.get("category_path_name", ""),
             created_at=data.get("created_at", datetime.now().isoformat()),
             updated_at=data.get("updated_at", datetime.now().isoformat())
         )
@@ -142,6 +154,8 @@ class UserLink:
     category: str                  # 分类
     template_id: Optional[str] = None  # 关联的模版 ID
     icon: Optional[str] = None     # 图标文件名
+    category_path_code: str = ""   # 冗余字段：分类全路径编码
+    category_path_name: str = ""   # 冗余字段：分类全路径名称
     last_known_size: int = 0       # 上次计算的空间大小（字节）
     created_at: str = field(default_factory=lambda: datetime.now().isoformat())
     updated_at: str = field(default_factory=lambda: datetime.now().isoformat())
@@ -175,6 +189,8 @@ class UserLink:
             "category": self.category,
             "template_id": self.template_id,
             "icon": self.icon,
+            "category_path_code": self.category_path_code,
+            "category_path_name": self.category_path_name,
             "last_known_size": self.last_known_size,
             "created_at": self.created_at,
             "updated_at": self.updated_at
@@ -191,6 +207,8 @@ class UserLink:
             category=data["category"],
             template_id=data.get("template_id"),
             icon=data.get("icon"),
+            category_path_code=data.get("category_path_code", ""),
+            category_path_name=data.get("category_path_name", ""),
             last_known_size=data.get("last_known_size", 0),
             created_at=data.get("created_at", datetime.now().isoformat()),
             updated_at=data.get("updated_at", datetime.now().isoformat())

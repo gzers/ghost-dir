@@ -130,6 +130,14 @@ class UserManager:
         if 'default_link_view' not in data:
             data['default_link_view'] = DEFAULT_LINK_VIEW
 
+        # 补全链接的全路径字段
+        for link in data.get('links', []):
+            if 'category_path_code' not in link or not link['category_path_code']:
+                cat = self.category_manager.get_category_by_id(link.get('category'))
+                if cat:
+                    link['category_path_code'] = getattr(cat, 'full_path_code', "")
+                    link['category_path_name'] = getattr(cat, 'full_path_name', "")
+
         return data
     
     def _init_default_data(self):
@@ -176,6 +184,7 @@ class UserManager:
                 print(f"连接已存在: {link.id}")
                 return False
             
+            self._enrich_link_path(link)
             self.links.append(link)
             self._save_data()
             return True
@@ -201,6 +210,7 @@ class UserManager:
             for i, l in enumerate(self.links):
                 if l.id == link.id:
                     link.updated_at = datetime.now().isoformat()
+                    self._enrich_link_path(link)
                     self.links[i] = link
                     self._save_data()
                     return True
@@ -440,3 +450,13 @@ class UserManager:
     def get_theme_color(self) -> str:
         """获取主题色"""
         return self.theme_color
+
+    def _enrich_link_path(self, link: UserLink):
+        """为单个链接填充分类全路径信息"""
+        if not self.category_manager:
+            return
+            
+        cat = self.category_manager.get_category_by_id(link.category)
+        if cat:
+            link.category_path_code = cat.full_path_code
+            link.category_path_name = cat.full_path_name
