@@ -4,7 +4,7 @@
 """
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QWidget
 from PySide6.QtCore import Qt
-from ..utils import icon_utils, spacing_utils, typography_utils
+from src.gui.styles.utils import icon_utils, spacing_utils, typography_utils
 
 def apply_icon_style(widget, size: str = "md", color_level: str = "primary"):
     """
@@ -54,7 +54,7 @@ def create_icon_with_text(
     
     # 文本标签
     text_label = QLabel(text)
-    from .component import apply_font_style
+    from src.gui.styles.appliers.component import apply_font_style
     apply_font_style(text_label, size=text_size)
     
     layout.addWidget(icon_label)

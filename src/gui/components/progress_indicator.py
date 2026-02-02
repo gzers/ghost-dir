@@ -5,7 +5,7 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout
 from PySide6.QtCore import Qt
 from qfluentwidgets import ProgressBar, BodyLabel
-from ..styles import apply_font_style, get_spacing
+from src.gui.styles import apply_font_style, get_spacing
 
 
 class ProgressIndicator(QWidget):

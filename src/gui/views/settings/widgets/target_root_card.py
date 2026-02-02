@@ -1,20 +1,21 @@
 # coding:utf-8
 from PySide6.QtWidgets import QFileDialog, QWidget
 from qfluentwidgets import PushSettingCard, FluentIcon
-from ....i18n import t
+from qfluentwidgets import PushSettingCard, FluentIcon, InfoBar
+from src.gui.i18n import t
 from src.common.validators import PathValidator
 
 class TargetRootCard(PushSettingCard):
     """ 默认仓库路径设置卡片 """
 
-    def __init__(self, user_manager, parent=None):
-        self.user_manager = user_manager
+    def __init__(self, config_service, parent=None):
+        self.config_service = config_service
         
         super().__init__(
             t("settings.select_path"),
             FluentIcon.FOLDER,
             t("settings.default_target_root"),
-            self.user_manager.get_default_target_root(),
+            self.config_service.get_default_target_root(),
             parent
         )
 
@@ -28,11 +29,15 @@ class TargetRootCard(PushSettingCard):
         path = QFileDialog.getExistingDirectory(
             parent_window, 
             t("settings.select_path"),
-            self.user_manager.get_default_target_root()
+            self.config_service.get_default_target_root()
         )
         
         if path:
-            # 使用 PathValidator 标准化路径，移除 \\?\ 等前缀并统一分隔符
-            path = PathValidator().normalize(path)
-            if self.user_manager.set_default_target_root(path):
+            if self.config_service.set_default_target_root(path):
                 self.setContent(path)
+                InfoBar.success(
+                    t("common.success"),
+                    t("settings.path_updated"),
+                    duration=2000,
+                    parent=parent_window
+                )

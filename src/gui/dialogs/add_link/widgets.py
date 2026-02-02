@@ -6,7 +6,7 @@ from qfluentwidgets import (
 from src.data.template_manager import TemplateManager
 from src.data.user_manager import UserManager
 from src.data.category_manager import CategoryManager
-from ...components import CategorySelector, ValidatedLineEdit
+from src.gui.components import CategorySelector, ValidatedLineEdit
 from src.gui.i18n import get_category_text
 from src.common.validators import PathValidator, NameValidator
 

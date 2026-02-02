@@ -7,8 +7,8 @@ import uuid
 from typing import List, Optional
 from datetime import datetime
 from dataclasses import asdict
-from ..data.model import UserLink, Category, Template
-from ..common.config import (
+from src.data.model import UserLink, Category, Template
+from src.common.config import (
     USER_DATA_FILE, DEFAULT_CATEGORY,
     DEFAULT_TARGET_ROOT, DEFAULT_THEME, DEFAULT_THEME_COLOR, DEFAULT_STARTUP_PAGE, DEFAULT_LINK_VIEW
 )
@@ -43,7 +43,7 @@ class UserManager:
         self.default_link_view: str = DEFAULT_LINK_VIEW      # 默认视图：list/category
         
         # 集成分类管理器
-        from .category_manager import CategoryManager
+        from src.data.category_manager import CategoryManager
         self.category_manager = CategoryManager()
         
         self._ensure_data_dir()
@@ -51,7 +51,7 @@ class UserManager:
     
     def _ensure_data_dir(self):
         """确保数据目录存在"""
-        from ..common.config import CONFIG_FILE
+        from src.common.config import CONFIG_FILE
         CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
 
     def reload(self):
@@ -60,7 +60,7 @@ class UserManager:
 
     def _load_data(self):
         """加载用户数据"""
-        from ..common.config import CONFIG_FILE
+        from src.common.config import CONFIG_FILE
         if not CONFIG_FILE.exists():
             self._init_default_data()
             return
@@ -153,7 +153,7 @@ class UserManager:
     
     def _save_data(self):
         """保存用户数据"""
-        from ..common.config import CONFIG_FILE
+        from src.common.config import CONFIG_FILE
         try:
             data = {
                 'links': [asdict(link) for link in self.links],
@@ -296,7 +296,7 @@ class UserManager:
         """获取所有分类"""
         # 优先尝试从 CategoryManager 获取最新的树形分类并转换为平铺列表
         try:
-            from .category_manager import CategoryManager
+            from src.data.category_manager import CategoryManager
             cm = CategoryManager()
             nodes = cm.get_all_categories()
             if nodes:
@@ -323,6 +323,10 @@ class UserManager:
     def get_custom_templates(self) -> List[Template]:
         """获取所有自定义模版"""
         return self.custom_templates
+
+    def has_custom_template(self, template_id: str) -> bool:
+        """检查是否存在该自定义模板"""
+        return any(t.id == template_id for t in self.custom_templates)
     
     def remove_custom_template(self, template_id: str) -> bool:
         """删除自定义模版"""
@@ -426,7 +430,7 @@ class UserManager:
             self.default_link_view = view
             self._save_data()
             # 发射配置变更信号
-            from ..common.signals import signal_bus
+            from src.common.signals import signal_bus
             signal_bus.config_changed.emit("default_link_view", view)
             return True
         except Exception as e:

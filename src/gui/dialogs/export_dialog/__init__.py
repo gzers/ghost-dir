@@ -1,1 +1,1 @@
-from .dialog import ExportDialog
+from src.gui.dialogs.export_dialog.dialog import ExportDialog

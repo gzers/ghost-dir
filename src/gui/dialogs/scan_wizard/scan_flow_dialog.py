@@ -10,12 +10,12 @@ from qfluentwidgets import (
     ProgressBar, ScrollArea, FluentIcon
 )
 
-from ...views.wizard.widgets.scan_result_card import ScanResultCard
-from ....core.scanner import SmartScanner
-from ....data.template_manager import TemplateManager
-from ....data.user_manager import UserManager
-from ...i18n import t, get_category_text
-from ...styles import apply_font_style
+from src.gui.views.wizard.widgets.scan_result_card import ScanResultCard
+from src.core.scanner import SmartScanner
+from src.data.template_manager import TemplateManager
+from src.data.user_manager import UserManager
+from src.gui.i18n import t, get_category_text
+from src.gui.styles import apply_font_style
 
 
 class ScanWorker(QThread):
@@ -43,7 +43,7 @@ class ScanFlowDialog(MessageBoxBase):
         # 数据准备
         # 🆕 增强稳健性：如果透传失败，主动实例化并触发加载
         if not category_manager:
-            from ....data.category_manager import CategoryManager
+            from src.data.category_manager import CategoryManager
             self.category_manager = CategoryManager()
         else:
             self.category_manager = category_manager

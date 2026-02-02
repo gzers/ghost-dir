@@ -15,9 +15,9 @@ from qfluentwidgets import (
 )
 from src.data.model import CategoryNode
 from src.data.category_manager import CategoryManager
-from ...components.category_selector import CategorySelector
-from ...i18n import t
-from ...styles import format_required_label
+from src.gui.components.category_selector import CategorySelector
+from src.gui.i18n import t
+from src.gui.styles import format_required_label
 
 
 class CategoryEditDialog(MessageBoxBase):
@@ -176,7 +176,7 @@ class CategoryEditDialog(MessageBoxBase):
             )
             
             depth = temp_category.get_depth(self.category_manager.categories)
-            from ....common.config import MAX_CATEGORY_DEPTH
+            from src.common.config import MAX_CATEGORY_DEPTH
             
             if depth > MAX_CATEGORY_DEPTH:
                 InfoBar.warning(

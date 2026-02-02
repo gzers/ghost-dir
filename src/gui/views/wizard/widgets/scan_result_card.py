@@ -10,8 +10,8 @@ from qfluentwidgets import (
 )
 
 
-from ....components import Card
-from ....styles import (
+from src.gui.components import Card
+from src.gui.styles import (
     apply_font_style, apply_badge_style, apply_accent_badge_style,
     get_spacing, get_radius, apply_muted_text_style, get_icon_background
 )

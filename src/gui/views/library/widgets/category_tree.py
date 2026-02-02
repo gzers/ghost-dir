@@ -9,7 +9,7 @@ from PySide6.QtGui import QAction
 from qfluentwidgets import FluentIcon, RoundMenu, Action, setCustomStyleSheet, TreeWidget
 from src.data.category_manager import CategoryManager
 from src.data.model import CategoryNode
-from ....styles import get_font_style, get_text_primary, apply_transparent_style
+from src.gui.styles import get_font_style, get_text_primary, apply_transparent_style
 
 
 class InternalCategoryTree(TreeWidget):
@@ -43,7 +43,7 @@ class InternalCategoryTree(TreeWidget):
 
     def _apply_style(self, theme_color: str = None):
         """应用统一样式"""
-        from ....styles import get_accent_color, get_font_style, get_text_primary
+        from src.gui.styles import get_accent_color, get_font_style, get_text_primary
         
         accent_color = theme_color
         if not accent_color and self.user_manager:
@@ -83,7 +83,7 @@ class InternalCategoryTree(TreeWidget):
         self.itemClicked.connect(self._on_item_clicked)
         self.customContextMenuRequested.connect(self._on_context_menu)
         
-        from .....common.signals import signal_bus
+        from src.common.signals import signal_bus
         signal_bus.theme_color_changed.connect(self._apply_style)
     
     def load_categories(self):
@@ -155,7 +155,7 @@ class InternalCategoryTree(TreeWidget):
                 edit_action.triggered.connect(lambda: self.edit_category_requested.emit(category_id))
                 menu.addAction(edit_action)
                 
-                from ....common.config import SYSTEM_CATEGORIES
+                from src.common.config import SYSTEM_CATEGORIES
                 if category_id not in SYSTEM_CATEGORIES:
                     delete_action = Action(FluentIcon.DELETE, '删除')
                     delete_action.triggered.connect(lambda: self.delete_category_requested.emit(category_id))
@@ -176,7 +176,7 @@ class InternalCategoryTree(TreeWidget):
 
     def highlight_categories(self, category_ids: List[str]):
         """高亮并展开指定的分类"""
-        from ....styles import get_text_primary, get_accent_color, get_text_secondary
+        from src.gui.styles import get_text_primary, get_accent_color, get_text_secondary
         text_primary = get_text_primary()
         text_secondary = get_text_secondary()
         accent_color = get_accent_color()
@@ -203,7 +203,7 @@ class InternalCategoryTree(TreeWidget):
     
     def clear_highlights(self):
         """清除所有高亮样式"""
-        from ....styles import get_text_primary
+        from src.gui.styles import get_text_primary
         text_primary = get_text_primary()
         for item in self.category_items.values():
             widget = self.itemWidget(item, 0)
@@ -233,10 +233,10 @@ class CategoryTreeWidget(QWidget):
         """初始化 UI"""
         from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout
         from qfluentwidgets import TransparentToolButton, StrongBodyLabel
-        from ....styles import get_text_secondary
+        from src.gui.styles import get_text_secondary
         
-        from ....styles.constants.icons import ICON_SIZES
-        from ....styles.constants.components import COMPONENT_STYLES
+        from src.gui.styles.constants.icons import ICON_SIZES
+        from src.gui.styles.constants.components import COMPONENT_STYLES
         
         btn_size = COMPONENT_STYLES["button"]["height_sm"] # 28
         icon_size = ICON_SIZES["sm"] # 16

@@ -8,7 +8,7 @@ from qfluentwidgets import (
     PushButton, ToolButton, SearchLineEdit, Pivot,
     FluentIcon
 )
-from ....i18n import t
+from src.gui.i18n import t
 
 
 class LinkCommandBar(QWidget):

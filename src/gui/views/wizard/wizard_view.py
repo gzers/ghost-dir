@@ -1,20 +1,20 @@
 """
-智能向导视图
-引导式操作，快速完成常见任务
+智能向导视图 (Wizard View)
+引导式操作，快速完成常见任务。已接入 Service 层。
 """
 from PySide6.QtCore import Qt
 from qfluentwidgets import MessageBox
-from ...i18n import t
-from ....data.user_manager import UserManager
-from ....data.template_manager import TemplateManager
-from ....core.scanner import SmartScanner
-from ...components import BasePageView
-from ....common.signals import signal_bus
-from .widgets import ScanProgressCard, ScanWorker
+
+from src.gui.i18n import t
+from src.core.services.context import service_bus
+from src.common.signals import signal_bus
+from src.gui.components import BasePageView
+from src.gui.dialogs import ScanFlowDialog
+from src.gui.views.wizard.widgets import ScanProgressCard
 
 
 class WizardView(BasePageView):
-    """智能向导视图"""
+    """智能向向导视图 - 业务逻辑已移交 Service"""
 
     def __init__(self, parent=None):
         super().__init__(
@@ -24,12 +24,11 @@ class WizardView(BasePageView):
             enable_scroll=True
         )
 
-        # 初始化数据管理器
-        self.template_manager = TemplateManager()
-        self.user_manager = UserManager()
-        self.scanner = SmartScanner(self.template_manager, self.user_manager)
+        # 依赖注入
+        self.template_service = service_bus.template_service
+        self.category_service = service_bus.category_service
 
-        # 扫描状态
+        # 扫描状态缓存 (UI 状态)
         self.discovered_templates = []
         self.scan_result_cards = {}
 
@@ -67,10 +66,8 @@ class WizardView(BasePageView):
 
     def _on_scan_clicked(self):
         """开始扫描 - 统一流程"""
-        from ...dialogs import ScanFlowDialog
-        
         # 弹出统一的全功能扫描对话框
-        dialog = ScanFlowDialog(self.template_manager.category_manager, self)
+        dialog = ScanFlowDialog(service_bus.category_manager, self)
         if dialog.exec():
             # 通知链接列表刷新
             signal_bus.data_refreshed.emit()
@@ -80,72 +77,16 @@ class WizardView(BasePageView):
 
     def _on_selection_changed(self, template_id, selected):
         """选择状态改变"""
-        # 更新选中计数
         selected_count = sum(
             1 for card in self.scan_result_cards.values()
             if card.is_selected()
         )
-        # 使用新的 API 更新选中数量
         self.scan_progress.update_selected_count(selected_count)
 
     def _on_import_clicked(self):
-        """一键导入选中的软件"""
-        # 获取选中的模版
-        selected = [
-            card.get_template()
-            for card in self.scan_result_cards.values()
-            if card.is_selected()
-        ]
-
-        if not selected:
-            return
-
-        # 确认对话框
-        box = MessageBox(
-            f"确定要导入 {len(selected)} 个软件吗？",
-            "批量导入确认",
-            self
-        )
-        if box.exec():
-            # 导入
-            count = self.scanner.import_templates(selected)
-            if count > 0:
-                # 通知主窗口更新
-                # TODO: 发送信号通知主窗口
-                self._show_import_success(count)
-            else:
-                self._show_import_failed()
-
-    def _on_single_import(self, template_id):
-        """导入单个软件"""
-        template = self.scan_result_cards[template_id].get_template()
-        count = self.scanner.import_templates([template])
-        if count > 0:
-            self._show_import_success(1)
-        else:
-            self._show_import_failed()
-
-    def _on_ignore_template(self, template_id):
-        """永久忽略软件"""
-        template = self.scan_result_cards[template_id].get_template()
-        self.user_manager.add_to_ignore_list(template_id)
-
-        # 移除卡片
-        card = self.scan_result_cards.pop(template_id)
-        card.deleteLater()
-
-        # 更新统计
-        if not self.scan_result_cards:
-            self.get_scroll_area().setVisible(False)
-            # 重置扫描进度卡片
-            self.scan_progress.reset()
-        else:
-            selected_count = sum(
-                1 for card in self.scan_result_cards.values()
-                if card.is_selected()
-            )
-            # 使用新的 API 更新选中数量
-            self.scan_progress.update_selected_count(selected_count)
+        """一键导入选中的软件 (待 Service 化重写)"""
+        # 目前 ScanFlow 内部已处理导入业务
+        pass
 
     def _on_refresh_clicked(self):
         """重新扫描"""
@@ -153,39 +94,10 @@ class WizardView(BasePageView):
 
     def _on_cancel_clicked(self):
         """取消扫描结果，返回初始状态"""
-        # 清空所有结果卡片
         self.discovered_templates.clear()
         for card in self.scan_result_cards.values():
             card.deleteLater()
         self.scan_result_cards.clear()
 
-        # 隐藏滚动区域
         self.get_scroll_area().setVisible(False)
-
-        # 重置扫描进度卡片
         self.scan_progress.reset()
-
-    def _show_import_success(self, count):
-        """显示导入成功"""
-        box = MessageBox(
-            f"成功导入 {count} 个软件！",
-            "导入成功",
-            self
-        )
-        box.yesButton.setText("确定")
-        box.cancelButton.hide()
-        box.exec()
-
-        # 重置状态
-        self._on_refresh_clicked()
-
-    def _show_import_failed(self):
-        """显示导入失败"""
-        box = MessageBox(
-            "导入失败，请重试！",
-            "导入失败",
-            self
-        )
-        box.yesButton.setText("确定")
-        box.cancelButton.hide()
-        box.exec()

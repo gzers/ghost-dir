@@ -1,9 +1,9 @@
 from PySide6.QtWidgets import QAbstractItemView, QTreeWidgetItem
 from PySide6.QtCore import Qt
 from qfluentwidgets import TreeWidget
-from ....common.config import MAX_CATEGORY_DEPTH, SYSTEM_CATEGORIES
-from ....common.signals import signal_bus
-from ...styles import get_accent_color, get_text_primary, get_font_style
+from src.common.config import MAX_CATEGORY_DEPTH, SYSTEM_CATEGORIES
+from src.common.signals import signal_bus
+from src.gui.styles import get_accent_color, get_text_primary, get_font_style
 
 class CategoryTreeWidget(TreeWidget):
     """自定义分类树，支持拖拽验证"""

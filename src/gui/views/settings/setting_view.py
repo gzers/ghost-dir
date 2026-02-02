@@ -5,25 +5,26 @@
 from qfluentwidgets import (
     TitleLabel, SettingCardGroup, FluentIcon
 )
-from ....data.user_manager import UserManager
-from ...i18n import t
-from ...components import BasePageView
-from ...styles import get_spacing, apply_font_style, apply_transparent_background_only
+from src.core.services.context import service_bus
+from src.common.signals import signal_bus
+from src.gui.components import BasePageView
+from src.gui.i18n import t
+from src.gui.styles import get_spacing, apply_font_style, apply_transparent_background_only
 from PySide6.QtCore import Qt
 
 
-from .widgets.theme_color_card import ThemeColorCard
-from .widgets.theme_card import ThemeCard
-from .widgets.startup_card import StartupCard
-from .widgets.link_view_card import LinkViewCard
-from .widgets.target_root_card import TargetRootCard
-from .widgets.log_folder_card import LogFolderCard
+from src.gui.views.settings.widgets.theme_color_card import ThemeColorCard
+from src.gui.views.settings.widgets.theme_card import ThemeCard
+from src.gui.views.settings.widgets.startup_card import StartupCard
+from src.gui.views.settings.widgets.link_view_card import LinkViewCard
+from src.gui.views.settings.widgets.target_root_card import TargetRootCard
+from src.gui.views.settings.widgets.log_folder_card import LogFolderCard
 
 
 class SettingView(BasePageView):
     """设置视图"""
 
-    def __init__(self, parent=None, user_manager=None):
+    def __init__(self, parent=None):
         """初始化设置视图"""
         super().__init__(
             parent=parent,
@@ -32,7 +33,8 @@ class SettingView(BasePageView):
             enable_scroll=True,
             use_expand_layout=True
         )
-        self.user_manager = user_manager or UserManager()
+        self.config_service = service_bus.config_service
+        self.user_manager = service_bus.user_manager
 
         # 设置页面内容
         self._setup_content()
@@ -54,7 +56,7 @@ class SettingView(BasePageView):
         apply_transparent_background_only(self.dirGroup)
 
         # 默认仓库路径
-        self.targetRootCard = TargetRootCard(self.user_manager, self.dirGroup)
+        self.targetRootCard = TargetRootCard(self.config_service, self.dirGroup)
         self.dirGroup.addSettingCard(self.targetRootCard)
 
         # 打开日志文件夹
@@ -69,11 +71,11 @@ class SettingView(BasePageView):
         apply_transparent_background_only(self.appearanceGroup)
 
         # 主题设置
-        self.themeCard = ThemeCard(self.user_manager, self.appearanceGroup)
+        self.themeCard = ThemeCard(self.config_service, self.appearanceGroup)
         self.appearanceGroup.addSettingCard(self.themeCard)
 
         # 主题强调色
-        self.themeColorCard = ThemeColorCard(self.user_manager, self.appearanceGroup)
+        self.themeColorCard = ThemeColorCard(self.config_service, self.appearanceGroup)
         self.appearanceGroup.addSettingCard(self.themeColorCard)
 
         expand_layout.addWidget(self.appearanceGroup)
@@ -84,12 +86,12 @@ class SettingView(BasePageView):
         apply_transparent_background_only(self.startupGroup)
 
         # 首次打开功能
-        self.startupCard = StartupCard(self.user_manager, self.startupGroup)
+        self.startupCard = StartupCard(self.config_service, self.startupGroup)
         self.startupGroup.addSettingCard(self.startupCard)
 
         # 默认视图设置
-        self.linkViewCard = LinkViewCard(self.user_manager, self.startupGroup)
-        self.startupGroup.addSettingCard(self.linkViewCard)
+        self.link_view_card = LinkViewCard(self.config_service, self.startupGroup)
+        self.startupGroup.addSettingCard(self.link_view_card)
 
         expand_layout.addWidget(self.startupGroup)
 

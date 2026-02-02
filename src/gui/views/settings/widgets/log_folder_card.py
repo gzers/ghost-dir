@@ -1,8 +1,8 @@
 # coding:utf-8
 import os
 from qfluentwidgets import PushSettingCard, FluentIcon
-from ....i18n import t
-from .....common.config import LOG_DIR
+from src.gui.i18n import t
+from src.common.config import LOG_DIR
 
 class LogFolderCard(PushSettingCard):
     """ 日志目录设置卡片 """

@@ -4,11 +4,11 @@
 from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout
 from PySide6.QtCore import Signal
 from qfluentwidgets import MessageBoxBase, LineEdit, BodyLabel, PushButton
-from ....data.user_manager import UserManager
-from ....data.category_manager import CategoryManager
-from ...components import CategorySelector
-from ....data.model import UserLink
-from ...i18n import t
+from src.data.user_manager import UserManager
+from src.data.category_manager import CategoryManager
+from src.gui.components import CategorySelector
+from src.data.model import UserLink
+from src.gui.i18n import t
 
 
 class EditLinkDialog(MessageBoxBase):

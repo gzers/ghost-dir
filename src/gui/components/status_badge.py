@@ -5,12 +5,12 @@
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel
 from PySide6.QtCore import Qt
 from qfluentwidgets import BodyLabel
-from ...data.model import LinkStatus
-from ..styles import (
+from src.data.model import LinkStatus
+from src.gui.styles import (
     get_spacing, apply_badge_style, apply_icon_style,
     get_status_icon, get_status_colors, apply_font_style, apply_transparent_background_only
 )
-from ..i18n import get_status_text
+from src.gui.i18n import get_status_text
 
 
 class StatusBadge(QWidget):

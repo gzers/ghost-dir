@@ -2,7 +2,7 @@
 from typing import Optional, List
 from PySide6.QtCore import Qt, Signal
 from qfluentwidgets import LineEdit, InfoBar, InfoBarPosition
-from ...common.validators.base import BaseValidator
+from src.common.validators.base import BaseValidator
 
 
 class ValidatedLineEdit(LineEdit):

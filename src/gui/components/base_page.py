@@ -5,12 +5,12 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QFrame
 from PySide6.QtCore import Qt, Signal
 from qfluentwidgets import TitleLabel, ScrollArea, ExpandLayout
-from ..styles import (
+from src.gui.styles import (
     apply_page_layout, apply_container_style, apply_page_style,
     get_spacing, get_text_disabled, apply_font_style,
     apply_transparent_style, apply_transparent_background_only, apply_no_border
 )
-from ...common.signals import signal_bus
+from src.common.signals import signal_bus
 
 
 class BasePageView(QFrame):
@@ -37,7 +37,8 @@ class BasePageView(QFrame):
         show_toolbar: bool = False,
         enable_scroll: bool = True,
         use_expand_layout: bool = False,
-        content_padding: bool = True
+        content_padding: bool = True,
+        add_stretch: bool = True
     ):
         """
         初始化页面视图基类
@@ -59,6 +60,7 @@ class BasePageView(QFrame):
         self._enable_scroll = enable_scroll
         self._use_expand_layout = use_expand_layout
         self._content_padding = content_padding
+        self._add_stretch = add_stretch
 
         # 标题栏引用
         self._title_label = None
@@ -102,8 +104,9 @@ class BasePageView(QFrame):
         # 内容区域
         self._init_content_area(layout)
 
-        # 在主布局底部添加弹簧，确保所有内容靠顶对齐
-        layout.addStretch(1)
+        # 仅针对需要弹簧的页面添加底部占位，确保护航内容靠顶而不溢出
+        if self._add_stretch:
+            layout.addStretch(1)
 
         # 应用页面背景样式
         apply_page_style(self)
@@ -194,7 +197,7 @@ class BasePageView(QFrame):
                 self._content_layout = QVBoxLayout(self._content_container)
                 
                 # 设置间距
-                from ..styles.utils import spacing_utils
+                from src.gui.styles.utils import spacing_utils
                 spacing_val = spacing_utils.get_list_spacing().get("group", 20)
                 self._content_layout.setSpacing(spacing_val)
                 
@@ -203,8 +206,9 @@ class BasePageView(QFrame):
                     self._content_layout.setContentsMargins(36, 12, 36, 36)
                 else:
                     self._content_layout.setContentsMargins(0, 0, 0, 0)
-                    
-                self._content_layout.addStretch()
+                
+                if self._add_stretch:
+                    self._content_layout.addStretch()
 
             self._scroll_area.setWidget(self._content_container)
             parent_layout.addWidget(self._scroll_area, 10)
@@ -226,9 +230,11 @@ class BasePageView(QFrame):
                     self._content_layout.setContentsMargins(36, 12, 36, 36)
                 else:
                     self._content_layout.setContentsMargins(0, 0, 0, 0)
+                
+                if self._add_stretch:
+                    self._content_layout.addStretch()
                     
-                self._content_layout.addStretch()
-                parent_layout.addLayout(self._content_layout)
+                parent_layout.addLayout(self._content_layout, 10)
 
     def _update_container_style(self):
         """更新容器背景样式"""

@@ -70,3 +70,32 @@
 
 ### 7.3 SDK 化潜力 (Headless Support)
 - **方案**: 确保所有 `src/core/services` 都不依赖任何 `PySide6` 组件。这使得核心逻辑未来可以轻松迁移到 CLI 工具或 Web 后台，实现逻辑的极致纯净。
+
+## 8. 深度设计：原子性、并发与数据交换
+
+### 8.1 事务保障机制 (Transactions & Atomicity)
+- **发现**: `TransactionManager` 目前主要处理 Link 创建流程。
+- **方案**: 
+  - Service 层应引入 **Unit of Work** 逻辑。
+  - 对于涉及多个文件或配置的操作，必须先锁定配置，记录操作日志，失败后调用对应的回滚方法。
+  - 采用“写前记录”策略，确保崩溃后应用重启时能自动检测并提示恢复。
+
+### 8.2 并发与异步模型 (Concurrency Control)
+- **执行器管理**: 
+  - 耗时 IO（文件移动、多级扫描）统一由 `ConnectionService` 管理的异步 Worker 处理，避免阻塞 UI 事件循环。
+  - 所有的进度信息通过 Service 统一向 View 层广播，不再由 Worker 直接操作 UI 组件。
+- **线程安全**: 
+  - 使用 Python 的 `threading.Lock` 保护对底层 JSON 数据的并发写入。
+
+### 8.3 数据交换规范 (DTOs & ViewModels)
+- **原则**: 隔离原始 Data Model。
+- **方案**: 
+  - **Input DTO**: View 向 Service 提交精简后的结构化数据。
+  - **Output ViewModel**: Service 向 View 返回专门用于显示的 ViewModel，包含计算后的字段（如大小单位转换）和 UI 友好的提示信息。
+
+### 8.4 权限管理与提权 (Elevation)
+- **原理**: Junction 操作通常需要 Administrator 权限。
+- **方案**: 
+  - Service 捕获 `PermissionError` 后返回特定的错误状态码。
+  - View 层根据该状态码引导用户重新以管理员身份运行。
+  - 设计“提权任务队列”，允许应用在提权后的进程中恢复执行中断的任务。

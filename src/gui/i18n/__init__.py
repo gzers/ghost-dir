@@ -11,8 +11,8 @@
     # 带参数的文案
     text = t("connected.selected_count", count=5)  # "已选择 5 项"
 """
-from .manager import I18nManager
-from .zh_CN import TEXTS
+from src.gui.i18n.manager import I18nManager
+from src.gui.i18n.zh_CN import TEXTS
 
 # 创建全局实例并设置文案
 _i18n = I18nManager()

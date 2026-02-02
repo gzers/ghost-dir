@@ -6,7 +6,7 @@ from typing import Optional, List, Dict
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QHeaderView, QWidget, QHBoxLayout, QTableWidgetItem
 from qfluentwidgets import TableWidget, CheckBox, setCustomStyleSheet
-from ..styles import (
+from src.gui.styles import (
     get_font_style, get_text_primary, apply_transparent_style, 
     get_text_secondary
 )
@@ -123,7 +123,7 @@ class BaseTableWidget(TableWidget):
 
     def _connect_base_signals(self):
         """连接全局信号"""
-        from ...common.signals import signal_bus
+        from src.common.signals import signal_bus
         signal_bus.theme_color_changed.connect(self._apply_base_style)
         signal_bus.theme_changed.connect(self._apply_base_style)
 

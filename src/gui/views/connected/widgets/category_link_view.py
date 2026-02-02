@@ -4,9 +4,9 @@
 """
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QSplitter
 from PySide6.QtCore import Qt, Signal
-from .category_tree import CategoryTree
-from ....components.link_table import LinkTable
-from .....data.user_manager import UserManager
+from src.gui.views.connected.widgets.category_tree import CategoryTree
+from src.gui.components.link_table import LinkTable
+from src.data.user_manager import UserManager
 
 
 class CategoryLinkView(QWidget):

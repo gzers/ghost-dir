@@ -7,8 +7,8 @@ import os
 from typing import List, Optional, Dict, Tuple
 from pathlib import Path
 from datetime import datetime
-from ..data.model import Template
-from ..common.config import (
+from src.data.model import Template
+from src.common.config import (
     DEFAULT_TEMPLATES_CONFIG, TEMPLATE_CACHE_FILE,
     LEGACY_CATEGORY_MAP, APP_VERSION
 )
@@ -186,7 +186,7 @@ class TemplateManager:
         
         # 自定义模版（从 UserManager 获取）
         try:
-            from .user_manager import UserManager
+            from src.data.user_manager import UserManager
             user_manager = UserManager()
             custom_templates = user_manager.get_custom_templates()
             
@@ -211,7 +211,7 @@ class TemplateManager:
         
         # 再查找自定义模版
         try:
-            from .user_manager import UserManager
+            from src.data.user_manager import UserManager
             user_manager = UserManager()
             for template in user_manager.get_custom_templates():
                 if template.id == template_id:
@@ -500,7 +500,7 @@ class TemplateManager:
             imported_categories = 0
             if self.category_manager:
                 for cat_data in import_data.get("categories", []):
-                    from ..data.model import CategoryNode
+                    from src.data.model import CategoryNode
                     original_id = cat_data["id"]
                     category = CategoryNode(**cat_data)
                     

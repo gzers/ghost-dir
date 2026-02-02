@@ -5,8 +5,8 @@
 from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout
 from PySide6.QtCore import Qt, Signal
 from qfluentwidgets import BodyLabel, ImageLabel
-from ....components import Card
-from ....styles import (
+from src.gui.components import Card
+from src.gui.styles import (
     apply_font_style, apply_muted_text_style, apply_badge_style,
     get_spacing, get_radius, get_icon_size, get_icon_background
 )

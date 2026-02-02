@@ -1,1 +1,1 @@
-from .dialog import EditLinkDialog
+from src.gui.dialogs.edit_link.dialog import EditLinkDialog

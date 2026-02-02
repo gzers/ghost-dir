@@ -1,7 +1,7 @@
 """
 应用信息文案
 """
-from .... import __app_name__, __version__, __author__, __github_url__
+from src import __app_name__, __version__, __author__, __github_url__
 
 APP_TEXTS = {
     "name": __app_name__,

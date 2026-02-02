@@ -3,7 +3,7 @@
 获取字体、大小、粗细、行高及层级规范
 """
 from typing import Dict, Any
-from ..constants import typography
+from src.gui.styles.constants import typography
 
 def get_font_family() -> str:
     """获取默认字体族"""
@@ -45,7 +45,7 @@ def get_font_style(
     Returns:
         CSS 样式字符串
     """
-    from .color_utils import get_text_primary
+    from src.gui.styles.utils.color_utils import get_text_primary
     
     font_family = get_font_family()
     font_size = get_font_size(size)

@@ -4,10 +4,10 @@
 from PySide6.QtWidgets import QTabWidget
 from PySide6.QtCore import Signal
 from qfluentwidgets import MessageBoxBase
-from ....data.template_manager import TemplateManager
-from ....data.user_manager import UserManager
-from ....data.model import UserLink, Template
-from .widgets import TemplateTabWidget, CustomTabWidget
+from src.data.template_manager import TemplateManager
+from src.data.user_manager import UserManager
+from src.data.model import UserLink, Template
+from src.gui.dialogs.add_link.widgets import TemplateTabWidget, CustomTabWidget
 import uuid
 
 
@@ -58,7 +58,7 @@ class AddLinkDialog(MessageBoxBase):
     
     def _on_manage_categories(self):
         """打开分类管理对话框"""
-        from ..category_manager import CategoryManagerDialog
+        from src.gui.dialogs.category_manager import CategoryManagerDialog
         dialog = CategoryManagerDialog(self)
         dialog.categories_changed.connect(self._refresh_categories)
         dialog.exec()

@@ -69,7 +69,7 @@ class CategoryTreeDropdown(QFrame):
     
     def _apply_style(self):
         """应用样式"""
-        from ..styles import get_font_style, get_text_primary, get_text_secondary, get_accent_color
+        from src.gui.styles import get_font_style, get_text_primary, get_text_secondary, get_accent_color
         from PySide6.QtWidgets import QApplication
         from PySide6.QtGui import QPalette
         
@@ -124,10 +124,10 @@ class CategoryTreeDropdown(QFrame):
         
         # 如果需要显示根分类
         if self.root_visible:
-            from ..styles import get_text_secondary
+            from src.gui.styles import get_text_secondary
             root_item = QTreeWidgetItem(self.tree)
             root_item.setData(0, Qt.ItemDataRole.UserRole, None)
-            from ...gui.i18n import t
+            from src.gui.i18n import t
             root_name = t("library.label_root_category")
             # 如果翻译缺失，回退到默认文案
             if "[Missing:" in root_name:
@@ -301,7 +301,7 @@ class CategorySelector(QWidget):
         """设置选中的分类 ID"""
         if category_id is None:
             if self.root_visible:
-                from ...gui.i18n import t
+                from src.gui.i18n import t
                 root_name = t("library.label_root_category")
                 if "[Missing:" in root_name:
                     root_name = "无 (根分类)"

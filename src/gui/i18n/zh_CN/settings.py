@@ -11,6 +11,7 @@ SETTINGS_TEXTS = {
     "select_path": "选择路径",
     "log_folder": "调试日志目录",
     "view_log": "查看日志",
+    "path_updated": "路径已更新",
     
     # 外观设置
     "group_appearance": "外观设置",
@@ -32,6 +33,8 @@ SETTINGS_TEXTS = {
     "theme_color_digital_rose_pink": "数字玫粉",
     "theme_color_mustard_yellow": "芥末亮黄",
     "theme_color_deep_plum_purple": "深醇梅紫",
+    "transparency": "窗口透明效果",
+    "transparency_desc": "开启后将为应用窗口应用云母或丙烯酸半透明效果",
     
     # 启动设置
     "group_startup": "启动设置",
@@ -44,8 +47,8 @@ SETTINGS_TEXTS = {
     "startup_changed_msg": "首启动页面已设置为 {page}",
     
     # 视图模式
-    "view_mode": "默认展示视图",
-    "view_mode_desc": "设置进入‘已连接’页面时默认显示的视图模式",
+    "default_view": "默认展示视图",
+    "default_view_desc": "设置进入‘已连接’页面时默认显示的视图模式",
     "view_list": "列表视图",
     "view_category": "分类视图",
 }

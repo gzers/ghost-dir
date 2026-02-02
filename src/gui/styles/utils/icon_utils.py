@@ -2,7 +2,7 @@
 图标工具函数
 获取图标尺寸、颜色、间距和状态规范
 """
-from ..constants import icons
+from src.gui.styles.constants import icons
 from .color_utils import (
     get_text_primary, get_text_secondary, get_text_tertiary, get_text_disabled,
     get_accent_color, get_success_color, get_warning_color, get_error_color, get_info_color

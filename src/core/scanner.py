@@ -4,9 +4,9 @@
 """
 import os
 from typing import List
-from ..data.model import Template, UserLink
-from ..data.template_manager import TemplateManager
-from ..data.user_manager import UserManager
+from src.data.model import Template, UserLink
+from src.data.template_manager import TemplateManager
+from src.data.user_manager import UserManager
 import uuid
 
 
@@ -34,7 +34,7 @@ class SmartScanner:
         """
         discovered = []
         existing_paths = {link.source_path for link in self.user_manager.get_all_links()}
-        from .link_opt import is_junction
+        from src.core.link_opt import is_junction
         
         for template in self.template_manager.get_all_templates():
             # 🆕 v7.4: 过滤已忽略的模版
@@ -71,7 +71,7 @@ class SmartScanner:
             成功导入的数量
         """
         success_count = 0
-        from .link_opt import get_junction_target
+        from src.core.link_opt import get_junction_target
         
         for template in templates:
             try:

@@ -1,8 +1,8 @@
 from PySide6.QtWidgets import QTreeWidgetItem
 from PySide6.QtCore import Signal, Qt
 from qfluentwidgets import TreeWidget
-from .....data.user_manager import UserManager
-from .....data.category_manager import CategoryManager
+from src.data.user_manager import UserManager
+from src.data.category_manager import CategoryManager
 
 
 class CategoryTree(TreeWidget):
@@ -35,7 +35,7 @@ class CategoryTree(TreeWidget):
         self.setMaximumWidth(250)
         # 设置背景色和移除边框
         self._update_theme_style()
-        from .....common.signals import signal_bus
+        from src.common.signals import signal_bus
         signal_bus.theme_changed.connect(self._on_theme_changed)
 
     def _update_theme_style(self):

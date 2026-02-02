@@ -3,16 +3,16 @@
 按功能模块化组织，支持主题感知、多尺寸间距、标准组件样式和图标系统。
 """
 
-from .manager import StyleManager
-from .stylesheet import window_style_sheet, link_table_style_sheet
-from .utils.color_utils import *
-from .utils.spacing_utils import *
-from .utils.typography_utils import *
-from .utils.icon_utils import *
-from .appliers.layout import *
-from .appliers.component import *
-from .appliers.icon import *
-from .appliers.common import (
+from src.gui.styles.manager import StyleManager
+from src.gui.styles.stylesheet import window_style_sheet, link_table_style_sheet
+from src.gui.styles.utils.color_utils import *
+from src.gui.styles.utils.spacing_utils import *
+from src.gui.styles.utils.typography_utils import *
+from src.gui.styles.utils.icon_utils import *
+from src.gui.styles.appliers.layout import *
+from src.gui.styles.appliers.component import *
+from src.gui.styles.appliers.icon import *
+from src.gui.styles.appliers.common import (
     apply_transparent_style,
     apply_transparent_background_only,
     apply_no_border

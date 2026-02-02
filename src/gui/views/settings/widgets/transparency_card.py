@@ -1,13 +1,13 @@
 # coding:utf-8
 from qfluentwidgets import SwitchSettingCard, FluentIcon, ConfigItem, BoolValidator
-from .....common.signals import signal_bus
-from ....i18n import t
+from src.common.signals import signal_bus
+from src.gui.i18n import t
 
 class TransparencyCard(SwitchSettingCard):
     """ 透明效果设置卡片 """
 
-    def __init__(self, user_manager, parent=None):
-        self.user_manager = user_manager
+    def __init__(self, config_service, parent=None):
+        self.config_service = config_service
         
         # 创建一个虚拟的 ConfigItem 用于绑定
         config_item = ConfigItem("Appearance", "EnableTransparency", True, BoolValidator())
@@ -28,11 +28,11 @@ class TransparencyCard(SwitchSettingCard):
     
     def _init_value(self):
         """ 初始化当前选中状态 """
-        enabled = self.user_manager.get_transparency()
+        enabled = self.config_service.get_transparency()
         self.setChecked(enabled)
 
     def _on_transparency_changed(self, is_checked: bool):
         """ 透明效果变更回调 """
-        if self.user_manager.set_transparency(is_checked):
+        if self.config_service.set_transparency(is_checked):
             # 发送全局信号（复用 theme 变更信号，因为窗口效果通常随之刷新）
-            signal_bus.theme_changed.emit(self.user_manager.get_theme())
+            signal_bus.theme_changed.emit(self.config_service.get_theme())

@@ -3,8 +3,8 @@
 负责主题感知和统一样式访问
 """
 from qfluentwidgets import isDarkTheme
-from ...common.signals import signal_bus
-from .utils import color_utils, spacing_utils, typography_utils, icon_utils
+from src.common.signals import signal_bus
+from src.gui.styles.utils import color_utils, spacing_utils, typography_utils, icon_utils
 
 class StyleManager:
     """样式管理器 - 提供主题感知的样式访问 (保持向后兼容)"""
@@ -25,7 +25,7 @@ class StyleManager:
         
         # 监听主题变更信号
         try:
-            from ...common.signals import signal_bus
+            from src.common.signals import signal_bus
             signal_bus.theme_changed.connect(self._on_theme_changed)
         except (ImportError, AttributeError):
             pass

@@ -1,9 +1,9 @@
 """
 帮助/关于视图
 """
-from ...i18n import t
-from ...components import BasePageView
-from .widgets.about_card import AboutCard
+from src.gui.i18n import t
+from src.gui.components import BasePageView
+from src.gui.views.help.widgets.about_card import AboutCard
 
 
 class HelpView(BasePageView):

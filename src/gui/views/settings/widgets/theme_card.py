@@ -1,14 +1,14 @@
 # coding:utf-8
 from qfluentwidgets import ComboBoxSettingCard, FluentIcon, OptionsConfigItem, OptionsValidator
-from .....common.signals import signal_bus
-from .....common.config import THEME_OPTIONS, DEFAULT_THEME
-from ....i18n import t
+from src.common.signals import signal_bus
+from src.common.config import THEME_OPTIONS, DEFAULT_THEME
+from src.gui.i18n import t
 
 class ThemeCard(ComboBoxSettingCard):
     """ 主题模式设置卡片 """
 
-    def __init__(self, user_manager, parent=None):
-        self.user_manager = user_manager
+    def __init__(self, config_service, parent=None):
+        self.config_service = config_service
         
         # 从配置构建映射字典
         self.theme_map = {
@@ -43,7 +43,7 @@ class ThemeCard(ComboBoxSettingCard):
     
     def _init_value(self):
         """ 初始化当前选中项 """
-        theme = self.user_manager.get_theme()
+        theme = self.config_service.get_theme()
         text = self.rev_theme_map.get(theme, list(self.theme_map.keys())[0])
         self.comboBox.setCurrentText(text)
 
@@ -51,5 +51,6 @@ class ThemeCard(ComboBoxSettingCard):
         """ 主题变更回调 """
         theme = self.theme_map.get(text, DEFAULT_THEME)
         
-        if self.user_manager.set_theme(theme):
+        if self.config_service.set_theme(theme):
             signal_bus.theme_changed.emit(theme)
+            # 同时也发送通用的配置变更信号

@@ -4,7 +4,7 @@ from PySide6.QtGui import QGuiApplication
 from PySide6.QtWidgets import QTableWidgetItem, QHeaderView, QWidget, QHBoxLayout
 from qfluentwidgets import FluentIcon, RoundMenu, Action, TransparentToolButton, InfoBar, InfoBarPosition
 from src.data.model import Template
-from ....components import BaseTableWidget
+from src.gui.components import BaseTableWidget
 
 
 class TemplateTableWidget(BaseTableWidget):

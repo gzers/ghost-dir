@@ -10,39 +10,40 @@ from qfluentwidgets import (
     setCustomStyleSheet, isDarkTheme, Theme
 )
 from PySide6.QtCore import Qt, QSize, QTimer
-from ..views.connected import ConnectedView
-from ..views.wizard import WizardView
-from ..views.library import LibraryView
-from ..views.help import HelpView
-from ..views.settings import SettingView
-from ...common.resource_loader import get_resource_path
-from ...common.config import WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT
-from ...utils.win_utils import is_transparency_enabled
-from ..styles import window_style_sheet
+from src.core.services.context import service_bus
+from src.gui.views.connected import ConnectedView
+from src.gui.views.wizard import WizardView
+from src.gui.views.library import LibraryView
+from src.gui.views.help import HelpView
+from src.gui.views.settings import SettingView
+from src.common.resource_loader import get_resource_path
+from src.common.config import WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT
+from src.utils.win_utils import is_transparency_enabled
+from src.gui.styles import window_style_sheet
 
 
 class MainWindow(FluentWindow):
     """主窗口"""
 
-    def __init__(self, user_manager=None):
+    def __init__(self):
         """初始化主窗口"""
         super().__init__()
 
-        # 保存用户管理器引用
-        self.user_manager = user_manager
+        # 使用服务中枢提供的全局管理器
+        self.user_manager = service_bus.user_manager
 
-        # 创建视图
+        # 创建视图 (构造函数已适配注入模式)
         self.connected_view = ConnectedView(self)
         self.wizard_view = WizardView(self)
         self.library_view = LibraryView(self)
         self.help_view = HelpView(self)
-        self.setting_view = SettingView(self, self.user_manager)
+        self.setting_view = SettingView(self)
 
         self._init_window()
         self._init_navigation()
 
         # 监听主题变更
-        from ...common.signals import signal_bus
+        from src.common.signals import signal_bus
         signal_bus.theme_changed.connect(self._on_theme_changed)
     
     def _init_window(self):

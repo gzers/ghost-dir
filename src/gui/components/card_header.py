@@ -5,7 +5,7 @@
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel
 from PySide6.QtCore import Qt
 from qfluentwidgets import StrongBodyLabel, BodyLabel
-from ..styles import (
+from src.gui.styles import (
     apply_font_style, apply_muted_text_style,
     get_spacing, apply_icon_style
 )

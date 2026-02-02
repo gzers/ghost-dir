@@ -1,1 +1,1 @@
-from .dialog import TemplatePreviewDialog
+from src.gui.dialogs.template_preview.dialog import TemplatePreviewDialog

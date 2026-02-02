@@ -6,10 +6,10 @@ from typing import List
 from PySide6.QtWidgets import QTableWidgetItem, QHeaderView, QWidget, QHBoxLayout
 from PySide6.QtCore import Qt, Signal
 from qfluentwidgets import PushButton, TransparentToolButton, FluentIcon
-from .base_table import BaseTableWidget
-from ...data.model import UserLink, LinkStatus
-from ...common.config import format_size
-from ..i18n import get_status_text, get_category_text
+from src.gui.components.base_table import BaseTableWidget
+from src.data.model import UserLink, LinkStatus
+from src.common.config import format_size
+from src.gui.i18n import get_status_text, get_category_text
 
 
 class LinkTable(BaseTableWidget):

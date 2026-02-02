@@ -1,1 +1,1 @@
-from .dialog import IconPickerDialog
+from src.gui.dialogs.icon_picker.dialog import IconPickerDialog

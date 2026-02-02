@@ -9,14 +9,14 @@ from qfluentwidgets import (
     StrongBodyLabel, BodyLabel, CaptionLabel,
     HyperlinkButton, PrimaryPushButton, FluentIcon
 )
-from ....i18n import t
-from ....components import Card
-from ....styles import (
+from src.gui.i18n import t
+from src.gui.components import Card
+from src.gui.styles import (
     apply_font_style, get_spacing, apply_badge_style, get_radius,
     get_text_secondary, get_text_disabled,
     get_content_width, apply_layout_margins
 )
-from .....common.resource_loader import get_resource_path
+from src.common.resource_loader import get_resource_path
 
 
 class VersionBadge(QWidget):

@@ -5,9 +5,9 @@
 import json
 from typing import List, Optional, Dict, Tuple
 from pathlib import Path
-from ..data.model import CategoryNode
-from ..data.category_log import CategoryLogEntry, CategoryOperation
-from ..common.config import CATEGORIES_CONFIG, CATEGORY_LOG_FILE, MAX_CATEGORY_DEPTH, SYSTEM_CATEGORIES
+from src.data.model import CategoryNode
+from src.data.category_log import CategoryLogEntry, CategoryOperation
+from src.common.config import CATEGORIES_CONFIG, CATEGORY_LOG_FILE, MAX_CATEGORY_DEPTH, SYSTEM_CATEGORIES
 
 
 class CategoryManager:

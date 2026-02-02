@@ -1,16 +1,16 @@
 """
 对话框模块导出
 """
-from .icon_picker import IconPickerDialog
-from .category_manager import CategoryEditDialog, CategoryManagerDialog
-from .template_edit import TemplateEditDialog
-from .template_preview import TemplatePreviewDialog
-from .batch_move import BatchMoveDialog
-from .export_dialog import ExportDialog
-from .import_dialog import ImportDialog  # 注意：这里我们避开 Python 关键字 import
-from .add_link import AddLinkDialog
-from .edit_link import EditLinkDialog
-from .scan_wizard import ScanWizardDialog, ScanFlowDialog
+from src.gui.dialogs.icon_picker import IconPickerDialog
+from src.gui.dialogs.category_manager import CategoryEditDialog, CategoryManagerDialog
+from src.gui.dialogs.template_edit import TemplateEditDialog
+from src.gui.dialogs.template_preview import TemplatePreviewDialog
+from src.gui.dialogs.batch_move import BatchMoveDialog
+from src.gui.dialogs.export_dialog import ExportDialog
+from src.gui.dialogs.import_dialog import ImportDialog
+from src.gui.dialogs.add_link import AddLinkDialog
+from src.gui.dialogs.edit_link import EditLinkDialog
+from src.gui.dialogs.scan_wizard import ScanWizardDialog, ScanFlowDialog
 
 # 导出映射，方便直接使用 import 和 export 名称但不冲突
 # 在外部使用：from src.gui.dialogs import ImportDialog, ExportDialog

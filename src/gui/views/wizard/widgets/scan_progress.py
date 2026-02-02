@@ -8,9 +8,9 @@ from qfluentwidgets import (
     BodyLabel, PrimaryPushButton, PushButton, FluentIcon
 )
 
-from ....components import Card, CardHeader, ProgressIndicator
-from ....styles import get_spacing, apply_font_style
-from ....i18n import t
+from src.gui.components import Card, CardHeader, ProgressIndicator
+from src.gui.styles import get_spacing, apply_font_style
+from src.gui.i18n import t
 
 
 class ScanProgressCard(Card):

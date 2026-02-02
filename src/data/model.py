@@ -164,7 +164,7 @@ class UserLink:
     def status(self) -> LinkStatus:
         """动态计算连接状态"""
         import os
-        from ..core.link_opt import is_junction
+        from src.core.link_opt import is_junction
         
         src_exists = os.path.exists(self.source_path)
         dst_exists = os.path.exists(self.target_path)

@@ -7,10 +7,10 @@ from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
 from qfluentwidgets import setTheme, Theme, setThemeColor, SystemThemeListener, setFontFamilies, MessageBox
-from ..common.signals import signal_bus
-from ..utils.admin import ensure_admin
-from ..core.transaction import check_crash_recovery, recover_from_crash
-from ..common.resource_loader import get_resource_path
+from src.common.signals import signal_bus
+from src.utils.admin import ensure_admin
+from src.core.transaction import check_crash_recovery, recover_from_crash
+from src.common.resource_loader import get_resource_path
 
 
 class GhostDirApp(QApplication):
@@ -116,7 +116,7 @@ class GhostDirApp(QApplication):
         """启动时的安全检查"""
         # 1. 强制检查管理员权限
         # 如果未获得权限，会自动请求提权并重启
-        from ..utils.admin import ensure_admin
+        from src.utils.admin import ensure_admin
         ensure_admin()
         
         # 2. 检查崩溃恢复
@@ -142,17 +142,17 @@ def run_app():
     """运行应用程序"""
     app = GhostDirApp(sys.argv)
 
-    # 加载用户数据并应用设置
-    from ..data.user_manager import UserManager
-    user_manager = UserManager()
+    # 通过服务中枢加载全局配置
+    from src.core.services.context import service_bus
+    config_service = service_bus.config_service
 
     # 应用主题设置
-    app._apply_theme(user_manager.get_theme())
-    app._apply_theme_color(user_manager.get_theme_color())
+    app._apply_theme(config_service.get_theme())
+    app._apply_theme_color(config_service.get_config("theme_color", "system"))
 
-    # 导入并创建主窗口（传入用户管理器）
+    # 导入并创建主窗口
     from .windows.main_window import MainWindow
-    window = MainWindow(user_manager)
+    window = MainWindow()
     window.show()
 
     sys.exit(app.exec())

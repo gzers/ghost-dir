@@ -2,7 +2,7 @@
 布局样式应用
 应用页面、容器、布局及间距样式
 """
-from ..utils import color_utils, spacing_utils
+from src.gui.styles.utils import color_utils, spacing_utils
 from qfluentwidgets import setCustomStyleSheet
 
 def apply_page_style(widget) -> None:

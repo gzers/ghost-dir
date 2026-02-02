@@ -8,7 +8,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QFormLayout, QListWidget, QL
 from qfluentwidgets import MessageBoxBase, SubtitleLabel, BodyLabel, InfoBar, InfoBarPosition
 from src.data.model import Template
 from src.data.category_manager import CategoryManager
-from ...components import CategorySelector
+from src.gui.components import CategorySelector
 
 
 class BatchMoveDialog(MessageBoxBase):

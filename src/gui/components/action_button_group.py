@@ -5,9 +5,9 @@
 from PySide6.QtWidgets import QWidget, QHBoxLayout
 from PySide6.QtCore import Signal
 from qfluentwidgets import PushButton, FluentIcon
-from ...data.model import LinkStatus
-from ..styles import get_spacing
-from ..i18n import t
+from src.data.model import LinkStatus
+from src.gui.styles import get_spacing
+from src.gui.i18n import t
 
 
 class ActionButtonGroup(QWidget):

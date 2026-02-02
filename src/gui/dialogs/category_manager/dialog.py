@@ -8,13 +8,11 @@ from qfluentwidgets import (
     InfoBar, InfoBarPosition
 )
 
-from ....data.user_manager import UserManager
-from ....data.category_manager import CategoryManager
-from ....data.template_manager import TemplateManager
-from ....data.model import CategoryNode
-from ....common.signals import signal_bus
-from ....common.config import SYSTEM_CATEGORIES
-from ...i18n import t
+from src.core.services.context import service_bus
+from src.data.model import CategoryNode
+from src.common.signals import signal_bus
+from src.common.config import SYSTEM_CATEGORIES
+from src.gui.i18n import t
 from .category_tree import CategoryTreeWidget
 
 
@@ -26,10 +24,9 @@ class CategoryManagerDialog(MessageBoxBase):
     def __init__(self, parent=None):
         super().__init__(parent)
         
-        self.user_manager = UserManager()
-        self.category_manager = CategoryManager()
-        self.template_manager = TemplateManager()
-        self.category_manager.set_template_manager(self.template_manager)
+        self.user_manager = service_bus.user_manager
+        self.category_manager = service_bus.category_manager
+        self.template_manager = service_bus.template_manager
         
         self.setWindowTitle(t("library.category_manager_title"))
         self._init_ui()

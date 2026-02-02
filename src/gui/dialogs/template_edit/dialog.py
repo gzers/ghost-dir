@@ -13,8 +13,8 @@ from qfluentwidgets import (
     PushButton, TextEdit, FluentIcon, TransparentToolButton,
     InfoBar, InfoBarPosition, BodyLabel
 )
-from ...components import CategorySelector, ValidatedLineEdit
-from ...styles import format_required_label
+from src.gui.components import CategorySelector, ValidatedLineEdit
+from src.gui.styles import format_required_label
 from src.data.template_manager import TemplateManager
 from src.data.category_manager import CategoryManager
 from src.data.model import Template

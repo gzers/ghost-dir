@@ -3,7 +3,7 @@
 获取间距、内边距、外边距和圆角像素值
 """
 from typing import Tuple
-from ..constants import spacing
+from src.gui.styles.constants import spacing
 
 def get_spacing(size: str = "md") -> int:
     """获取基础间距像素值"""
@@ -31,16 +31,16 @@ def get_list_spacing() -> dict:
 
 def get_content_width(level: str = "narrow") -> int:
     """获取预定义的容器最大宽度"""
-    from ..constants.components import COMPONENT_STYLES
+    from src.gui.styles.constants.components import COMPONENT_STYLES
     widths = COMPONENT_STYLES.get("content_width", {})
     return widths.get(level)
 
 def get_card_padding() -> Tuple[int, int, int, int]:
     """获取标准卡片内边距规范 (top, right, bottom, left)"""
-    from ..constants.components import COMPONENT_STYLES
+    from src.gui.styles.constants.components import COMPONENT_STYLES
     return COMPONENT_STYLES["card"]["padding"]
 
 def get_badge_padding() -> Tuple[int, int, int, int]:
     """获取标准徽章内边距规范 (top, right, bottom, left)"""
-    from ..constants.components import COMPONENT_STYLES
+    from src.gui.styles.constants.components import COMPONENT_STYLES
     return COMPONENT_STYLES["badge"]["padding"]

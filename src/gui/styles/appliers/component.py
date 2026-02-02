@@ -2,8 +2,8 @@
 组件样式应用
 应用卡片、按钮、徽章、文字等组件级别样式
 """
-from ..utils import color_utils, spacing_utils, typography_utils
-from ..constants.components import COMPONENT_STYLES
+from src.gui.styles.utils import color_utils, spacing_utils, typography_utils
+from src.gui.styles.constants.components import COMPONENT_STYLES
 
 def apply_card_style(widget, size: str = "md"):
     """

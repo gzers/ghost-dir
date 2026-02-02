@@ -3,7 +3,7 @@
 未来用于从远程服务器获取模板数据
 """
 from typing import List, Dict, Optional
-from ..data.model import Template
+from src.data.model import Template
 
 
 class TemplateAPIClient:

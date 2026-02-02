@@ -4,7 +4,7 @@
 from PySide6.QtWidgets import QHBoxLayout
 from PySide6.QtCore import Signal
 from qfluentwidgets import BodyLabel, PushButton, ToolButton, FluentIcon
-from .card import Card
+from src.gui.components.card import Card
 
 
 class BatchToolbar(Card):

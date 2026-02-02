@@ -1,14 +1,14 @@
 # coding:utf-8
 from qfluentwidgets import ComboBoxSettingCard, FluentIcon, OptionsConfigItem, OptionsValidator
-from .....common.signals import signal_bus
-from .....common.config import THEME_COLOR_OPTIONS, DEFAULT_THEME_COLOR
-from ....i18n import t
+from src.common.signals import signal_bus
+from src.common.config import THEME_COLOR_OPTIONS, DEFAULT_THEME_COLOR
+from src.gui.i18n import t
 
 class ThemeColorCard(ComboBoxSettingCard):
     """ 主题颜色设置卡片 """
 
-    def __init__(self, user_manager, parent=None):
-        self.user_manager = user_manager
+    def __init__(self, config_service, parent=None):
+        self.config_service = config_service
         
         # 从配置构建颜色映射字典
         self.color_map = {
@@ -46,7 +46,7 @@ class ThemeColorCard(ComboBoxSettingCard):
     
     def _init_value(self):
         """ 初始化当前选中项 """
-        color = self.user_manager.get_theme_color()
+        color = self.config_service.get_theme_color()
         # 查找对应的显示文本，如果找不到则使用第一个选项
         text = self.rev_color_map.get(color, list(self.color_map.keys())[0])
         self.comboBox.setCurrentText(text)
@@ -55,5 +55,5 @@ class ThemeColorCard(ComboBoxSettingCard):
         """ 颜色变更回调 """
         color = self.color_map.get(text, DEFAULT_THEME_COLOR)
         
-        if self.user_manager.set_theme_color(color):
+        if self.config_service.set_theme_color(color):
             signal_bus.theme_color_changed.emit(color)

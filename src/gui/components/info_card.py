@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QCursor
 from qfluentwidgets import BodyLabel, CaptionLabel, FluentIcon
-from ..styles import StyleManager, get_spacing, get_radius
+from src.gui.styles import StyleManager, get_spacing, get_radius
 
 
 class InfoCard(QWidget):
