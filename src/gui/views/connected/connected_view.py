@@ -77,6 +77,7 @@ class ConnectedView(BasePageView):
         
         self.refresh_btn = ToolButton(FIF.SYNC)
         self.refresh_btn.setToolTip(t("connected.refresh_status"))
+        self.refresh_btn.clicked.connect(lambda: self._load_data(refresh_size=True))
 
         toolbar.addWidget(self.search_edit)
         toolbar.addSpacing(8)
@@ -119,7 +120,7 @@ class ConnectedView(BasePageView):
         self.scan_btn.clicked.connect(self._on_scan)
         self.search_edit.textChanged.connect(self._on_search_changed)
         self.view_pivot.currentItemChanged.connect(self._on_view_pivot_changed)
-        self.refresh_btn.clicked.connect(self._load_data)
+        # 刷新按钮已在 _setup_toolbar 中绑定 explicit refresh_size=True
         
         self.category_tree.category_selected.connect(self._on_category_selected)
         
@@ -138,7 +139,7 @@ class ConnectedView(BasePageView):
         signal_bus.data_refreshed.connect(self._load_data)
         signal_bus.config_changed.connect(self._on_config_changed)
 
-    def _load_data(self, refresh_size: bool = True):
+    def _load_data(self, refresh_size: bool = False):
         """加载数据"""
         view_models = self.connection_service.get_all_links(self.current_category_id)
         

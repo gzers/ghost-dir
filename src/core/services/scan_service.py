@@ -85,7 +85,13 @@ class SmartScanner:
                 # 语义优化：如果探测到已经是 Junction，说明已经建立过链接，自动读取其目标路径
                 is_manual_junction = getattr(template, '_auto_detected_junction', False)
                 if is_manual_junction:
-                    target_path = get_junction_target(source_path) or (target_drive + source_path[3:])
+                    target_path = get_junction_target(source_path)
+                    if target_path:
+                        # 🆕 修复 Windows 扩展长度路径前缀 (\\?\)
+                        if target_path.startswith("\\\\?\\"):
+                            target_path = target_path[4:]
+                    else:
+                        target_path = target_drive + source_path[3:]
                 else:
                     # 普通扫描导入，默认生成映射路径
                     target_path = target_drive + source_path[3:]  # C:\xxx -> D:\xxx

@@ -32,6 +32,20 @@ class ScanWorker(QThread):
         self.finished.emit(discovered)
 
 
+class ImportWorker(QThread):
+    """导入工作线程"""
+    finished = Signal(int)
+    
+    def __init__(self, scanner: SmartScanner, templates: List):
+        super().__init__()
+        self.scanner = scanner
+        self.templates = templates
+        
+    def run(self):
+        count = self.scanner.import_templates(self.templates)
+        self.finished.emit(count)
+
+
 class ScanFlowDialog(MessageBoxBase):
     """全流程扫描对话框 - 统一标准版本"""
     
@@ -57,7 +71,7 @@ class ScanFlowDialog(MessageBoxBase):
         
     def _init_ui(self):
         """初始化 UI 结构"""
-        # 主堆栈，用于切换扫描中/结果列表
+        # 主堆栈，用于切换扫描中/结果列表/导入中
         self.stack = QStackedWidget()
         
         # --- 阶段 1：扫描中 UI ---
@@ -103,10 +117,29 @@ class ScanFlowDialog(MessageBoxBase):
         result_layout.addWidget(self.result_title)
         result_layout.addWidget(self.result_subtitle)
         result_layout.addWidget(self.scroll_area)
+
+        # --- 阶段 3：导入中 UI ---
+        self.importing_widget = QWidget()
+        importing_layout = QVBoxLayout(self.importing_widget)
+        importing_layout.setContentsMargins(0, 40, 0, 40)
+        importing_layout.setSpacing(24)
+        importing_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        
+        self.importing_title = SubtitleLabel("正在导入连接...")
+        self.import_progress = ProgressBar()
+        self.import_progress.setRange(0, 0)
+        self.import_progress.setFixedWidth(400)
+        self.import_status = BodyLabel("正在同步配置并刷新列表...")
+        apply_font_style(self.import_status, color="secondary")
+        
+        importing_layout.addWidget(self.importing_title)
+        importing_layout.addWidget(self.import_progress)
+        importing_layout.addWidget(self.import_status)
         
         # 添加到堆栈
-        self.stack.addWidget(self.loading_widget)
-        self.stack.addWidget(self.result_overlay)
+        self.stack.addWidget(self.loading_widget)  # 0
+        self.stack.addWidget(self.result_overlay)  # 1
+        self.stack.addWidget(self.importing_widget) # 2
         
         # 将堆栈添加到 MessageBox 视图
         self.viewLayout.addWidget(self.stack)
@@ -137,25 +170,19 @@ class ScanFlowDialog(MessageBoxBase):
         self.result_subtitle.setText(t("wizard.scan_complete_detail", count=len(discovered)))
         
         if discovered:
-            # 记录：不再在此处手动构建 cat_map，统一走 get_category_text (配置驱动+智能降级)
-            
             # 加载卡片
             for template in discovered:
-                # 🆕 增强型映射：尝试 category_id，回退到 category 字段
                 cat_id = getattr(template, 'category_id', getattr(template, 'category', ''))
                 cat_name = get_category_text(cat_id)
                 
                 card = ScanResultCard(template, category_name=cat_name)
-                # 连接选中状态，用于实时更新底部按钮
                 card.selected_changed.connect(self._update_selection_count)
                 
-                # 插入到 stretch 之前
                 self.list_layout.insertWidget(self.list_layout.count() - 1, card)
                 self.result_cards[template.id] = card
                 
             self._update_selection_count()
         else:
-            # 未发现结果处理
             no_result = BodyLabel("未发现可管理的软件")
             no_result.setAlignment(Qt.AlignmentFlag.AlignCenter)
             self.list_layout.insertWidget(0, no_result)
@@ -176,12 +203,26 @@ class ScanFlowDialog(MessageBoxBase):
         ]
 
     def validate(self):
-        """重写确定按钮逻辑，执行导入操作"""
+        """异步触发导入操作"""
         selected = self.get_selected_templates()
         if not selected:
             return False
             
-        # 物理导入
-        count = self.scanner.import_templates(selected)
+        # 切换到导入中状态
+        self.stack.setCurrentIndex(2)
+        self.yesButton.setEnabled(False)
+        self.cancelButton.setEnabled(False)
+        
+        # 启动异步导入
+        self.import_worker = ImportWorker(self.scanner, selected)
+        self.import_worker.finished.connect(self._on_import_finished)
+        self.import_worker.start()
+        
+        # 返回 False 阻止 MessageBox 立即自动关闭
+        return False
+
+    def _on_import_finished(self, count: int):
+        """导入完成回调"""
         self.scan_completed.emit(count)
-        return True
+        # 手动触发表单接受并关闭对话框
+        self.accept()
