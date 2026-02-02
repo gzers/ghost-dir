@@ -3,14 +3,16 @@
 管理所有已建立或待处理的链接，支持分类查看、列表搜索及批量操作
 """
 import os
+import typing
 from typing import List, Optional
 from PySide6.QtWidgets import QSplitter, QWidget, QStackedWidget, QVBoxLayout
 from PySide6.QtCore import Qt
 from qfluentwidgets import (
     PushButton, ToolButton, FluentIcon as FIF, MessageBox, 
     InfoBar, InfoBarPosition, Pivot, SearchLineEdit, PrimaryPushButton, 
-    TransparentPushButton, StateToolTip
+    TransparentPushButton, StateToolTip, IndeterminateProgressRing
 )
+from src.gui.common import operation_runner
 from src.gui.i18n import t
 from src.core.services.context import service_bus
 from src.common.signals import signal_bus
@@ -36,10 +38,11 @@ class ConnectedView(BasePageView):
         self.connection_service = service_bus.connection_service
         self.config_service = service_bus.config_service
         self.category_manager = service_bus.category_manager
+        self.user_manager = service_bus.user_manager
         
         self.current_category_id: str = "all"
 
-        self._state_tooltip: Optional[StateToolTip] = None
+        self.current_category_id: str = "all"
 
         # 构建界面
         self._setup_toolbar()
@@ -139,6 +142,7 @@ class ConnectedView(BasePageView):
         signal_bus.data_refreshed.connect(self._load_data)
         signal_bus.config_changed.connect(self._on_config_changed)
 
+
     def _load_data(self, refresh_size: bool = False):
         """加载数据"""
         view_models = self.connection_service.get_all_links(self.current_category_id)
@@ -168,11 +172,8 @@ class ConnectedView(BasePageView):
             self._state_tooltip.setState(True)
             self._state_tooltip = None
         
-        # 🆕 重要：这里决不能再次调用 self._load_data()，否则会无限循环
-        # 我们直接调用 load_links 更新 UI 即可
-        view_models = self.connection_service.get_all_links(self.current_category_id)
-        self.category_link_table.load_links(view_models) # 此加载不应再触发线程更新
-        self.list_view.load_links(view_models)
+        # 🆕 提示：此处不再手动 load_links，因为 ConnectionService 
+        # 会通过 signal_bus 发射 data_refreshed 信号，驱动 _load_data 执行。
 
     def _on_category_selected(self, category_id: str):
         self.current_category_id = category_id
@@ -201,17 +202,29 @@ class ConnectedView(BasePageView):
     def _on_action_clicked(self, link_id: str, action: str):
         """单项操作"""
         if action == "establish":
-            success, msg = self.connection_service.establish_connection_by_id(link_id)
-            if success: InfoBar.success(t("common.success"), msg, parent=self)
-            else: InfoBar.error(t("common.error"), msg, parent=self)
+            operation_runner.run_task_async(
+                self.connection_service.establish_connection_by_id, 
+                link_id, 
+                title="正在建立连接",
+                parent=self,
+                on_finished=lambda s, m, d: self._load_data() if s else None
+            )
         elif action == "disconnect":
-            success, msg = self.connection_service.disconnect_connection(link_id)
-            if success: InfoBar.success(t("common.success"), msg, parent=self)
-            else: InfoBar.error(t("common.error"), msg, parent=self)
+            operation_runner.run_task_async(
+                self.connection_service.disconnect_connection, 
+                link_id, 
+                title="正在断开连接",
+                parent=self,
+                on_finished=lambda s, m, d: self._load_data() if s else None
+            )
         elif action == "reconnect":
-            success, msg = self.connection_service.reconnect_connection(link_id)
-            if success: InfoBar.success(t("common.success"), msg, parent=self)
-            else: InfoBar.error(t("common.error"), msg, parent=self)
+            operation_runner.run_task_async(
+                self.connection_service.reconnect_connection, 
+                link_id, 
+                title="正在重新连接",
+                parent=self,
+                on_finished=lambda s, m, d: self._load_data() if s else None
+            )
         elif action == "edit":
             link = service_bus.user_manager.get_link_by_id(link_id)
             if link:
@@ -219,7 +232,7 @@ class ConnectedView(BasePageView):
                 dialog = EditLinkDialog(link, self)
                 if dialog.exec():
                     self._load_data()
-            return # 编辑不需要触发全量刷新，dialog 内部会处理或手动触发
+            return 
         elif action == "delete":
             link = service_bus.user_manager.get_link_by_id(link_id)
             if not link: return
@@ -229,37 +242,48 @@ class ConnectedView(BasePageView):
             if MessageBox(title, msg, self).exec():
                 service_bus.user_manager.remove_link(link_id)
                 InfoBar.success(t("common.success"), t("connected.batch_remove"), parent=self)
-            else:
-                return # 取消则不刷新
-        
-        self._load_data()
+                self._load_data()
+            return
+
 
     def _on_batch_establish(self):
         checked_ids = self._get_checked_ids()
         if not checked_ids: return
         
-        success, fail = self.connection_service.batch_establish(checked_ids)
-        InfoBar.success("批量建立完成", f"成功: {success}, 失败: {fail}", parent=self)
-        self._load_data()
-        self._clear_all_selection()
+        operation_runner.run_batch_task_async(
+            checked_ids,
+            self.connection_service.establish_connection_by_id,
+            "批量建立连接",
+            lambda lid: f"正在建立: {self.user_manager.get_link_by_id(lid).name}",
+            parent=self,
+            on_finished=lambda s, m, d: (self._load_data(), self._clear_all_selection())
+        )
 
     def _on_batch_disconnect(self):
         checked_ids = self._get_checked_ids()
         if not checked_ids: return
         
-        success, fail = self.connection_service.batch_disconnect(checked_ids)
-        InfoBar.success("批量断开完成", f"成功: {success}, 失败: {fail}", parent=self)
-        self._load_data()
-        self._clear_all_selection()
+        operation_runner.run_batch_task_async(
+            checked_ids,
+            self.connection_service.disconnect_connection,
+            "批量断开连接",
+            lambda lid: f"正在断开: {self.user_manager.get_link_by_id(lid).name}",
+            parent=self,
+            on_finished=lambda s, m, d: (self._load_data(), self._clear_all_selection())
+        )
 
     def _on_batch_remove(self):
         checked_ids = self._get_checked_ids()
         if not checked_ids: return
         if MessageBox("确认移除", f"确定要移除选中的 {len(checked_ids)} 个连接配置吗？", self).exec():
-            for lid in checked_ids:
-                service_bus.user_manager.remove_link(lid)
-            self._load_data()
-            self._clear_all_selection()
+            operation_runner.run_batch_task_async(
+                checked_ids,
+                self.user_manager.remove_link,
+                "批量移除配置",
+                lambda lid: f"正在移除: {self.user_manager.get_link_by_id(lid).name}",
+                parent=self,
+                on_finished=lambda s, m, d: (self._load_data(), self._clear_all_selection())
+            )
 
     def _get_checked_ids(self) -> List[str]:
         if self.view_stack.currentIndex() == 0:

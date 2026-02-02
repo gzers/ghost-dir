@@ -138,7 +138,7 @@ class ConnectionService:
         
         worker = SizeWorker()
         worker.finished.connect(on_finished_callback)
-        worker.finished.connect(lambda results: self._on_size_batch_done(results))
+        worker.finished.connect(self._on_size_batch_done)
         self._async_runners['size_calc'] = worker
         worker.finished.connect(self._reset_calc_flag)
         worker.start()
@@ -148,9 +148,13 @@ class ConnectionService:
         self._size_calc_running = False
 
     def _on_size_batch_done(self, results: Dict[str, int]):
-        """批量更新大小缓存"""
+        """批量更新大小缓存并持久化"""
         for lid, size in results.items():
             self.user_manager.update_link_size(lid, size)
+        
+        # 🆕 显式广播数据已刷新信号，通知所有 UI 组件重新读取已持久化的数据
+        from src.common.signals import signal_bus
+        signal_bus.data_refreshed.emit()
 
     def batch_establish(self, link_ids: List[str]) -> Tuple[int, int]:
         """批量建立连接 (返回: 成功数, 失败数)"""
