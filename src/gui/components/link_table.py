@@ -157,31 +157,35 @@ class LinkTable(BaseTableWidget):
         return widget
 
     def _on_row_checked_changed(self):
-        """处理行勾选状态改变 - 使用绑定数据而非物理索引"""
-        # 注意：此处不再调用 super()._on_row_checked_changed()，因为我们要处理排序兼容性
-        # 计算数量
-        count = sum(1 for cb in self.checkboxes.values() if cb.isChecked())
+        """处理行勾选状态改变 - 鲁棒性增强版本"""
+        # 获取选中的 ID 列表
+        selected_ids = self.get_selected_links()
+        count = len(selected_ids)
         self.checked_changed.emit(count)
         
-        # 同步表头
+        # 同步表头复选框状态
         if self.header_checkbox:
             self.header_checkbox.blockSignals(True)
-            total = len(self.checkboxes)
+            total = self.rowCount()
+            # 只有当选中数量等于总行数且总行数大于 0 时，表头才勾选
             self.header_checkbox.setChecked(count == total and total > 0)
             self.header_checkbox.blockSignals(False)
 
         # 发射业务信号
-        selected_ids = self.get_selected_links()
         self.link_selected.emit(selected_ids)
 
     def get_selected_links(self) -> list:
         """获取当前勾选的连接 ID 列表 - 强鲁棒版本"""
         selected_ids = []
-        for cb in self.checkboxes.values():
-            if cb.isChecked():
-                lid = cb.property("link_id")
-                if lid:
-                    selected_ids.append(lid)
+        for row in range(self.rowCount()):
+            container = self.cellWidget(row, 0)
+            if container:
+                from qfluentwidgets import CheckBox
+                cb = container.findChild(CheckBox)
+                if cb and cb.isChecked():
+                    lid = cb.property("link_id")
+                    if lid:
+                        selected_ids.append(lid)
         return selected_ids
 
     def set_all_sizes_loading(self):
