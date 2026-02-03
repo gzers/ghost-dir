@@ -81,10 +81,15 @@ class ConnectedView(BasePageView):
         self.refresh_btn.setToolTip(t("connected.refresh_status"))
         self.refresh_btn.clicked.connect(lambda: self._load_data(refresh_size=True))
 
+        self.help_btn = ToolButton(FIF.HELP)
+        self.help_btn.setToolTip(t("connected.status_help_title"))
+        self.help_btn.clicked.connect(self._on_show_status_help)
+
         toolbar.addWidget(self.search_edit)
         toolbar.addSpacing(8)
         toolbar.addWidget(self.view_pivot)
         toolbar.addWidget(self.refresh_btn)
+        toolbar.addWidget(self.help_btn)
 
     def _setup_content(self):
         """设置主内容区"""
@@ -180,8 +185,48 @@ class ConnectedView(BasePageView):
             self._state_tooltip.setState(True)
             self._state_tooltip = None
         
-        # 🆕 提示：此处不再手动 load_links，因为 ConnectionService 
-        # 会通过 signal_bus 发射 data_refreshed 信号，驱动 _load_data 执行。
+    def _on_show_status_help(self):
+        """显示状态定义说明"""
+        from src.gui.styles.utils.color_utils import get_status_colors, get_text_secondary, get_divider_color
+        colors = get_status_colors()
+        sec_color = get_text_secondary()
+        border_color = get_divider_color()
+        
+        title = t("connected.status_help_title")
+        
+        # 封装表格行 html，使用 table 解决换行对齐问题，使用 SVG 圆点解决显示不全问题
+        def get_row_html(status_key, label_key):
+            color = colors.get(status_key, "#808080")
+            status_name = t(f"connected.status_{status_key}")
+            desc = t(f"connected.{label_key}")
+            # 使用简单的 SVG 确保圆点在富文本中不被截断且居中
+            dot_svg = f"""<svg width="12" height="12"><circle cx="6" cy="6" r="5" fill="{color}" /></svg>"""
+            return f"""
+                <tr>
+                    <td style="padding: 10px 8px; vertical-align: top; width: 80px;">
+                        <span style="white-space: nowrap;">{dot_svg} <b>{status_name}</b></span>
+                    </td>
+                    <td style="padding: 10px 8px; vertical-align: top; color: {sec_color};">
+                        {desc}
+                    </td>
+                </tr>
+            """
+
+        content = f"""
+            <table style="width: 100%; border-collapse: collapse;">
+                {get_row_html('connected', 'status_connected_desc')}
+                {get_row_html('disconnected', 'status_disconnected_desc')}
+                {get_row_html('ready', 'status_ready_desc')}
+                {get_row_html('invalid', 'status_invalid_desc')}
+            </table>
+        """
+        
+        # 使用 MessageBox 并配置单一居中按钮
+        msg = MessageBox(title, "", self)
+        msg.titleLabel.setText(title)
+        msg.contentLabel.setText(content) # QLabel 使用 setText 渲染 HTML
+        msg.cancelButton.hide() # 隐藏取消按钮，使 OK 按钮自动居中
+        msg.exec()
 
     def _on_category_selected(self, category_id: str):
         self.current_category_id = category_id
