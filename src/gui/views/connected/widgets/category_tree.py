@@ -40,17 +40,31 @@ class CategoryTree(TreeWidget):
 
     def _update_theme_style(self):
         """更新主题样式"""
-        self.setStyleSheet("""
-            CategoryTree {
+        from src.gui.styles.utils import color_utils
+        text_color = color_utils.get_text_primary()
+        selected_bg = color_utils.get_item_selected_background()
+        
+        self.setStyleSheet(f"""
+            CategoryTree {{
                 background: transparent;
                 border: none;
                 outline: none;
                 padding: 12px 0;
-            }
-            QTreeWidget::item {
+                color: {text_color};
+            }}
+            QTreeWidget::item {{
                 padding: 8px 12px;
                 background: transparent;
-            }
+                border-radius: 4px;
+                margin: 2px 8px;
+            }}
+            QTreeWidget::item:hover {{
+                background: {selected_bg};
+            }}
+            QTreeWidget::item:selected {{
+                background: {selected_bg};
+                color: {text_color};
+            }}
         """)
 
     def _on_theme_changed(self, theme):
@@ -62,7 +76,8 @@ class CategoryTree(TreeWidget):
         self.clear()
         
         # 1. 添加"全部"节点
-        all_item = QTreeWidgetItem(["全部"])
+        total_count = len(self.user_manager.get_all_links())
+        all_item = QTreeWidgetItem([f"全部 ({total_count})"])
         all_item.setData(0, Qt.ItemDataRole.UserRole, "all")
         self.addTopLevelItem(all_item)
         

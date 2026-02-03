@@ -41,6 +41,7 @@ class UserManager:
         self.theme_color: str = DEFAULT_THEME_COLOR          # 主题色
         self.startup_page: str = DEFAULT_STARTUP_PAGE        # 首次打开：wizard/connected/library
         self.default_link_view: str = DEFAULT_LINK_VIEW      # 默认视图：list/category
+        self.transparency: bool = True                       # 是否开启透明效果
         
         # 集成分类管理器
         from src.data.category_manager import CategoryManager
@@ -95,6 +96,7 @@ class UserManager:
             self.theme_color = data.get('theme_color', DEFAULT_THEME_COLOR)  # 主题色
             self.startup_page = data.get('startup_page', DEFAULT_STARTUP_PAGE)  # 首次打开
             self.default_link_view = data.get('default_link_view', DEFAULT_LINK_VIEW)  # 默认视图
+            self.transparency = data.get('transparency', True)                         # 透明效果
             
             # 确保有默认分类
             if not any(c.name == DEFAULT_CATEGORY for c in self.categories):
@@ -129,6 +131,8 @@ class UserManager:
             data['startup_page'] = DEFAULT_STARTUP_PAGE
         if 'default_link_view' not in data:
             data['default_link_view'] = DEFAULT_LINK_VIEW
+        if 'transparency' not in data:
+            data['transparency'] = True
 
         # 补全链接的全路径字段
         for link in data.get('links', []):
@@ -165,7 +169,8 @@ class UserManager:
                 'theme': self.theme,
                 'theme_color': self.theme_color,
                 'startup_page': self.startup_page,
-                'default_link_view': self.default_link_view
+                'default_link_view': self.default_link_view,
+                'transparency': self.transparency
             }
 
             with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
@@ -464,6 +469,20 @@ class UserManager:
     def get_theme_color(self) -> str:
         """获取主题色"""
         return self.theme_color
+
+    def set_transparency(self, enabled: bool) -> bool:
+        """设置透明效果"""
+        try:
+            self.transparency = enabled
+            self._save_data()
+            return True
+        except Exception as e:
+            print(f"设置透明效果时出错: {e}")
+            return False
+
+    def get_transparency(self) -> bool:
+        """获取透明效果状态"""
+        return self.transparency
 
     def _enrich_link_path(self, link: UserLink):
         """为单个链接填充分类全路径信息"""
