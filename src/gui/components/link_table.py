@@ -196,7 +196,12 @@ class LinkTable(BaseTableWidget):
     def set_row_size_loading(self, row: int, is_loading: bool):
         """设置某一行空间占用列的加载状态"""
         if is_loading:
-            # 插入进度环
+            # 1. 先清空原本的文字内容，避免并存
+            size_item = self.item(row, 4)
+            if size_item:
+                size_item.setText("")
+            
+            # 2. 插入进度环
             loading_container = QWidget()
             loading_container.setStyleSheet("background: transparent;")
             layout = QHBoxLayout(loading_container)
@@ -210,7 +215,5 @@ class LinkTable(BaseTableWidget):
             layout.addWidget(ring)
             self.setCellWidget(row, 4, loading_container)
         else:
-            # 恢复文字在 _create_row 或动态更新时处理，这里暂时由 load_links 重新加载刷新
-            # 如果需要立即清除，可以设置为空 Item 或按 load_links 逻辑处理
-            # 实际上 load_links 已经重新创建了行，所以通常不需要手动恢复
-            pass
+            # 清除单元格中的 Widget (ProgressRing)
+            self.removeCellWidget(row, 4)
