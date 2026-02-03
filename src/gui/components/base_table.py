@@ -130,6 +130,7 @@ class BaseTableWidget(TableWidget):
     def create_checkbox_cell(self, row: int, enabled: bool = True) -> CheckBox:
         """为特定行创建并设置复选框单元格，返回该复选框对象"""
         cb_container = QWidget()
+        cb_container.setObjectName("checkboxContainer") # 方便查找
         cb_container.setFixedHeight(40)
         cb_container.setStyleSheet("background: transparent; border: none;")
         cb_layout = QHBoxLayout(cb_container)
@@ -142,19 +143,21 @@ class BaseTableWidget(TableWidget):
         cb_layout.setSpacing(0)
         
         self.setCellWidget(row, 0, cb_container)
-        self.checkboxes[row] = cb
+        
+        # 不再按行号存字典，直接连接信号
         cb.stateChanged.connect(self._on_row_checked_changed)
         return cb
 
     def _on_row_checked_changed(self):
         """处理行勾选状态改变"""
-        count = sum(1 for cb in self.checkboxes.values() if cb.isChecked())
+        checked_rows = self.get_checked_rows()
+        count = len(checked_rows)
         self.checked_changed.emit(count)
         
         # 同步表头复选框状态
         if self.header_checkbox:
             self.header_checkbox.blockSignals(True)
-            total = len(self.checkboxes)
+            total = self.rowCount()
             if count == 0:
                 self.header_checkbox.setChecked(False)
             elif count == total and total > 0:
@@ -166,15 +169,26 @@ class BaseTableWidget(TableWidget):
     def _on_header_checked_changed(self, state):
         """处理表头勾选状态改变"""
         is_checked = state == Qt.CheckState.Checked.value
-        for cb in self.checkboxes.values():
-            cb.blockSignals(True)
-            cb.setChecked(is_checked)
-            cb.blockSignals(False)
+        for row in range(self.rowCount()):
+            container = self.cellWidget(row, 0)
+            if container:
+                cb = container.findChild(CheckBox)
+                if cb and cb.isEnabled(): # 仅处理启用的复选框
+                    cb.blockSignals(True)
+                    cb.setChecked(is_checked)
+                    cb.blockSignals(False)
         self._on_row_checked_changed()
 
     def get_checked_rows(self) -> List[int]:
-        """获取所有已勾选的行索引"""
-        return [row for row, cb in self.checkboxes.items() if cb.isChecked()]
+        """获取所有已勾选的行索引 (支持排序后的动态获取)"""
+        checked = []
+        for row in range(self.rowCount()):
+            container = self.cellWidget(row, 0)
+            if container:
+                cb = container.findChild(CheckBox)
+                if cb and cb.isChecked():
+                    checked.append(row)
+        return checked
 
     def reset_checkbox_state(self):
         """重置所有复选框状态"""
@@ -187,10 +201,14 @@ class BaseTableWidget(TableWidget):
 
     def clear_selection(self):
         """取消勾选所有行"""
-        for cb in self.checkboxes.values():
-            cb.blockSignals(True)
-            cb.setChecked(False)
-            cb.blockSignals(False)
+        for row in range(self.rowCount()):
+            container = self.cellWidget(row, 0)
+            if container:
+                cb = container.findChild(CheckBox)
+                if cb:
+                    cb.blockSignals(True)
+                    cb.setChecked(False)
+                    cb.blockSignals(False)
         if self.header_checkbox:
             self.header_checkbox.blockSignals(True)
             self.header_checkbox.setChecked(False)

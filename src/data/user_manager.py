@@ -337,9 +337,13 @@ class UserManager:
     def remove_custom_template(self, template_id: str) -> bool:
         """删除自定义模版"""
         try:
+            initial_count = len(self.custom_templates)
             self.custom_templates = [t for t in self.custom_templates if t.id != template_id]
-            self._save_data()
-            return True
+            
+            if len(self.custom_templates) < initial_count:
+                self._save_data()
+                return True
+            return False
         except Exception as e:
             print(f"删除自定义模版时出错: {e}")
             return False

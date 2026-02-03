@@ -11,7 +11,8 @@
       "default_target": "D:\\Ghost_Library\\Steam",
       "description": "Steam 游戏安装目录",
       "category_path_code": "games/platforms",
-      "category_path_name": "游戏/游戏平台"
+      "category_path_name": "游戏/游戏平台",
+      "is_custom": false
     },
     {
       "id": "chrome",
@@ -21,7 +22,8 @@
       "default_target": "D:\\Ghost_Library\\Chrome",
       "description": "Chrome 浏览器缓存和用户数据",
       "category_path_code": "browsers",
-      "category_path_name": "浏览器"
+      "category_path_name": "浏览器",
+      "is_custom": false
     },
     {
       "id": "wechat",
@@ -31,7 +33,8 @@
       "default_target": "D:\\Ghost_Library\\WeChat",
       "description": "微信聊天记录和文件",
       "category_path_code": "social/im",
-      "category_path_name": "社交/即时通讯"
+      "category_path_name": "社交/即时通讯",
+      "is_custom": false
     },
     {
       "id": "qq",
@@ -41,7 +44,8 @@
       "default_target": "D:\\Ghost_Library\\QQ",
       "description": "QQ 聊天记录和文件",
       "category_path_code": "social/im",
-      "category_path_name": "社交/即时通讯"
+      "category_path_name": "社交/即时通讯",
+      "is_custom": false
     },
     {
       "id": "vscode",
@@ -51,7 +55,8 @@
       "default_target": "D:\\Ghost_Library\\VSCode",
       "description": "Visual Studio Code 扩展目录",
       "category_path_code": "dev_tools/editors",
-      "category_path_name": "开发工具/编辑器"
+      "category_path_name": "开发工具/编辑器",
+      "is_custom": false
     },
     {
       "id": "onedrive",
@@ -61,7 +66,8 @@
       "default_target": "D:\\Ghost_Library\\OneDrive",
       "description": "OneDrive 同步文件夹",
       "category_path_code": "cloud_storage",
-      "category_path_name": "云存储"
+      "category_path_name": "云存储",
+      "is_custom": false
     },
     {
       "id": "razer_core",
@@ -71,7 +77,8 @@
       "default_target": "D:\\Software\\Devices\\Razer\\Program Files\\Razer",
       "description": "Razer 核心组件目录",
       "category_path_code": "hardware",
-      "category_path_name": "硬件与驱动"
+      "category_path_name": "硬件与驱动",
+      "is_custom": false
     },
     {
       "id": "razer_chroma_sdk_x86",
@@ -81,7 +88,8 @@
       "default_target": "D:\\Software\\Devices\\Razer\\Program Files (x86)\\Razer Chroma SDK",
       "description": "雷蛇幻彩灯效 SDK (32位)",
       "category_path_code": "hardware",
-      "category_path_name": "硬件与驱动"
+      "category_path_name": "硬件与驱动",
+      "is_custom": false
     },
     {
       "id": "razer_x86",
@@ -91,7 +99,8 @@
       "default_target": "D:\\Software\\Devices\\Razer\\Program Files (x86)\\Razer",
       "description": "Razer 32位应用程序目录",
       "category_path_code": "hardware",
-      "category_path_name": "硬件与驱动"
+      "category_path_name": "硬件与驱动",
+      "is_custom": false
     },
     {
       "id": "razer_chroma_sdk",
@@ -101,7 +110,8 @@
       "default_target": "D:\\Software\\Devices\\Razer\\Program Files\\Razer Chroma SDK",
       "description": "雷蛇幻彩灯效 SDK (64位)",
       "category_path_code": "hardware",
-      "category_path_name": "硬件与驱动"
+      "category_path_name": "硬件与驱动",
+      "is_custom": false
     },
     {
       "id": "yeelight_station",
@@ -111,7 +121,8 @@
       "default_target": "D:\\Software\\Devices\\Yeelight Station",
       "description": "Yeelight 智能灯光控制台",
       "category_path_code": "hardware",
-      "category_path_name": "硬件与驱动"
+      "category_path_name": "硬件与驱动",
+      "is_custom": false
     },
     {
       "id": "adobe_common_files",
@@ -121,7 +132,8 @@
       "default_target": "D:\\Software\\Adobe\\Common\\Common Files",
       "description": "Adobe 共享库文件",
       "category_path_code": "office",
-      "category_path_name": "办公软件"
+      "category_path_name": "办公软件",
+      "is_custom": false
     },
     {
       "id": "adobe_program_files",
@@ -131,7 +143,8 @@
       "default_target": "D:\\Software\\Adobe\\Common\\Program Files",
       "description": "Adobe 系列软件 64位安装根目录",
       "category_path_code": "office",
-      "category_path_name": "办公软件"
+      "category_path_name": "办公软件",
+      "is_custom": false
     },
     {
       "id": "adobe_program_files_x86",
@@ -141,7 +154,8 @@
       "default_target": "D:\\Software\\Adobe\\Common\\Program Files (x86)",
       "description": "Adobe 系列软件 32位安装根目录",
       "category_path_code": "office",
-      "category_path_name": "办公软件"
+      "category_path_name": "办公软件",
+      "is_custom": false
     },
     {
       "id": "pyenv_win_versions",
@@ -151,7 +165,8 @@
       "default_target": "D:\\Software\\Develop\\PyEnv-Win\\versions",
       "description": "PyEnv-Win 管理的所有 Python 解释器版本",
       "category_path_code": "dev_tools",
-      "category_path_name": "开发工具"
+      "category_path_name": "开发工具",
+      "is_custom": false
     },
     {
       "id": "comfyui_appdata",
@@ -161,7 +176,8 @@
       "default_target": "E:\\Users\\{UserName}\\WorkSpace\\AI\\ComfyUI\\AppData",
       "description": "ComfyUI 的用户设置和扩展插件",
       "category_path_code": "dev_tools",
-      "category_path_name": "开发工具"
+      "category_path_name": "开发工具",
+      "is_custom": false
     },
     {
       "id": "comfyui_program",
@@ -171,7 +187,8 @@
       "default_target": "E:\\Users\\{UserName}\\WorkSpace\\AI\\ComfyUI\\Program",
       "description": "ComfyUI 工作流与数据",
       "category_path_code": "dev_tools",
-      "category_path_name": "开发工具"
+      "category_path_name": "开发工具",
+      "is_custom": false
     },
     {
       "id": "ea_electronic_arts",
@@ -181,7 +198,8 @@
       "default_target": "D:\\Games\\EA\\Electronic Arts",
       "description": "EA 平台基础组件",
       "category_path_code": "games/platforms",
-      "category_path_name": "游戏/游戏平台"
+      "category_path_name": "游戏/游戏平台",
+      "is_custom": false
     },
     {
       "id": "ea_desktop",
@@ -191,7 +209,8 @@
       "default_target": "D:\\Games\\EA\\EA",
       "description": "EA Desktop 应用程序目录",
       "category_path_code": "games/platforms",
-      "category_path_name": "游戏/游戏平台"
+      "category_path_name": "游戏/游戏平台",
+      "is_custom": false
     },
     {
       "id": "epic_games_store",
@@ -201,7 +220,8 @@
       "default_target": "D:\\Games\\Epic",
       "description": "Epic 游戏平台安装目录",
       "category_path_code": "games/platforms",
-      "category_path_name": "游戏/游戏平台"
+      "category_path_name": "游戏/游戏平台",
+      "is_custom": false
     },
     {
       "id": "repo_drivers",
@@ -211,7 +231,8 @@
       "default_target": "E:\\Drivers",
       "description": "驱动安装包备份仓库",
       "category_path_code": "user_data",
-      "category_path_name": "个人数据"
+      "category_path_name": "个人数据",
+      "is_custom": false
     },
     {
       "id": "repo_cloud_drive",
@@ -221,7 +242,8 @@
       "default_target": "E:\\Users\\{UserName}\\Drive",
       "description": "同步盘/云盘本地目录",
       "category_path_code": "user_data",
-      "category_path_name": "个人数据"
+      "category_path_name": "个人数据",
+      "is_custom": false
     },
     {
       "id": "repo_themes",
@@ -231,7 +253,8 @@
       "default_target": "E:\\Users\\{UserName}\\Theme",
       "description": "壁纸、图标与个性化主题存放地",
       "category_path_code": "user_data",
-      "category_path_name": "个人数据"
+      "category_path_name": "个人数据",
+      "is_custom": false
     },
     {
       "id": "repo_workspace",
@@ -241,7 +264,8 @@
       "default_target": "E:\\Users\\{UserName}\\WorkSpace",
       "description": "个人代码与开发项目",
       "category_path_code": "user_data",
-      "category_path_name": "个人数据"
+      "category_path_name": "个人数据",
+      "is_custom": false
     },
     {
       "id": "repo_videos",
@@ -251,7 +275,8 @@
       "default_target": "E:\\Users\\{UserName}\\Videos",
       "description": "电影、视频录制存放目录",
       "category_path_code": "user_data",
-      "category_path_name": "个人数据"
+      "category_path_name": "个人数据",
+      "is_custom": false
     },
     {
       "id": "repo_pictures",
@@ -261,7 +286,8 @@
       "default_target": "E:\\Users\\{UserName}\\Pictures",
       "description": "静态图片与照片存放目录",
       "category_path_code": "user_data",
-      "category_path_name": "个人数据"
+      "category_path_name": "个人数据",
+      "is_custom": false
     },
     {
       "id": "repo_downloads",
@@ -271,7 +297,8 @@
       "default_target": "E:\\Users\\{UserName}\\Downloads",
       "description": "系统默认下载路径重定向",
       "category_path_code": "user_data",
-      "category_path_name": "个人数据"
+      "category_path_name": "个人数据",
+      "is_custom": false
     }
   ]
 }

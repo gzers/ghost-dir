@@ -143,9 +143,16 @@ class TemplateService:
             else:
                 errors.append(f"{tid}: {msg}")
         
+        if success_count > 0:
+            self.manager.load_templates()
+            
         if not errors:
-            return True, f"成功删除 {success_count} 个模板"
-        return success_count > 0, f"删除了 {success_count} 个，失败 {len(errors)} 个"
+            return True, f"成功删除 {success_count} 个自定义模板"
+        
+        msg = f"删除了 {success_count} 个自定义模板"
+        if len(errors) > 0:
+            msg += f"，跳过了 {len(errors)} 个内置或受保护项目"
+        return success_count > 0, msg
 
     def export_to_file(self, file_path: str, options: Dict) -> Tuple[bool, str]:
         """导出业务落地"""

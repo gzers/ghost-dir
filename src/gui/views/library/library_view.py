@@ -107,6 +107,7 @@ class LibraryView(BasePageView):
 
         # 批量操作栏
         self.batch_toolbar = BatchToolbar(self)
+        self.batch_toolbar.set_mode("library")
         self.batch_toolbar.hide()
         content_layout.addWidget(self.batch_toolbar)
 

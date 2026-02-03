@@ -2,7 +2,7 @@ from typing import List, Dict
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtWidgets import QTableWidgetItem, QHeaderView, QWidget, QHBoxLayout
-from qfluentwidgets import FluentIcon, RoundMenu, Action, TransparentToolButton, InfoBar, InfoBarPosition
+from qfluentwidgets import FluentIcon, RoundMenu, Action, TransparentToolButton, InfoBar, InfoBarPosition, CheckBox
 from src.data.model import Template
 from src.gui.components import BaseTableWidget
 
@@ -72,13 +72,18 @@ class TemplateTableWidget(BaseTableWidget):
         
         self.setRowCount(len(templates))
         for i, template in enumerate(templates):
-            # 0. 复选框容器 (使用基类)
-            self.create_checkbox_cell(i, enabled=allow_operations)
-            
-            # 同时在第 0 列设置数据项用于存储 ID
+            # 0. 同时在第 0 列设置数据项用于存储 ID (必须在 setCellWidget 之前，否则可能由于重新创建项导致 Widget 被清除)
             id_item = QTableWidgetItem()
             id_item.setData(Qt.ItemDataRole.UserRole, template.id)
             self.setItem(i, 0, id_item)
+            
+            # 1. 复选框容器 (使用基类)
+            # v7.4.1: 如果是内置模板且 allow_operations 为 True (普通视图模式)，禁用复选框
+            is_selectable = template.is_custom if allow_operations else False
+            cb = self.create_checkbox_cell(i, enabled=is_selectable)
+            cb.setProperty("template_id", template.id) 
+            if not template.is_custom:
+                cb.setToolTip("系统内置模板，无法删除或修改")
             
             # 1. 名称
             name_item = QTableWidgetItem(template.name)
@@ -211,9 +216,18 @@ class TemplateTableWidget(BaseTableWidget):
             self.sort_states[self.current_category_id] = (column, order)
 
     def get_checked_template_ids(self) -> List[str]:
-        """获取所有已勾选的模板ID"""
+        """获取所有已勾选的模板ID (增强版：双重校验确保 ID 准确)"""
         ids = []
         for row in self.get_checked_rows():
+            # 1. 优先从 CheckBox 属性获取 (最可靠，不受 Item 覆盖影响)
+            container = self.cellWidget(row, 0)
+            if container:
+                cb = container.findChild(CheckBox)
+                if cb and cb.property("template_id"):
+                    ids.append(cb.property("template_id"))
+                    continue
+            
+            # 2. 备选方案：从 QTableWidgetItem 获取
             id_item = self.item(row, 0)
             if id_item:
                 ids.append(id_item.data(Qt.ItemDataRole.UserRole))
