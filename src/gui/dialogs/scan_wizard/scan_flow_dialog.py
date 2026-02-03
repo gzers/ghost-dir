@@ -104,8 +104,12 @@ class ScanFlowDialog(MessageBoxBase):
         self.scroll_area = ScrollArea()
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setFrameShape(ScrollArea.NoFrame)
+        # 设置透明背景
+        self.scroll_area.setStyleSheet("QScrollArea { background: transparent; border: none; }")
         
         self.list_container = QWidget()
+        # 设置透明背景
+        self.list_container.setStyleSheet("QWidget { background: transparent; }")
         self.list_layout = QVBoxLayout(self.list_container)
         self.list_layout.setContentsMargins(0, 0, 16, 0)
         self.list_layout.setSpacing(12)

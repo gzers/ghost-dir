@@ -72,15 +72,8 @@ class ValidatedLineEdit(LineEdit):
         self._is_valid = is_valid
         self._error_message = error_msg
         
-        # 更新 UI 状态
-        if not is_valid:
-            from src.gui.styles import get_error_color
-            error_color = get_error_color()
-            self.setStyleSheet(f"ValidatedLineEdit {{ border: 1px solid {error_color}; border-bottom: 2px solid {error_color}; }}")
-        else:
-            self.setStyleSheet("")
-            
-        self.style().polish(self)
+        # 更新 UI 状态 - 使用 QFluentWidgets 官方方法
+        self.setError(not is_valid)
         
         # 发送信号
         self.validationChanged.emit(is_valid, error_msg)

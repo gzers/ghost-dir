@@ -1,7 +1,6 @@
 """
 新增连接对话框
 """
-from PySide6.QtWidgets import QTabWidget
 from PySide6.QtCore import Signal
 from qfluentwidgets import MessageBoxBase
 from src.data.template_manager import TemplateManager
@@ -28,22 +27,50 @@ class AddLinkDialog(MessageBoxBase):
     
     def _init_ui(self):
         """初始化 UI"""
-        # 创建标签页
-        self.tabWidget = QTabWidget()
+        from PySide6.QtWidgets import QVBoxLayout, QStackedWidget
+        from qfluentwidgets import SegmentedWidget
+        
+        # 创建主布局容器
+        container = QVBoxLayout()
+        container.setContentsMargins(0, 0, 0, 0)
+        container.setSpacing(12)
+        
+        # 创建分段导航栏（官方组件）
+        self.pivot = SegmentedWidget()
+        
+        # 创建堆栈视图
+        self.stackedWidget = QStackedWidget()
         
         # Tab 1: 从模版库选择
         self.templateTab = TemplateTabWidget(self.template_manager, self.user_manager)
         self.templateTab.template_selected_signal.connect(self._on_template_selected)
         self.templateTab.manage_categories_requested.connect(self._on_manage_categories)
-        self.tabWidget.addTab(self.templateTab, "从模版库选择")
         
         # Tab 2: 自定义
         self.customTab = CustomTabWidget(self.user_manager)
         self.customTab.manage_categories_requested.connect(self._on_manage_categories)
-        self.tabWidget.addTab(self.customTab, "自定义")
+        
+        # 添加到堆栈和导航栏
+        self.stackedWidget.addWidget(self.templateTab)
+        self.stackedWidget.addWidget(self.customTab)
+        self.pivot.addItem(routeKey='template', text='从模版库选择')
+        self.pivot.addItem(routeKey='custom', text='自定义')
+        
+        # 连接导航切换信号
+        self.pivot.currentItemChanged.connect(self._on_pivot_changed)
+        self.pivot.setCurrentItem('template')
+        
+        # 添加到容器
+        container.addWidget(self.pivot)
+        container.addWidget(self.stackedWidget)
+        
+        # 创建包装器 widget
+        from PySide6.QtWidgets import QWidget
+        wrapper = QWidget()
+        wrapper.setLayout(container)
         
         # 添加到视图
-        self.viewLayout.addWidget(self.tabWidget)
+        self.viewLayout.addWidget(wrapper)
         
         # 按钮
         self.yesButton.setText("添加")
@@ -51,6 +78,11 @@ class AddLinkDialog(MessageBoxBase):
         
         self.widget.setMinimumWidth(600)
         self.widget.setMinimumHeight(500)
+    
+    def _on_pivot_changed(self, key):
+        """导航切换回调"""
+        index = 0 if key == 'template' else 1
+        self.stackedWidget.setCurrentIndex(index)
     
     def _on_template_selected(self, template):
         """模版选中回调"""
@@ -70,7 +102,7 @@ class AddLinkDialog(MessageBoxBase):
     
     def validate(self):
         """验证并添加"""
-        if self.tabWidget.currentIndex() == 0:  # 从模版添加
+        if self.stackedWidget.currentIndex() == 0:  # 从模版添加
             name = self.templateTab.nameEdit.text().strip()
             source = self.templateTab.sourceEdit.text().strip()
             target = self.templateTab.targetEdit.text().strip()
@@ -104,7 +136,7 @@ class AddLinkDialog(MessageBoxBase):
         # 添加到用户数据
         if self.user_manager.add_link(link):
             # 处理保存为模版
-            if self.tabWidget.currentIndex() == 1 and self.customTab.saveAsTemplateBtn.isChecked():
+            if self.stackedWidget.currentIndex() == 1 and self.customTab.saveAsTemplateBtn.isChecked():
                 new_template = Template(
                     id=str(uuid.uuid4()),
                     name=name,

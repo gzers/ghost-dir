@@ -62,23 +62,18 @@ class GhostDirApp(QApplication):
 
     def _apply_theme(self, theme: str):
         """应用主题设置"""
-        theme_map = {
-            "system": Theme.AUTO,
-            "light": Theme.LIGHT,
-            "dark": Theme.DARK
-        }
-        setTheme(theme_map.get(theme, Theme.AUTO))
+        try:
+            theme_map = {
+                "system": Theme.AUTO,
+                "light": Theme.LIGHT,
+                "dark": Theme.DARK
+            }
+            setTheme(theme_map.get(theme, Theme.AUTO))
 
-        # 启动或停止系统主题监听器
-        if theme == "system":
-            if not self.system_theme_listener.isRunning():
-                self.system_theme_listener.start()
-        else:
-            if self.system_theme_listener.isRunning():
-                self.system_theme_listener.stop()
-
-        # 主题切换完成后处理
-        self._onThemeChangedFinished()
+            # 主题切换完成后处理
+            self._onThemeChangedFinished()
+        except Exception as e:
+            print(f"应用主题失败: {e}")
 
     def _on_system_theme_changed(self, theme: Theme):
         """系统主题变化回调"""
@@ -88,9 +83,8 @@ class GhostDirApp(QApplication):
     def _onThemeChangedFinished(self):
         """主题切换完成后的处理"""
         # 刷新窗口云母特效（如果有主窗口实例）
-        # 注意：这里需要延迟刷新以确保主题已经完全切换
         from PySide6.QtCore import QTimer
-        QTimer.singleShot(100, self._refresh_mica_effect)
+        QTimer.singleShot(200, self._refresh_mica_effect)
 
     def _refresh_mica_effect(self):
         """刷新窗口云母特效"""

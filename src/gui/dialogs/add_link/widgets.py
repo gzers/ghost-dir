@@ -37,6 +37,24 @@ class TemplateTabWidget(QWidget):
         # 模版列表
         self.templateList = QListWidget()
         self.templateList.itemClicked.connect(self._on_item_clicked)
+        
+        # 使用官方响应式样式方案
+        from qfluentwidgets import setCustomStyleSheet
+        setCustomStyleSheet(
+            self.templateList,
+            lightQss="""
+                QListWidget { background: transparent; border: none; color: #1F1F1F; }
+                QListWidget::item { padding: 8px; border-radius: 4px; color: #1F1F1F; }
+                QListWidget::item:hover { background: rgba(0, 0, 0, 0.05); }
+                QListWidget::item:selected { background: rgba(0, 0, 0, 0.1); }
+            """,
+            darkQss="""
+                QListWidget { background: transparent; border: none; color: #FFFFFF; }
+                QListWidget::item { padding: 8px; border-radius: 4px; color: #FFFFFF; }
+                QListWidget::item:hover { background: rgba(255, 255, 255, 0.05); }
+                QListWidget::item:selected { background: rgba(255, 255, 255, 0.1); }
+            """
+        )
         layout.addWidget(self.templateList)
         
         # 详情区域
@@ -50,13 +68,13 @@ class TemplateTabWidget(QWidget):
         
         self.sourceEdit = ValidatedLineEdit()
         self.sourceEdit.addValidator(PathValidator())
-        self.sourceEdit.setPlaceholderText("源路径 (C 盘)")
+        self.sourceEdit.setPlaceholderText("源路径")
         details_layout.addWidget(BodyLabel("源路径:"))
         details_layout.addWidget(self.sourceEdit)
         
         self.targetEdit = ValidatedLineEdit()
         self.targetEdit.addValidator(PathValidator())
-        self.targetEdit.setPlaceholderText("目标路径 (D 盘)")
+        self.targetEdit.setPlaceholderText("目标路径")
         details_layout.addWidget(BodyLabel("目标路径:"))
         details_layout.addWidget(self.targetEdit)
         
@@ -141,14 +159,14 @@ class CustomTabWidget(QWidget):
         
         self.customSourceEdit = ValidatedLineEdit()
         self.customSourceEdit.addValidator(PathValidator())
-        self.customSourceEdit.setPlaceholderText("C:\\...")
-        layout.addWidget(BodyLabel("源路径 (C 盘):"))
+        self.customSourceEdit.setPlaceholderText("源路径...")
+        layout.addWidget(BodyLabel("源路径:"))
         layout.addWidget(self.customSourceEdit)
         
         self.customTargetEdit = ValidatedLineEdit()
         self.customTargetEdit.addValidator(PathValidator())
-        self.customTargetEdit.setPlaceholderText("D:\\...")
-        layout.addWidget(BodyLabel("目标路径 (D 盘):"))
+        self.customTargetEdit.setPlaceholderText("目标路径...")
+        layout.addWidget(BodyLabel("目标路径:"))
         layout.addWidget(self.customTargetEdit)
         
         self.customCategorySelector = CategorySelector()
@@ -170,6 +188,14 @@ class CustomTabWidget(QWidget):
         
         layout.addStretch()
         self.refresh_categories()
+        
+        # 为所有 BodyLabel 应用响应式主题
+        from qfluentwidgets import setCustomStyleSheet
+        setCustomStyleSheet(
+            self,
+            lightQss="BodyLabel { color: #1F1F1F; }",
+            darkQss="BodyLabel { color: #FFFFFF; }"
+        )
 
     def refresh_categories(self):
         """刷新分类列表"""

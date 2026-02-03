@@ -36,55 +36,61 @@ class InternalCategoryTree(TreeWidget):
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.setAnimated(True)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.setIndentation(20)  # 设置缩进,为展开/收缩指示器留出空间
+        self.setIndentation(20)
         self.setSelectionBehavior(QTreeWidget.SelectionBehavior.SelectRows)
-        apply_transparent_style(self)
-        self._apply_style()
-
-    def _apply_style(self, theme_color: str = None):
-        """应用统一样式"""
-        from src.gui.styles import get_accent_color, get_font_style, get_text_primary
+        self.setUniformRowHeights(True)
         
-        accent_color = theme_color
-        if not accent_color and self.user_manager:
-            accent_color = self.user_manager.get_theme_color()
+        # 使用官方最可靠的响应式样式适配方案
+        from qfluentwidgets import setCustomStyleSheet
+        from src.gui.styles import get_font_family, get_font_size, get_font_weight
         
-        if not accent_color or accent_color == "system":
-            accent_color = get_accent_color()
-            
-        font_style = get_font_style(size="md", weight="normal")
-        text_primary = get_text_primary()
+        font_family = get_font_family()
+        font_size = get_font_size("md")
+        font_weight = get_font_weight("normal")
         
-        qss = f"""
-            TreeWidget {{
+        # 基础样式模板
+        qss_base = f"""
+            InternalCategoryTree {{
                 background: transparent;
                 border: none;
                 outline: none;
-                {font_style}
+                font-family: {font_family};
+                font-size: {font_size}px;
+                font-weight: {font_weight};
             }}
-            TreeWidget::item {{
-                color: {text_primary};
+            QTreeWidget::item {{
                 height: 36px;
                 padding-left: 12px;
-                margin: 0px;
-            }}
-            TreeWidget::branch {{
                 background: transparent;
-                width: 24px;
+                border: none;
+            }}
+            QTreeWidget::branch {{
+                background: transparent;
             }}
         """
-        setCustomStyleSheet(self, qss, qss)
         
-        # 关键: 设置统一行高,避免展开/折叠时的布局抖动
-        self.setUniformRowHeights(True)
+        setCustomStyleSheet(
+            self,
+            lightQss=qss_base + """
+                InternalCategoryTree { color: #1F1F1F; }
+                QTreeWidget::item { color: #1F1F1F; }
+                QTreeWidget::item:hover, QTreeWidget::item:selected { background: rgba(0, 0, 0, 0.05); }
+                QTreeWidget::item:selected { color: #1F1F1F; }
+            """,
+            darkQss=qss_base + """
+                InternalCategoryTree { color: #FFFFFF; }
+                QTreeWidget::item { color: #FFFFFF; }
+                QTreeWidget::item:hover, QTreeWidget::item:selected { background: rgba(255, 255, 255, 0.08); }
+                QTreeWidget::item:selected { color: #FFFFFF; }
+            """
+        )
+
+
 
     def _connect_signals(self):
         """连接内部和外部信号"""
         self.itemClicked.connect(self._on_item_clicked)
         self.customContextMenuRequested.connect(self._on_context_menu)
-        
-        from src.common.signals import signal_bus
-        signal_bus.theme_color_changed.connect(self._apply_style)
     
     def load_categories(self):
         """加载分类树"""
@@ -251,7 +257,12 @@ class CategoryTreeWidget(QWidget):
         self.toolbar_layout.setSpacing(2)
 
         self.title_label = StrongBodyLabel("分类")
-        self.title_label.setStyleSheet(f"color: {get_text_secondary()}; font-weight: bold;")
+        from qfluentwidgets import setCustomStyleSheet
+        setCustomStyleSheet(
+            self.title_label,
+            lightQss="color: #606060; font-weight: bold;",
+            darkQss="color: #B0B0B0; font-weight: bold;"
+        )
         self.toolbar_layout.addWidget(self.title_label)
         self.toolbar_layout.addStretch()
 
@@ -271,7 +282,6 @@ class CategoryTreeWidget(QWidget):
 
         self.main_layout.addLayout(self.toolbar_layout)
 
-        # 2. 内部树视图
         self.tree = InternalCategoryTree(self.category_manager, self.user_manager, self)
         self.main_layout.addWidget(self.tree)
 
