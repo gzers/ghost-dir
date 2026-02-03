@@ -81,7 +81,7 @@ class CategoryManagerDialog(MessageBoxBase):
         self.cancelSortButton.hide()
         toolbar_layout.addWidget(self.cancelSortButton)
         
-        self.helpButton = PushButton(FluentIcon.INFO, t("library.btn_help"))
+        self.helpButton = PushButton(FluentIcon.HELP, t("library.btn_help"))
         self.helpButton.clicked.connect(self._show_help)
         toolbar_layout.addWidget(self.helpButton)
         
