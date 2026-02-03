@@ -230,6 +230,7 @@ class ConnectedView(BasePageView):
         msg.titleLabel.setText(title)
         msg.contentLabel.setText(content) # QLabel 使用 setText 渲染 HTML
         msg.cancelButton.hide() # 隐藏取消按钮，使 OK 按钮自动居中
+        msg.yesButton.setFixedWidth(120)
         msg.exec()
 
     def _on_category_selected(self, category_id: str):
