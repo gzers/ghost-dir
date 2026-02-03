@@ -111,6 +111,8 @@ class ConnectedView(BasePageView):
         self.splitter.addWidget(self.category_tree)
         self.splitter.addWidget(self.view_stack)
         self.splitter.setStretchFactor(1, 1)
+        self.splitter.setHandleWidth(1)
+        self.splitter.setStyleSheet("QSplitter::handle { background: transparent; }")
         apply_transparent_style(self.splitter)
         
         content_layout.addWidget(self.splitter, 1)
