@@ -2,6 +2,7 @@
 排版工具函数
 获取字体、大小、粗细、行高及层级规范
 """
+import typing
 from typing import Dict, Any
 from src.gui.styles.constants import typography
 
@@ -9,9 +10,11 @@ def get_font_family() -> str:
     """获取默认字体族"""
     return typography.FONT_FAMILY
 
-def get_font_size(size: str = "md") -> int:
+def get_font_size(size: typing.Union[str, int] = "md") -> int:
     """获取字体大小像素值"""
-    return typography.FONT_SIZES.get(size, typography.FONT_SIZES["md"])
+    if isinstance(size, int):
+        return size if size > 0 else 14
+    return typography.FONT_SIZES.get(str(size), 14)
 
 def get_font_weight(weight: str = "normal") -> int:
     """获取字体粗细数值"""

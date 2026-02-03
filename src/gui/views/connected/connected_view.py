@@ -41,8 +41,7 @@ class ConnectedView(BasePageView):
         self.user_manager = service_bus.user_manager
         
         self.current_category_id: str = "all"
-
-        self.current_category_id: str = "all"
+        self._state_tooltip: Optional[StateToolTip] = None
 
         # 构建界面
         self._setup_toolbar()
@@ -156,6 +155,15 @@ class ConnectedView(BasePageView):
         if refresh_size and view_models:
             # 🆕 UI 反馈：通知表格进入加载状态
             self.category_link_table.set_all_sizes_loading()
+            
+            # 显示状态提示
+            self._state_tooltip = StateToolTip(
+                "正在统计空间占用",
+                "计算中，请稍候...",
+                self.window()
+            )
+            self._state_tooltip.show()
+
             # 注意：FlatLinkView 也需要这个支持，如果它是基于列表的视图
             if hasattr(self.list_view, 'table'):
                 self.list_view.table.set_all_sizes_loading()

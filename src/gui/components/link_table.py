@@ -94,7 +94,10 @@ class LinkTable(BaseTableWidget):
         
         badge = StatusBadge(link.status)
         status_layout.addWidget(badge)
-        status_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        # 确保无边距且双轴居中
+        status_layout.setContentsMargins(0, 0, 0, 0)
+        status_layout.setSpacing(0)
+        status_layout.setAlignment(Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter)
         self.setCellWidget(row, 3, status_widget)
         
         # 4. 占用空间
