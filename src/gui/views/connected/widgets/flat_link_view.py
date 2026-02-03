@@ -116,15 +116,16 @@ class LinkItemWidget(QWidget):
         title_layout = QHBoxLayout()
         self.name_label = BodyLabel(self.link.name, self)
         
-        cat_name = get_category_text(self.link.category)
+        # 优先使用全路径名称 (尝试引用 ViewModel 的 category_path 或 DataModel 的 category_path_name)
+        full_path = getattr(self.link, 'category_path', "") or getattr(self.link, 'category_path_name', "")
+        cat_name = full_path or get_category_text(self.link.category)
         self.category_label = CaptionLabel(cat_name, self)
         
         # 设置分类全路径 Tooltip
-        full_path = getattr(self.link, 'category_path_name', "")
         if full_path:
             self.category_label.setToolTip(full_path)
         else:
-            self.category_label.setToolTip(cat_name)
+            self.category_label.setToolTip(get_category_text(self.link.category))
         
         # 使用 QGraphicsOpacityEffect 实现透明度
         op = QGraphicsOpacityEffect(self.category_label)
