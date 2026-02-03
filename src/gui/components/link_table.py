@@ -85,20 +85,12 @@ class LinkTable(BaseTableWidget):
         cat_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
         self.setItem(row, 2, cat_item)
 
-        # 3. 状态 (使用可视化的 StatusBadge)
+        # 3. 状态 (使用标准对齐容器包装 StatusBadge)
         from .status_badge import StatusBadge
-        status_widget = QWidget()
-        status_widget.setStyleSheet("background: transparent; border: none;")
-        status_layout = QHBoxLayout(status_widget)
-        status_layout.setContentsMargins(0, 0, 0, 0)
-        
+        container = self.create_alignment_container()
         badge = StatusBadge(link.status)
-        status_layout.addWidget(badge)
-        # 确保无边距且双轴居中
-        status_layout.setContentsMargins(0, 0, 0, 0)
-        status_layout.setSpacing(0)
-        status_layout.setAlignment(Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter)
-        self.setCellWidget(row, 3, status_widget)
+        container.layout().addWidget(badge)
+        self.setCellWidget(row, 3, container)
         
         # 4. 占用空间
         size_text = format_size(link.last_known_size) if link.last_known_size > 0 else "未计算"
@@ -115,12 +107,9 @@ class LinkTable(BaseTableWidget):
 
     def _create_action_buttons(self, link: UserLink) -> QWidget:
         """创建操作按钮组"""
-        widget = QWidget()
-        widget.setStyleSheet("background: transparent; border: none;")
-        layout = QHBoxLayout(widget)
-        layout.setContentsMargins(0, 0, 0, 0)
+        container = self.create_alignment_container()
+        layout = container.layout()
         layout.setSpacing(8)
-        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
         # 获取状态字符串值进行比较
         status_val = link.status.value if hasattr(link.status, 'value') else link.status
@@ -134,30 +123,30 @@ class LinkTable(BaseTableWidget):
         ]
         
         if status_val in to_connect_statues:
-            btn = TransparentToolButton(FluentIcon.PLAY_SOLID, widget)
+            btn = TransparentToolButton(FluentIcon.PLAY_SOLID, container)
             btn.setToolTip("建立连接")
             btn.clicked.connect(lambda: self.action_clicked.emit(link.id, "establish"))
             layout.addWidget(btn)
         elif status_val == (LinkStatus.CONNECTED.value if hasattr(LinkStatus.CONNECTED, 'value') else LinkStatus.CONNECTED):
-            btn = TransparentToolButton(FluentIcon.CLOSE, widget)
+            btn = TransparentToolButton(FluentIcon.CLOSE, container)
             btn.setToolTip("断开连接")
             btn.clicked.connect(lambda: self.action_clicked.emit(link.id, "disconnect"))
             layout.addWidget(btn)
 
         
         # 通用编辑按钮
-        edit_btn = TransparentToolButton(FluentIcon.EDIT, widget)
+        edit_btn = TransparentToolButton(FluentIcon.EDIT, container)
         edit_btn.setToolTip("编辑连接信息")
         edit_btn.clicked.connect(lambda: self.action_clicked.emit(link.id, "edit"))
         layout.addWidget(edit_btn)
         
         # 通用删除按钮
-        del_btn = TransparentToolButton(FluentIcon.DELETE, widget)
+        del_btn = TransparentToolButton(FluentIcon.DELETE, container)
         del_btn.setToolTip("删除链接记录")
         del_btn.clicked.connect(lambda: self.action_clicked.emit(link.id, "delete"))
         layout.addWidget(del_btn)
         
-        return widget
+        return container
 
     def _on_row_checked_changed(self):
         """处理行勾选状态改变 - 鲁棒性增强版本"""
@@ -204,19 +193,13 @@ class LinkTable(BaseTableWidget):
             if size_item:
                 size_item.setText("")
             
-            # 2. 插入进度环
-            loading_container = QWidget()
-            loading_container.setStyleSheet("background: transparent;")
-            layout = QHBoxLayout(loading_container)
-            layout.setContentsMargins(0, 0, 0, 0)
-            layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            
-            ring = IndeterminateProgressRing(loading_container)
-            ring.setFixedSize(16, 16) # 小巧的进度环
+            # 2. 插入进度环 (使用标准对齐容器)
+            container = self.create_alignment_container()
+            ring = IndeterminateProgressRing(container)
+            ring.setFixedSize(16, 16)
             ring.setStrokeWidth(2)
-            
-            layout.addWidget(ring)
-            self.setCellWidget(row, 4, loading_container)
+            container.layout().addWidget(ring)
+            self.setCellWidget(row, 4, container)
         else:
             # 清除单元格中的 Widget (ProgressRing)
             self.removeCellWidget(row, 4)

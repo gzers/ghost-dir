@@ -127,24 +127,31 @@ class BaseTableWidget(TableWidget):
         signal_bus.theme_color_changed.connect(self._apply_base_style)
         signal_bus.theme_changed.connect(self._apply_base_style)
 
+    def create_alignment_container(self, alignment=Qt.AlignmentFlag.AlignCenter) -> QWidget:
+        """创建一个标准化的对齐容器，确保垂直居中"""
+        container = QWidget()
+        container.setFixedHeight(40) # 对应默认行高
+        container.setStyleSheet("background: transparent; border: none;")
+        layout = QHBoxLayout(container)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        # 强制包含垂直居中，除非子类明确覆盖
+        layout.setAlignment(alignment | Qt.AlignmentFlag.AlignVCenter)
+        return container
+
     def create_checkbox_cell(self, row: int, enabled: bool = True) -> CheckBox:
         """为特定行创建并设置复选框单元格，返回该复选框对象"""
-        cb_container = QWidget()
-        cb_container.setObjectName("checkboxContainer") # 方便查找
-        cb_container.setFixedHeight(40)
-        cb_container.setStyleSheet("background: transparent; border: none;")
-        cb_layout = QHBoxLayout(cb_container)
+        container = self.create_alignment_container()
+        container.setObjectName("checkboxContainer")
+        
         cb = CheckBox()
         cb.setEnabled(enabled)
         cb.setText("")
-        cb_layout.addWidget(cb)
-        cb_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        cb_layout.setContentsMargins(0, 0, 0, 0)
-        cb_layout.setSpacing(0)
+        container.layout().addWidget(cb)
         
-        self.setCellWidget(row, 0, cb_container)
+        self.setCellWidget(row, 0, container)
         
-        # 不再按行号存字典，直接连接信号
+        # 连接信号
         cb.stateChanged.connect(self._on_row_checked_changed)
         return cb
 
@@ -218,3 +225,6 @@ class BaseTableWidget(TableWidget):
     def ensure_row_height(self):
         """强制对齐行高"""
         self.verticalHeader().setDefaultSectionSize(40)
+        # 确保现有行也遵循此高度
+        for row in range(self.rowCount()):
+            self.setRowHeight(row, 40)
