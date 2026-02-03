@@ -84,4 +84,7 @@ CONNECTED_TEXTS = {
     "target_path": "目标路径",
     "confirm_remove_title": "确认移除",
     "confirm_remove_msg": "确定要移除选中的 {count} 个连接吗？\n这不会删除实际文件。",
+    "edit_path_locked_tip": "当前连接已建立，如需修改路径请先断开连接。",
+    "edit_rule_title": "路径编辑规则",
+    "edit_rule_desc": "为了确保连接的完整性，仅在<b>非正常（未连接、就绪、失效）</b>状态下允许修改路径。若连接已建立，请先执行「断开连接」后再进行路径调整。",
 }

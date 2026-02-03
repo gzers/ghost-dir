@@ -219,6 +219,10 @@ class ConnectedView(BasePageView):
                 {get_row_html('ready', 'status_ready_desc')}
                 {get_row_html('invalid', 'status_invalid_desc')}
             </table>
+            <div style="margin-top: 15px; border-top: 1px solid {border_color}; padding-top: 15px;">
+                <b style="font-size: 14px;">{t('connected.edit_rule_title')}</b>
+                <p style="margin-top: 8px; color: {sec_color}; line-height: 1.5;">{t('connected.edit_rule_desc')}</p>
+            </div>
         """
         
         # 使用 MessageBox 并配置单一居中按钮

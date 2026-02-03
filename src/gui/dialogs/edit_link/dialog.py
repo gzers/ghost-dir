@@ -7,7 +7,7 @@ from qfluentwidgets import MessageBoxBase, LineEdit, BodyLabel, PushButton
 from src.data.user_manager import UserManager
 from src.data.category_manager import CategoryManager
 from src.gui.components import CategorySelector
-from src.data.model import UserLink
+from src.data.model import UserLink, LinkStatus
 from src.gui.i18n import t
 
 
@@ -22,6 +22,7 @@ class EditLinkDialog(MessageBoxBase):
         self.user_manager = UserManager()
         
         self.setWindowTitle(t("connected.edit_link"))
+        self.is_connected = self.link.status == LinkStatus.CONNECTED
         self._init_ui()
         self._load_data()
     
@@ -38,16 +39,22 @@ class EditLinkDialog(MessageBoxBase):
         # 源路径
         self.sourceEdit = LineEdit()
         self.sourceEdit.setPlaceholderText("C:\\...")
-        self.sourceEdit.setReadOnly(True)  # 源路径通常不建议修改，因为事务已建立
+        self.sourceEdit.setReadOnly(self.is_connected)
         layout.addWidget(BodyLabel(t("connected.source_path")))
         layout.addWidget(self.sourceEdit)
         
         # 目标路径
         self.targetEdit = LineEdit()
         self.targetEdit.setPlaceholderText("D:\\...")
-        self.targetEdit.setReadOnly(True)  # 同上
+        self.targetEdit.setReadOnly(self.is_connected)
         layout.addWidget(BodyLabel(t("connected.target_path")))
         layout.addWidget(self.targetEdit)
+
+        # 锁定提示
+        if self.is_connected:
+            tip_label = BodyLabel(t("connected.edit_path_locked_tip"))
+            tip_label.setStyleSheet("color: #666; font-size: 12px;")
+            layout.addWidget(tip_label)
         
         # 分类
         self.categorySelector = CategorySelector()
@@ -85,6 +92,11 @@ class EditLinkDialog(MessageBoxBase):
         # 更新对象
         self.link.name = name
         self.link.category = category
+        
+        # 如果未连接，允许更新路径
+        if not self.is_connected:
+            self.link.source_path = self.sourceEdit.text().strip()
+            self.link.target_path = self.targetEdit.text().strip()
         
         # 保存到数据库
         if self.user_manager.update_link(self.link):
