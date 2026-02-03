@@ -18,6 +18,7 @@ def run_task_async(
     *args,
     title: str = "正在处理...",
     parent: QWidget = None,
+    on_start: typing.Callable[[], None] = None,
     on_finished: typing.Callable[[bool, str, typing.Any], None] = None,
     **kwargs
 ):
@@ -28,32 +29,26 @@ def run_task_async(
         func: 要执行的函数
         *args: 函数参数
         title: 初始提示标题
-        parent: 父窗口（用于定位 ToolTip）
+        parent: 父窗口
+        on_start: 任务开始前的回调
         on_finished: 完成后的回调 (success, msg, data)
     """
-    tooltip = StateToolTip(title, "请稍候...", parent)
-    tooltip.show()
-    
+    if on_start:
+        on_start()
+
     worker = SimpleTaskWorker(func, *args, **kwargs)
     
     def _on_done(success: bool, msg: str, data: typing.Any):
-        from PySide6.QtCore import QTimer
-        
-        # 更新显示内容
-        tooltip.setContent(msg + (" ✓" if success else " ✗"))
-        tooltip.setState(success)
-        
-        # 失败处理：立即弹出报错信息并强制关闭 ToolTip，消除视觉干扰
+        # 统一使用原生带图标的 InfoBar 反馈内容
+        # 位置统一修正为项目定义的 'TopCenter' (字符串驱动)
         if not success:
-            tooltip.close()
             InfoBar.error(t("common.error"), msg, duration=5000, position='TopCenter', parent=parent)
         else:
-            # 成功时，保留 1.5 秒动画后自动销毁
-            QTimer.singleShot(1500, tooltip.close)
+            InfoBar.success(t("common.success"), msg, duration=2000, position='TopCenter', parent=parent)
         
         if on_finished:
             on_finished(success, msg, data)
-            
+        
         # 延迟清理引用
         task_id = f"task_{id(worker)}"
         _runners.pop(task_id, None)

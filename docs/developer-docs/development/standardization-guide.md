@@ -97,3 +97,28 @@ display_name = get_category_text(link.category_id)
 - **Service** 可以调用 **Engine**。
 - **Engine层** 必须保持纯净, **严禁** 导入 `src.core.services` 或任何 GUI/数据管理层逻辑。
 - 底层原子操作应优先封装在辅助函数或 `*Engine` 静态类中。
+
+---
+
+## 6. UI/UX 交互与布局规约 (UX Standards)
+
+### 6.1 表格垂直居中 (Vertical Alignment)
+为了解决自定义单元格组件（如 Badge, Button, ProgressRing）与普通文字在表格行中基线不一致的问题, 遵循 **对齐代理容器 (Alignment Proxy)** 模式。
+
+- **标准高度**: 容器高度固定为 **40px** (与表格默认行高一致)。
+- **对齐方式**: 容器布局强制设为 `Qt.AlignmentFlag.AlignVCenter`。
+- **工厂方法**: 优先使用基类定义的 `create_alignment_container()` 以保证一致性。
+
+### 6.2 异步操作通知 (Notification Norms)
+反馈系统必须遵循全局一致的物理视觉中心。
+
+- **位置规范**: 所有的操作反馈通知 (Success/Error `InfoBar`) 必须统一定位在窗口 **顶部中心**。在调用时传递位置参数字符串 `'TopCenter'`。
+- **反馈标准**: 
+    - **去冗余化**: 异步执行中 **禁止** 使用 `StateToolTip` (紫色气泡) 进行辅助反馈，以免遮挡操作行或造成视觉噪点。
+    - **原生驱动**: 必须直接使用 `InfoBar.success` 或 `InfoBar.error` 静态方法，确保自动带有官方标准的成功/错误图标。
+
+### 6.3 平滑加载动画 (Loading Feedback)
+对于任何耗时超过 500ms 的局部操作, **必须** 提供上下文感知的反馈。
+
+- **行内反馈**: 在表格单元格操作中, 必须使用 `IndeterminateProgressRing` (16x16) 替代原始文字或按钮。
+- **生命周期绑定**: 加载动画应与异步任务的 `on_start` 和 `on_finished` 回调严格绑定, 禁止让界面进入“无感知的静止”状态。

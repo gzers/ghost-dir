@@ -254,29 +254,43 @@ class ConnectedView(BasePageView):
 
     def _on_action_clicked(self, link_id: str, action: str):
         """单项操作"""
+        from qfluentwidgets import InfoBarPosition
+        
         if action == "establish":
             operation_runner.run_task_async(
                 self.connection_service.establish_connection_by_id, 
                 link_id, 
-                title="正在建立连接",
+                title=t("connected.establish"),
                 parent=self,
-                on_finished=lambda s, m, d: self._load_data() if s else None
+                on_start=lambda: self.category_link_table.show_loading(link_id, True),
+                on_finished=lambda s, m, d: (
+                    self.category_link_table.show_loading(link_id, False),
+                    self._load_data() if s else None
+                )
             )
         elif action == "disconnect":
             operation_runner.run_task_async(
                 self.connection_service.disconnect_connection, 
                 link_id, 
-                title="正在断开连接",
+                title=t("connected.disconnect"),
                 parent=self,
-                on_finished=lambda s, m, d: self._load_data() if s else None
+                on_start=lambda: self.category_link_table.show_loading(link_id, True),
+                on_finished=lambda s, m, d: (
+                    self.category_link_table.show_loading(link_id, False),
+                    self._load_data() if s else None
+                )
             )
         elif action == "reconnect":
             operation_runner.run_task_async(
                 self.connection_service.reconnect_connection, 
                 link_id, 
-                title="正在重新连接",
+                title=t("connected.reconnect"),
                 parent=self,
-                on_finished=lambda s, m, d: self._load_data() if s else None
+                on_start=lambda: self.category_link_table.show_loading(link_id, True),
+                on_finished=lambda s, m, d: (
+                    self.category_link_table.show_loading(link_id, False),
+                    self._load_data() if s else None
+                )
             )
         elif action == "edit":
             link = service_bus.user_manager.get_link_by_id(link_id)
@@ -294,7 +308,13 @@ class ConnectedView(BasePageView):
             msg = t("connected.msg_delete_confirm").format(name=link.name)
             if MessageBox(title, msg, self).exec():
                 service_bus.user_manager.remove_link(link_id)
-                InfoBar.success(t("common.success"), t("connected.batch_remove"), duration=2000, position='TopCenter', parent=self)
+                InfoBar.success(
+                    t("common.success"), 
+                    t("connected.batch_remove"), 
+                    duration=2000, 
+                    position=InfoBarPosition.TOP_CENTER, 
+                    parent=self
+                )
                 self._load_data()
             return
 

@@ -203,3 +203,11 @@ class LinkTable(BaseTableWidget):
         else:
             # 清除单元格中的 Widget (ProgressRing)
             self.removeCellWidget(row, 4)
+
+    def show_loading(self, link_id: str, is_loading: bool):
+        """根据 ID 查找行并显示加载状态"""
+        for row in range(self.rowCount()):
+            item = self.item(row, 1)
+            if item and item.data(Qt.ItemDataRole.UserRole) == link_id:
+                self.set_row_size_loading(row, is_loading)
+                break
