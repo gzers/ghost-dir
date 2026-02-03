@@ -123,20 +123,22 @@ class LinkTable(BaseTableWidget):
         status_val = link.status.value if hasattr(link.status, 'value') else link.status
         
         # 使用更轻量的按钮样式以匹配视觉
-        if status_val == LinkStatus.DISCONNECTED.value:
-            btn = TransparentToolButton(FluentIcon.LINK, widget)
+        # 交互逻辑统一化：失效、就绪、断开均视为“待建立”
+        to_connect_statues = [
+            LinkStatus.DISCONNECTED.value if hasattr(LinkStatus.DISCONNECTED, 'value') else LinkStatus.DISCONNECTED,
+            LinkStatus.READY.value if hasattr(LinkStatus.READY, 'value') else LinkStatus.READY,
+            LinkStatus.INVALID.value if hasattr(LinkStatus.INVALID, 'value') else LinkStatus.INVALID
+        ]
+        
+        if status_val in to_connect_statues:
+            btn = TransparentToolButton(FluentIcon.PLAY_SOLID, widget)
             btn.setToolTip("建立连接")
             btn.clicked.connect(lambda: self.action_clicked.emit(link.id, "establish"))
             layout.addWidget(btn)
-        elif status_val == LinkStatus.CONNECTED.value:
+        elif status_val == (LinkStatus.CONNECTED.value if hasattr(LinkStatus.CONNECTED, 'value') else LinkStatus.CONNECTED):
             btn = TransparentToolButton(FluentIcon.CLOSE, widget)
             btn.setToolTip("断开连接")
             btn.clicked.connect(lambda: self.action_clicked.emit(link.id, "disconnect"))
-            layout.addWidget(btn)
-        elif status_val == LinkStatus.READY.value:
-            btn = TransparentToolButton(FluentIcon.SYNC, widget)
-            btn.setToolTip("重新连接")
-            btn.clicked.connect(lambda: self.action_clicked.emit(link.id, "reconnect"))
             layout.addWidget(btn)
 
         

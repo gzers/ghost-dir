@@ -241,7 +241,7 @@ class ConnectedView(BasePageView):
             msg = t("connected.msg_delete_confirm").format(name=link.name)
             if MessageBox(title, msg, self).exec():
                 service_bus.user_manager.remove_link(link_id)
-                InfoBar.success(t("common.success"), t("connected.batch_remove"), parent=self)
+                InfoBar.success(t("common.success"), t("connected.batch_remove"), duration=2000, position='TopCenter', parent=self)
                 self._load_data()
             return
 

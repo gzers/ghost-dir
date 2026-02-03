@@ -159,11 +159,14 @@ class LinkItemWidget(QWidget):
 
     def setup_actions(self, layout):
         """根据状态设置操作按钮"""
-        if self.link.status == LinkStatus.DISCONNECTED:
-            btn = TransparentToolButton(FluentIcon.LINK, self)
+        # 建立连接：适用于“未连接”、“就绪”、“失效/异常”状态
+        if self.link.status in [LinkStatus.DISCONNECTED, LinkStatus.READY, LinkStatus.INVALID]:
+            btn = TransparentToolButton(FluentIcon.PLAY_SOLID, self)
             btn.setToolTip("建立连接")
             btn.clicked.connect(lambda: self.action_clicked.emit(self.link.id, "establish"))
             layout.addWidget(btn)
+        
+        # 断开连接：仅适用于“已连接”状态
         elif self.link.status == LinkStatus.CONNECTED:
             btn = TransparentToolButton(FluentIcon.CLOSE, self)
             btn.setToolTip("断开连接")

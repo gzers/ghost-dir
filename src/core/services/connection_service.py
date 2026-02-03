@@ -109,6 +109,10 @@ class ConnectionService:
             link.category
         )
 
+    def reconnect_connection(self, link_id: str) -> Tuple[bool, str]:
+        """重新连接 (接口别名，确保 UI 兼容)"""
+        return self.establish_connection_by_id(link_id)
+
     def calculate_sizes_async(self, link_ids: List[str], on_finished_callback):
         """异步触发大小计算"""
         links = []

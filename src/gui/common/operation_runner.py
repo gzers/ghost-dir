@@ -8,6 +8,7 @@ from qfluentwidgets import StateToolTip, InfoBar, InfoBarPosition
 from src.gui.common.task_runner import SimpleTaskWorker, BatchTaskWorker
 from src.gui.components.progress_dialog import ProgressDialog
 from src.gui.i18n import t
+import src.gui.common.notification # 确保注册自定义管理器
 
 # 全局运行器池，防止 Worker 被 GC 回收
 _runners: typing.Dict[str, typing.Any] = {}
@@ -36,8 +37,19 @@ def run_task_async(
     worker = SimpleTaskWorker(func, *args, **kwargs)
     
     def _on_done(success: bool, msg: str, data: typing.Any):
+        from PySide6.QtCore import QTimer
+        
+        # 更新显示内容
         tooltip.setContent(msg + (" ✓" if success else " ✗"))
         tooltip.setState(success)
+        
+        # 失败处理：立即弹出报错信息并强制关闭 ToolTip，消除视觉干扰
+        if not success:
+            tooltip.close()
+            InfoBar.error(t("common.error"), msg, duration=5000, position='TopCenter', parent=parent)
+        else:
+            # 成功时，保留 1.5 秒动画后自动销毁
+            QTimer.singleShot(1500, tooltip.close)
         
         if on_finished:
             on_finished(success, msg, data)
@@ -88,7 +100,7 @@ def run_batch_task_async(
         else:
             # 默认反馈
             target = parent if parent else None
-            InfoBar.success(t("common.success"), msg, parent=target)
+            InfoBar.success(t("common.success"), msg, position='TopCenter', parent=target)
             
         # 清理引用
         task_id = f"batch_{id(worker)}"

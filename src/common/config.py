@@ -90,15 +90,22 @@ LINK_VIEW_OPTIONS = [
 ]
 
 # ========== 系统路径黑名单 ==========
-# 系统路径黑名单（禁止操作这些路径）
-BLACKLIST_PATHS = [
-    "C:\\",
+# 核心黑名单：绝对禁止操作该目录及其下所有内容
+CORE_BLACKLIST = [
     "C:\\Windows",
+    "C:\\Users",
+]
+
+# 容器黑名单：禁止操作根目录本身，但允许管理其下的子目录（如具体软件）
+CONTAINER_BLACKLIST = [
+    "C:\\",
     "C:\\Program Files",
     "C:\\Program Files (x86)",
-    "C:\\Users",
     "C:\\ProgramData",
 ]
+
+# 导出汇总黑名单 (用于向后兼容或基础校验)
+BLACKLIST_PATHS = CORE_BLACKLIST + CONTAINER_BLACKLIST
 
 # UI 常量
 WINDOW_MIN_WIDTH = 1000

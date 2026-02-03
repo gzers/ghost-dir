@@ -23,11 +23,16 @@ def is_junction(path: str) -> bool:
     
     try:
         # 使用 os.path.islink 在 Windows 上可以检测 junction
-        return os.path.islink(path) or (
-            os.path.isdir(path) and 
+        # 补充：必须确保是目录才能进行属性检查
+        if os.path.islink(path):
+            return True
+        
+        # 检查属性是否包含 0x400 (Reparse Point)
+        return os.path.isdir(path) and (
             os.stat(path, follow_symlinks=False).st_file_attributes & 0x400
         )
-    except:
+    except Exception as e:
+        print(f"检查 {path} 是否为连接点时出错: {e}")
         return False
 
 
@@ -120,26 +125,43 @@ def remove_junction(path: str) -> bool:
         return False
 
 
-def validate_path(path: str, blacklist: list) -> bool:
+def validate_path(path: str, blacklist: list = None) -> bool:
     """
-    验证路径是否安全（不在黑名单中）
+    验证路径是否安全（分级黑名单校验）
+    
+    规则：
+    1. CORE_BLACKLIST: 绝对禁止（匹配路径本身或其任何子路径）
+    2. CONTAINER_BLACKLIST: 只禁止根（匹配路径本身禁止，但允许操作子目录）
     
     Args:
         path: 要验证的路径
-        blacklist: 黑名单路径列表
+        blacklist: 基础黑名单（兼容旧接口，主要使用 config 中的分级名单）
         
     Returns:
         True 如果安全，否则 False
     """
-    path_obj = Path(path).resolve()
+    from src.common.config import CORE_BLACKLIST, CONTAINER_BLACKLIST
     
-    for blocked in blacklist:
-        blocked_obj = Path(blocked).resolve()
-        try:
-            # 检查是否是黑名单路径或其子路径
-            path_obj.relative_to(blocked_obj)
-            return False
-        except ValueError:
-            continue
-    
-    return True
+    try:
+        path_obj = Path(path).resolve()
+        
+        # 1. 检查核心黑名单 (全封锁)
+        for blocked in CORE_BLACKLIST:
+            blocked_obj = Path(blocked).resolve()
+            try:
+                # 检查是否是黑名单路径或其子路径
+                path_obj.relative_to(blocked_obj)
+                return False
+            except ValueError:
+                continue
+                
+        # 2. 检查容器黑名单 (仅封锁根)
+        for blocked in CONTAINER_BLACKLIST:
+            blocked_obj = Path(blocked).resolve()
+            if path_obj == blocked_obj:
+                return False
+                
+        return True
+    except Exception as e:
+        print(f"路径验证出错: {e}")
+        return False
