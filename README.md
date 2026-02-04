@@ -278,7 +278,7 @@ if processes:
 - ✅ 详细的安装和使用指南
 
 查看完整更新日志：[CHANGELOG.md](docs/release/CHANGELOG.md)  
-查看发布说明：[v1.0.0.md](docs/release/v1.0.0.md)
+查看发布说明：[v1.0.0.md](docs/release/notes/v1.0.0.md)
 
 ## 📝 后续计划
 

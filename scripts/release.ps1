@@ -94,5 +94,5 @@ Write-Host "   - 使用 docs/release/copy.md 中的文案" -ForegroundColor Gray
 Write-Host "   - 上传 dist\$zipName" -ForegroundColor Gray
 Write-Host "   - SHA256: $hash" -ForegroundColor Gray
 Write-Host ""
-Write-Host "3. 发布文案位置：docs\release\copy.md" -ForegroundColor White
+Write-Host "3. 发布文案位置：docs\release\templates.md" -ForegroundColor White
 Write-Host ""
