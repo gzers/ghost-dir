@@ -97,8 +97,13 @@ class ConnectedView(BasePageView):
 
         self.splitter = QSplitter(Qt.Orientation.Horizontal)
         
-        # 分类树
-        self.category_tree = CategoryTreeWidget(self.category_manager, service_bus.user_manager)
+        # 分类树（显示连接数量）
+        self.category_tree = CategoryTreeWidget(
+            self.category_manager, 
+            service_bus.user_manager,
+            show_count=True,
+            count_provider=lambda cid: len(self.user_manager.get_links_by_category(cid)) if cid != "all" else len(self.user_manager.get_all_links())
+        )
         self.category_tree.setFixedWidth(240)
         
         # 堆栈视图

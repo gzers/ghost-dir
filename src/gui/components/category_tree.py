@@ -19,10 +19,13 @@ class InternalCategoryTree(TreeWidget):
     edit_category_requested = Signal(str)
     delete_category_requested = Signal(str)
     
-    def __init__(self, category_manager: CategoryManager, user_manager: Optional['UserManager'] = None, parent=None):
+    def __init__(self, category_manager: CategoryManager, user_manager: Optional['UserManager'] = None, 
+                 show_count: bool = False, count_provider: Optional[callable] = None, parent=None):
         super().__init__(parent)
         self.category_manager = category_manager
         self.user_manager = user_manager
+        self.show_count = show_count
+        self.count_provider = count_provider
         self.category_items = {}
         
         self._init_ui()
@@ -41,38 +44,53 @@ class InternalCategoryTree(TreeWidget):
         self._apply_style()
 
     def _apply_style(self, theme_color: str = None):
-        """应用统一样式"""
-        from src.gui.styles import get_accent_color, get_font_style, get_text_primary
+        """应用统一样式 - 使用明暗分离的 QSS"""
+        from src.gui.styles import get_font_family, get_font_size, get_font_weight
         
-        accent_color = theme_color
-        if not accent_color and self.user_manager:
-            accent_color = self.user_manager.get_theme_color()
+        font_family = get_font_family()
+        font_size = get_font_size("md")
+        font_weight = get_font_weight("normal")
         
-        if not accent_color or accent_color == "system":
-            accent_color = get_accent_color()
-            
-        font_style = get_font_style(size="md", weight="normal")
-        text_primary = get_text_primary()
-        
-        qss = f"""
+        # 基础样式模板
+        qss_base = f"""
             TreeWidget {{
                 background: transparent;
                 border: none;
                 outline: none;
-                {font_style}
+                font-family: {font_family};
+                font-size: {font_size}px;
+                font-weight: {font_weight};
             }}
             TreeWidget::item {{
-                color: {text_primary};
                 height: 36px;
                 padding-left: 12px;
                 margin: 0px;
+                background: transparent;
+                border: none;
             }}
             TreeWidget::branch {{
                 background: transparent;
                 width: 24px;
             }}
         """
-        setCustomStyleSheet(self, qss, qss)
+        
+        # 明亮主题样式
+        light_qss = qss_base + """
+            TreeWidget { color: #1F1F1F; }
+            TreeWidget::item { color: #1F1F1F; }
+            TreeWidget::item:hover, TreeWidget::item:selected { background: rgba(0, 0, 0, 0.05); }
+            TreeWidget::item:selected { color: #1F1F1F; }
+        """
+        
+        # 暗黑主题样式
+        dark_qss = qss_base + """
+            TreeWidget { color: #FFFFFF; }
+            TreeWidget::item { color: #FFFFFF; }
+            TreeWidget::item:hover, TreeWidget::item:selected { background: rgba(255, 255, 255, 0.08); }
+            TreeWidget::item:selected { color: #FFFFFF; }
+        """
+        
+        setCustomStyleSheet(self, light_qss, dark_qss)
         
         # 关键: 设置统一行高,避免展开/折叠时的布局抖动
         self.setUniformRowHeights(True)
@@ -84,6 +102,7 @@ class InternalCategoryTree(TreeWidget):
         
         from src.common.signals import signal_bus
         signal_bus.theme_color_changed.connect(self._apply_style)
+        signal_bus.theme_changed.connect(self._apply_style)  # 修复主题切换 Bug
     
     def load_categories(self):
         """加载分类树"""
@@ -92,10 +111,17 @@ class InternalCategoryTree(TreeWidget):
         
         root_categories = self.category_manager.get_category_tree()
         
-        # 1. 手动添加“全部”根节点
+        # 1. 手动添加"全部"根节点
         all_item = QTreeWidgetItem(self)
         all_item.setData(0, Qt.ItemDataRole.UserRole, "all")
-        all_item.setText(0, "全部")  # 直接设置文本,不使用自定义 widget
+        
+        # 根据配置决定是否显示数量
+        if self.show_count and self.count_provider:
+            count = self.count_provider("all")
+            all_item.setText(0, f"全部 ({count})")
+        else:
+            all_item.setText(0, "全部")
+        
         self.category_items["all"] = all_item
 
         # 默认选中“全部”
@@ -116,7 +142,14 @@ class InternalCategoryTree(TreeWidget):
             item = QTreeWidgetItem(self)
         
         item.setData(0, Qt.ItemDataRole.UserRole, category.id)
-        item.setText(0, category.name)  # 直接设置文本,不使用自定义 widget
+        
+        # 根据配置决定是否显示数量
+        if self.show_count and self.count_provider:
+            count = self.count_provider(category.id)
+            item.setText(0, f"{category.name} ({count})")
+        else:
+            item.setText(0, category.name)
+        
         self.category_items[category.id] = item
         
         # 为非叶子节点添加工具提示
@@ -221,10 +254,14 @@ class CategoryTreeWidget(QWidget):
     edit_category_requested = Signal(str)
     delete_category_requested = Signal(str)
     
-    def __init__(self, category_manager: CategoryManager, user_manager: Optional['UserManager'] = None, title: str = "分类", parent=None):
+    def __init__(self, category_manager: CategoryManager, user_manager: Optional['UserManager'] = None, 
+                 show_count: bool = False, count_provider: Optional[callable] = None, 
+                 title: str = "分类", parent=None):
         super().__init__(parent)
         self.category_manager = category_manager
         self.user_manager = user_manager
+        self.show_count = show_count
+        self.count_provider = count_provider
         self.title_text = title
         
         self._init_ui()
@@ -272,7 +309,13 @@ class CategoryTreeWidget(QWidget):
         self.main_layout.addLayout(self.toolbar_layout)
 
         # 2. 内部树视图
-        self.tree = InternalCategoryTree(self.category_manager, self.user_manager, self)
+        self.tree = InternalCategoryTree(
+            self.category_manager, 
+            self.user_manager, 
+            show_count=self.show_count,
+            count_provider=self.count_provider,
+            parent=self
+        )
         self.main_layout.addWidget(self.tree)
 
     def _connect_signals(self):

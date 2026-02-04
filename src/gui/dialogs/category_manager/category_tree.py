@@ -16,8 +16,10 @@ class CategoryTreeWidget(TreeWidget):
         self.setIndentation(28)  # 增加缩进空间
         self._apply_style()
         
-        # 连接主题色变更信号
+        # 连接主题变更信号
         signal_bus.theme_color_changed.connect(self._apply_style)
+        signal_bus.theme_changed.connect(self._apply_style)  # 修复主题切换 Bug
+
 
     def _apply_style(self):
         """应用主题敏感样式 - 确保垂直居中对齐"""

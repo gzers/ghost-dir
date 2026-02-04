@@ -1,12 +1,13 @@
 """
 分类视图组件
-左树右表布局，复用现有的 CategoryTree 和 LinkTable 组件
+左树右表布局，复用现有的 CategoryTreeWidget 和 LinkTable 组件
 """
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QSplitter
 from PySide6.QtCore import Qt, Signal
-from src.gui.views.connected.widgets.category_tree import CategoryTree
+from src.gui.components import CategoryTreeWidget
 from src.gui.components.link_table import LinkTable
 from src.data.user_manager import UserManager
+from src.data.category_manager import CategoryManager
 
 
 class CategoryLinkView(QWidget):
@@ -21,6 +22,7 @@ class CategoryLinkView(QWidget):
         """初始化分类视图"""
         super().__init__(parent)
         self.user_manager = UserManager()
+        self.category_manager = CategoryManager()
         self._current_category = None
         self._setup_ui()
         self._connect_signals()
@@ -35,7 +37,12 @@ class CategoryLinkView(QWidget):
         splitter = QSplitter(Qt.Orientation.Horizontal)
         
         # 左侧：分类树
-        self.category_tree = CategoryTree()
+        self.category_tree = CategoryTreeWidget(
+            self.category_manager,
+            self.user_manager,
+            show_count=True,
+            count_provider=lambda cid: len(self.user_manager.get_links_by_category(cid)) if cid != "all" else len(self.user_manager.get_all_links())
+        )
         splitter.addWidget(self.category_tree)
         
         # 右侧：连接表格
