@@ -49,6 +49,17 @@ class WizardView(BasePageView):
             top_margin=0,
             bottom_margin=12
         )
+        
+        # 配置编辑器卡片（固定内容）
+        from src.gui.views.wizard.widgets import ConfigEditorCard
+        self.config_editor = ConfigEditorCard()
+        self.add_fixed_content(
+            self.config_editor,
+            before_scroll=True,
+            use_padding=True,
+            top_margin=0,
+            bottom_margin=12
+        )
 
         # 结果滚动区域初始隐藏
         self.get_scroll_area().setVisible(False)
