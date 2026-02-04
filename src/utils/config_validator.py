@@ -37,12 +37,12 @@ class ConfigValidator:
     @staticmethod
     def validate_config_structure(file_path: Path) -> Tuple[bool, str]:
         """
-        校验 config.json 结构
+        校验 config.json 结构 (适配 v7.4+ 扁平化结构)
         
         必需字段：
-        - QFluentWidgets.FontFamilies (list)
-        - QFluentWidgets.ThemeColor (str)
-        - QFluentWidgets.ThemeMode (str)
+        - theme (str)
+        - theme_color (str)
+        - startup_page (str)
         
         Args:
             file_path: config.json 文件路径
@@ -54,28 +54,28 @@ class ConfigValidator:
             with open(file_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
             
-            # 检查必需字段
-            if "QFluentWidgets" not in data:
-                return False, "缺少 QFluentWidgets 配置节"
-            
-            qfw = data["QFluentWidgets"]
+            # 校验必需的扁平化字段
             required_fields = {
-                "FontFamilies": list,
-                "ThemeColor": str,
-                "ThemeMode": str
+                "theme": str,
+                "theme_color": str,
+                "startup_page": str
             }
             
             for field, expected_type in required_fields.items():
-                if field not in qfw:
-                    return False, f"缺少必需字段: QFluentWidgets.{field}"
+                if field not in data:
+                    # 如果不存在，可能是旧版本，尝试兼容 QFluentWidgets 节 (可选)
+                    if "QFluentWidgets" in data:
+                        continue
+                    return False, f"缺少必需字段: {field}"
                 
-                if not isinstance(qfw[field], expected_type):
-                    return False, f"字段类型错误: QFluentWidgets.{field} 应为 {expected_type.__name__}"
+                if not isinstance(data[field], expected_type):
+                    return False, f"字段类型错误: {field} 应为 {expected_type.__name__}"
             
-            # 校验 ThemeMode 的值
-            valid_modes = ["Auto", "Light", "Dark"]
-            if qfw["ThemeMode"] not in valid_modes:
-                return False, f"ThemeMode 值无效，应为: {', '.join(valid_modes)}"
+            # 校验 theme 的值
+            valid_themes = ["system", "light", "dark"]
+            current_theme = data.get("theme")
+            if current_theme and current_theme not in valid_themes:
+                return False, f"theme 值无效，应为: {', '.join(valid_themes)}"
             
             return True, ""
         except Exception as e:
