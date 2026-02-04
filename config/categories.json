@@ -163,10 +163,118 @@
       "full_path_name": "个人数据"
     },
     {
+      "id": "cache",
+      "name": "通用缓存",
+      "parent_id": null,
+      "order": 10,
+      "is_builtin": true,
+      "full_path_code": "cache",
+      "full_path_name": "通用缓存"
+    },
+    {
+      "id": "ide",
+      "name": "IDE",
+      "parent_id": null,
+      "order": 11,
+      "is_builtin": true,
+      "full_path_code": "ide",
+      "full_path_name": "IDE"
+    },
+    {
+      "id": "ide.eclipse",
+      "name": "Eclipse",
+      "parent_id": "ide",
+      "order": 0,
+      "is_builtin": true,
+      "full_path_code": "ide/eclipse",
+      "full_path_name": "IDE/Eclipse"
+    },
+    {
+      "id": "ide.java",
+      "name": "Java 生态",
+      "parent_id": "ide",
+      "order": 1,
+      "is_builtin": true,
+      "full_path_code": "ide/java",
+      "full_path_name": "IDE/Java 生态"
+    },
+    {
+      "id": "ide.ai",
+      "name": "AI 编辑器",
+      "parent_id": "ide",
+      "order": 2,
+      "is_builtin": true,
+      "full_path_code": "ide/ai",
+      "full_path_name": "IDE/AI 编辑器"
+    },
+    {
+      "id": "media.video_editing",
+      "name": "视频剪辑",
+      "parent_id": "media",
+      "order": 2,
+      "is_builtin": true,
+      "full_path_code": "media/video_editing",
+      "full_path_name": "多媒体/视频剪辑"
+    },
+    {
+      "id": "dev_tools.package_managers",
+      "name": "包管理器",
+      "parent_id": "dev_tools",
+      "order": 3,
+      "is_builtin": true,
+      "full_path_code": "dev_tools/package_managers",
+      "full_path_name": "开发工具/包管理器"
+    },
+    {
+      "id": "dev_tools.containers",
+      "name": "容器与虚拟机",
+      "parent_id": "dev_tools",
+      "order": 4,
+      "is_builtin": true,
+      "full_path_code": "dev_tools/containers",
+      "full_path_name": "开发工具/容器与虚拟机"
+    },
+    {
+      "id": "ai",
+      "name": "AI",
+      "parent_id": null,
+      "order": 12,
+      "is_builtin": true,
+      "full_path_code": "ai",
+      "full_path_name": "AI"
+    },
+    {
+      "id": "ai.models",
+      "name": "大模型",
+      "parent_id": "ai",
+      "order": 0,
+      "is_builtin": true,
+      "full_path_code": "ai/models",
+      "full_path_name": "AI/大模型"
+    },
+    {
+      "id": "games.engines",
+      "name": "游戏引擎",
+      "parent_id": "games",
+      "order": 1,
+      "is_builtin": true,
+      "full_path_code": "games/engines",
+      "full_path_name": "游戏/游戏引擎"
+    },
+    {
+      "id": "design",
+      "name": "设计软件",
+      "parent_id": null,
+      "order": 13,
+      "is_builtin": true,
+      "full_path_code": "design",
+      "full_path_name": "设计软件"
+    },
+    {
       "id": "uncategorized",
       "name": "未分类",
       "parent_id": null,
-      "order": 9,
+      "order": 99,
       "is_builtin": true,
       "full_path_code": "uncategorized",
       "full_path_name": "未分类"
