@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout
+from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout, QFormLayout, QWidget
 from PySide6.QtCore import Signal, Qt
 from qfluentwidgets import MessageBoxBase, LineEdit, BodyLabel, PushButton, InfoBar, InfoBarPosition
 from src.data.user_manager import UserManager
@@ -27,41 +27,43 @@ class EditLinkDialog(MessageBoxBase):
     
     def _init_ui(self):
         """初始化 UI"""
-        layout = self.viewLayout
-        layout.setSpacing(12)
+        # 使用 QFormLayout 实现 Label 与 Input 水平并排对齐
+        form_widget = QWidget()
+        form_layout = QFormLayout(form_widget)
+        form_layout.setContentsMargins(0, 0, 0, 0)
+        form_layout.setSpacing(12)
+        form_layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
         
         # 软件名称
         self.nameEdit = LineEdit()
         self.nameEdit.setPlaceholderText(t("connected.link_name_placeholder"))
-        layout.addWidget(BodyLabel(format_required_label(t("connected.link_name"))))
-        layout.addWidget(self.nameEdit)
+        form_layout.addRow(BodyLabel(format_required_label(t("connected.link_name"))), self.nameEdit)
         
         # 源路径
         self.sourceEdit = LineEdit()
         self.sourceEdit.setPlaceholderText("C:\\...")
         self.sourceEdit.setReadOnly(self.is_connected)
-        layout.addWidget(BodyLabel(format_required_label(t("connected.source_path"))))
-        layout.addWidget(self.sourceEdit)
+        form_layout.addRow(BodyLabel(format_required_label(t("connected.source_path"))), self.sourceEdit)
         
         # 目标路径
         self.targetEdit = LineEdit()
         self.targetEdit.setPlaceholderText("D:\\...")
         self.targetEdit.setReadOnly(self.is_connected)
-        layout.addWidget(BodyLabel(format_required_label(t("connected.target_path"))))
-        layout.addWidget(self.targetEdit)
+        form_layout.addRow(BodyLabel(format_required_label(t("connected.target_path"))), self.targetEdit)
 
         # 锁定提示
         if self.is_connected:
             tip_label = BodyLabel(t("connected.edit_path_locked_tip"))
-            tip_label.setStyleSheet("color: #E21; font-size: 12px; font-weight: semibold;") # 强化警告
-            layout.addWidget(tip_label)
+            tip_label.setStyleSheet("color: #E21; font-size: 12px; font-weight: semibold;")
+            form_layout.addRow("", tip_label)
         
         # 分类
         self.categorySelector = CategorySelector()
         self.categorySelector.set_manager(self.category_manager)
+        form_layout.addRow(BodyLabel(format_required_label(t("connected.category"))), self.categorySelector)
         
-        layout.addWidget(BodyLabel(format_required_label(t("connected.category"))))
-        layout.addWidget(self.categorySelector)
+        # 将表单添加到主视图
+        self.viewLayout.addWidget(form_widget)
         
         # 按钮
         self.yesButton.setText(t("common.save"))
