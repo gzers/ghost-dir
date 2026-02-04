@@ -253,7 +253,7 @@ class CategoryManagerDialog(MessageBoxBase):
                         content=msg,
                         orient=Qt.Orientation.Horizontal,
                         isClosable=True,
-                        position=InfoBarPosition.TOP,
+                        position=InfoBarPosition.TOP_CENTER,
                         duration=2000,
                         parent=self
                     )
@@ -294,7 +294,7 @@ class CategoryManagerDialog(MessageBoxBase):
                         content=msg,
                         orient=Qt.Orientation.Horizontal,
                         isClosable=True,
-                        position=InfoBarPosition.TOP,
+                        position=InfoBarPosition.TOP_CENTER,
                         duration=2000,
                         parent=self
                     )
@@ -372,7 +372,7 @@ class CategoryManagerDialog(MessageBoxBase):
                 content=t("library.msg_delete_success", count=success_count),
                 orient=Qt.Orientation.Horizontal,
                 isClosable=True,
-                position=InfoBarPosition.TOP,
+                position=InfoBarPosition.TOP_CENTER,
                 duration=2000,
                 parent=self
             )
@@ -486,7 +486,7 @@ class CategoryManagerDialog(MessageBoxBase):
             content=t("library.msg_sort_cancelled"),
             orient=Qt.Orientation.Horizontal,
             isClosable=True,
-            position=InfoBarPosition.TOP,
+            position=InfoBarPosition.TOP_CENTER,
             duration=2000,
             parent=self
         )
@@ -633,7 +633,7 @@ class CategoryManagerDialog(MessageBoxBase):
                 content=msg,
                 orient=Qt.Orientation.Horizontal,
                 isClosable=True,
-                position=InfoBarPosition.TOP,
+                position=InfoBarPosition.TOP_CENTER,
                 duration=2000,
                 parent=self
             )

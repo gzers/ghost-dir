@@ -39,5 +39,6 @@ class TargetRootCard(PushSettingCard):
                     t("common.success"),
                     t("settings.path_updated"),
                     duration=2000,
+                    position=InfoBarPosition.TOP_CENTER,
                     parent=parent_window
                 )

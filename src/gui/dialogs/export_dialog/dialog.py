@@ -123,7 +123,7 @@ class ExportDialog(MessageBoxBase):
                 content='请选择导出文件路径',
                 orient=Qt.Orientation.Horizontal,
                 isClosable=True,
-                position=InfoBarPosition.TOP,
+                position=InfoBarPosition.TOP_CENTER,
                 duration=3000,
                 parent=self
             )
@@ -135,7 +135,7 @@ class ExportDialog(MessageBoxBase):
                 content='请至少选择一项导出内容',
                 orient=Qt.Orientation.Horizontal,
                 isClosable=True,
-                position=InfoBarPosition.TOP,
+                position=InfoBarPosition.TOP_CENTER,
                 duration=3000,
                 parent=self
             )

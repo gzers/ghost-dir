@@ -85,6 +85,7 @@ class ConfigFileRow(QWidget):
                 t("wizard.config_editor.opened"),
                 t("wizard.config_editor.save_to_reload"),
                 duration=3000,
+                position=InfoBarPosition.TOP_CENTER,
                 parent=self.window()
             )
         else:
@@ -92,6 +93,7 @@ class ConfigFileRow(QWidget):
                 t("common.error"),
                 t("wizard.config_editor.open_failed"),
                 duration=3000,
+                position=InfoBarPosition.TOP_CENTER,
                 parent=self.window()
             )
     
@@ -222,6 +224,7 @@ class ConfigEditorCard(CardWidget):
                     t("common.success"),
                     t("wizard.config_editor.reloaded"),
                     duration=2000,
+                    position=InfoBarPosition.TOP_CENTER,
                     parent=self.window()
                 )
             else:
@@ -229,6 +232,7 @@ class ConfigEditorCard(CardWidget):
                     t("common.error"),
                     error_msg,
                     duration=3000,
+                    position=InfoBarPosition.TOP_CENTER,
                     parent=self.window()
                 )
             
@@ -253,6 +257,7 @@ class ConfigEditorCard(CardWidget):
                     t("common.success"),
                     t("wizard.config_editor.export_success").format(path=result),
                     duration=3000,
+                    position=InfoBarPosition.TOP_CENTER,
                     parent=self.window()
                 )
             else:
@@ -260,6 +265,7 @@ class ConfigEditorCard(CardWidget):
                     t("common.error"),
                     result,
                     duration=3000,
+                    position=InfoBarPosition.TOP_CENTER,
                     parent=self.window()
                 )
     
@@ -288,6 +294,7 @@ class ConfigEditorCard(CardWidget):
                         t("common.success"),
                         t("wizard.config_editor.restore_success"),
                         duration=3000,
+                        position=InfoBarPosition.TOP_CENTER,
                         parent=self.window()
                     )
                     
@@ -299,5 +306,6 @@ class ConfigEditorCard(CardWidget):
                         t("common.error"),
                         error_msg,
                         duration=3000,
+                        position=InfoBarPosition.TOP_CENTER,
                         parent=self.window()
                     )

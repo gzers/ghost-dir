@@ -146,7 +146,7 @@ class LibraryView(BasePageView):
                 content=t("library.orphaned_warning_content", count=len(orphaned)),
                 orient=Qt.Orientation.Horizontal,
                 isClosable=True,
-                position=InfoBarPosition.TOP,
+                position=InfoBarPosition.TOP_CENTER,
                 duration=5000,
                 parent=self
             )
@@ -197,7 +197,7 @@ class LibraryView(BasePageView):
         self.category_service.manager.load_categories()
         self.category_tree.load_categories()
         self._filter_templates()
-        InfoBar.success(t("common.success"), t("library.refresh_success"), duration=2000, parent=self)
+        InfoBar.success(t("common.success"), t("library.refresh_success"), duration=2000, position=InfoBarPosition.TOP_CENTER, parent=self)
 
     def _on_show_more_menu(self):
         """显示更多菜单"""
@@ -259,9 +259,9 @@ class LibraryView(BasePageView):
                 success, msg = self.category_service.add_category(category.name, category.parent_id)
                 if success:
                     self._on_categories_changed()
-                    InfoBar.success(t("common.success"), msg, parent=self)
+                    InfoBar.success(t("common.success"), msg, duration=2000, position=InfoBarPosition.TOP_CENTER, parent=self)
                 else:
-                    InfoBar.error(t("common.error"), msg, parent=self)
+                    InfoBar.error(t("common.error"), msg, duration=3000, position=InfoBarPosition.TOP_CENTER, parent=self)
 
     def _on_edit_category_requested(self, category_id: str):
         """请求编辑分类"""
@@ -274,15 +274,15 @@ class LibraryView(BasePageView):
                 success, msg = self.category_service.update_category(updated_category)
                 if success:
                     self._on_categories_changed()
-                    InfoBar.success(t("common.success"), msg, parent=self)
+                    InfoBar.success(t("common.success"), msg, duration=2000, position=InfoBarPosition.TOP_CENTER, parent=self)
                 else:
-                    InfoBar.error(t("common.error"), msg, parent=self)
+                    InfoBar.error(t("common.error"), msg, duration=3000, position=InfoBarPosition.TOP_CENTER, parent=self)
 
     def _on_delete_category_requested(self, category_id: str):
         """请求删除分类"""
         status, context = self.category_service.validate_delete(category_id)
         if status == "ERROR":
-            InfoBar.error("错误", context["message"], parent=self)
+            InfoBar.error("错误", context["message"], duration=3000, position=InfoBarPosition.TOP_CENTER, parent=self)
             return
 
         if status == "REQUIRED_CONFIRM":
@@ -294,9 +294,9 @@ class LibraryView(BasePageView):
             self._on_categories_changed()
             self.current_category_id = None
             self.template_table.set_templates([], "")
-            InfoBar.success("删除成功", msg, parent=self)
+            InfoBar.success("删除成功", msg, duration=2000, position=InfoBarPosition.TOP_CENTER, parent=self)
         else:
-            InfoBar.error("删除失败", msg, parent=self)
+            InfoBar.error("删除失败", msg, duration=3000, position=InfoBarPosition.TOP_CENTER, parent=self)
 
     def _on_add_template_clicked(self):
         """新建模板按钮被点击"""
@@ -311,7 +311,7 @@ class LibraryView(BasePageView):
                 self._on_category_selected(self.current_category_id)
             else:
                 self._filter_templates()
-            InfoBar.success('处理成功', '模板已创建', parent=self)
+            InfoBar.success('处理成功', '模板已创建', duration=2000, position=InfoBarPosition.TOP_CENTER, parent=self)
 
     def _on_edit_template_requested(self, template_id: str):
         """请求编辑模板"""
@@ -325,7 +325,7 @@ class LibraryView(BasePageView):
         if dialog.exec():
             # 业务持久化已在对话框 validate() 调用 Service 完成
             self._filter_templates()
-            InfoBar.success('处理成功', '模板已更新', parent=self)
+            InfoBar.success('处理成功', '模板已更新', duration=2000, position=InfoBarPosition.TOP_CENTER, parent=self)
 
     def _on_delete_template_requested(self, template_id: str):
         """请求删除模板"""
@@ -336,9 +336,9 @@ class LibraryView(BasePageView):
             success, msg = self.template_service.delete_template(template_id)
             if success:
                 self._filter_templates()
-                InfoBar.success('删除成功', f'已删除模板 "{template.name}"', parent=self)
+                InfoBar.success('删除成功', f'已删除模板 "{template.name}"', duration=2000, position=InfoBarPosition.TOP_CENTER, parent=self)
             else:
-                InfoBar.error('删除失败', msg, parent=self)
+                InfoBar.error('删除失败', msg, duration=2000, position=InfoBarPosition.TOP_CENTER, parent=self)
 
     def _on_batch_delete_clicked(self):
         """批量删除被点击"""
@@ -351,9 +351,9 @@ class LibraryView(BasePageView):
                 self._filter_templates()
                 self._update_count()
                 self._clear_all_selection()
-                InfoBar.success('删除成功', msg, parent=self)
+                InfoBar.success('删除成功', msg, duration=2000, position=InfoBarPosition.TOP_CENTER, parent=self)
             else:
-                InfoBar.error('删除失败', msg, parent=self)
+                InfoBar.error('删除失败', msg, duration=2000, position=InfoBarPosition.TOP_CENTER, parent=self)
 
     def _on_export_requested(self):
         """导出请求"""
@@ -364,8 +364,8 @@ class LibraryView(BasePageView):
             path = options.pop('file_path', None)
             if path:
                 success, msg = self.template_service.export_to_file(path, options)
-                if success: InfoBar.success("成功", msg, parent=self)
-                else: InfoBar.error("失败", msg, parent=self)
+                if success: InfoBar.success("成功", msg, duration=2000, position=InfoBarPosition.TOP_CENTER, parent=self)
+                else: InfoBar.error("失败", msg, duration=3000, position=InfoBarPosition.TOP_CENTER, parent=self)
 
     def _on_import_clicked(self):
         """导入请求"""
@@ -377,8 +377,8 @@ class LibraryView(BasePageView):
                 success, msg = self.template_service.import_from_file(path, options)
                 if success:
                     self._on_categories_changed()
-                    InfoBar.success("成功", msg, parent=self)
-                else: InfoBar.error("失败", msg, parent=self)
+                    InfoBar.success("成功", msg, duration=2000, position=InfoBarPosition.TOP_CENTER, parent=self)
+                else: InfoBar.error("失败", msg, duration=3000, position=InfoBarPosition.TOP_CENTER, parent=self)
 
     def _on_checked_count_changed(self, count: int):
         """勾选数量改变"""

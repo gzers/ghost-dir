@@ -141,7 +141,7 @@ class CategoryEditDialog(MessageBoxBase):
                 content=t("library.error_empty_name"),
                 orient=Qt.Orientation.Horizontal,
                 isClosable=True,
-                position=InfoBarPosition.TOP,
+                position=InfoBarPosition.TOP_CENTER,
                 duration=3000,
                 parent=self
             )
@@ -159,7 +159,7 @@ class CategoryEditDialog(MessageBoxBase):
                     content=msg,
                     orient=Qt.Orientation.Horizontal,
                     isClosable=True,
-                    position=InfoBarPosition.TOP,
+                    position=InfoBarPosition.TOP_CENTER,
                     duration=3000,
                     parent=self
                 )
@@ -184,7 +184,7 @@ class CategoryEditDialog(MessageBoxBase):
                     content=t("library.help_notes_3"), # 复用层级限制说明或者建新key，这里复用
                     orient=Qt.Orientation.Horizontal,
                     isClosable=True,
-                    position=InfoBarPosition.TOP,
+                    position=InfoBarPosition.TOP_CENTER,
                     duration=3000,
                     parent=self
                 )

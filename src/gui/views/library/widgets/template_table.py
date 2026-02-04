@@ -190,7 +190,7 @@ class TemplateTableWidget(BaseTableWidget):
                     content=f"内容: {item.text()[:20]}...",
                     orient=Qt.Orientation.Horizontal,
                     isClosable=True,
-                    position=InfoBarPosition.TOP,
+                    position=InfoBarPosition.TOP_CENTER,
                     duration=2000,
                     parent=self.window()
                 )

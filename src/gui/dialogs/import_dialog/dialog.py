@@ -165,7 +165,7 @@ class ImportDialog(MessageBoxBase):
                 content='请选择导入文件',
                 orient=Qt.Orientation.Horizontal,
                 isClosable=True,
-                position=InfoBarPosition.TOP,
+                position=InfoBarPosition.TOP_CENTER,
                 duration=3000,
                 parent=self
             )
@@ -177,7 +177,7 @@ class ImportDialog(MessageBoxBase):
                 content='无法读取导入文件',
                 orient=Qt.Orientation.Horizontal,
                 isClosable=True,
-                position=InfoBarPosition.TOP,
+                position=InfoBarPosition.TOP_CENTER,
                 duration=3000,
                 parent=self
             )

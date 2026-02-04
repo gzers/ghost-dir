@@ -95,7 +95,7 @@ class EditLinkDialog(MessageBoxBase):
                 title="验证失败",
                 content=msg,
                 orient=Qt.Orientation.Horizontal,
-                position=InfoBarPosition.TOP,
+                position=InfoBarPosition.TOP_CENTER,
                 duration=3000,
                 parent=self
             )

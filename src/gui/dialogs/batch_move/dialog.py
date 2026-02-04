@@ -81,7 +81,7 @@ class BatchMoveDialog(MessageBoxBase):
                 content='请选择目标分类（只能选择叶子分类）',
                 orient=Qt.Orientation.Horizontal,
                 isClosable=True,
-                position=InfoBarPosition.TOP,
+                position=InfoBarPosition.TOP_CENTER,
                 duration=3000,
                 parent=self
             )
