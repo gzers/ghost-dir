@@ -14,4 +14,7 @@ APP_TEXTS = {
     "github": "GitHub 仓库",
     "github_url": __github_url__,
     "license": "MIT License",
+    "splash_initializing": "正在初始化...",
+    "splash_check_admin": "正在校验管理员权限...",
+    "splash_check_data": "正在检查数据完整性...",
 }

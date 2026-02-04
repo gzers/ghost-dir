@@ -6,10 +6,14 @@ import ctypes
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
-from qfluentwidgets import setTheme, Theme, setThemeColor, SystemThemeListener, setFontFamilies, MessageBox
+from qfluentwidgets import (setTheme, Theme, setThemeColor, SystemThemeListener, setFontFamilies, 
+                            MessageBox, isDarkTheme, TitleLabel, SubtitleLabel, 
+                            CaptionLabel, IndeterminateProgressBar)
 from src.common.signals import signal_bus
 from src.utils.admin import ensure_admin
 from src.core.engine.transaction_engine import check_crash_recovery, recover_from_crash
+from src.common.config import APP_NAME, APP_VERSION
+from src.gui.i18n import t
 
 
 from src.common.resource_loader import get_resource_path
@@ -31,8 +35,8 @@ class GhostDirApp(QApplication):
             pass
 
         # 设置应用程序信息
-        self.setApplicationName("Ghost-Dir")
-        self.setApplicationVersion("1.0.0")
+        self.setApplicationName(APP_NAME)
+        self.setApplicationVersion(APP_VERSION)
         self.setOrganizationName("Ghost-Dir Team")
 
         # 字体标准化（QFluentWidgets 标准）
@@ -48,9 +52,6 @@ class GhostDirApp(QApplication):
         # 启用高 DPI 缩放
         self.setAttribute(Qt.ApplicationAttribute.AA_EnableHighDpiScaling)
         self.setAttribute(Qt.ApplicationAttribute.AA_UseHighDpiPixmaps)
-
-        # 执行启动检查
-        self._startup_checks()
 
         # 连接主题变更信号
         signal_bus.theme_changed.connect(self._apply_theme)
@@ -109,16 +110,24 @@ class GhostDirApp(QApplication):
 
         setThemeColor(target_color)
     
-    def _startup_checks(self):
+    def _startup_checks(self, splash=None):
         """启动时的安全检查"""
         # 1. 强制检查管理员权限
-        # 如果未获得权限，会自动请求提权并重启
+        if splash:
+            splash.set_message(t("app.splash_check_admin"))
+            self.processEvents()
+            
         from src.utils.admin import ensure_admin
         ensure_admin()
         
         # 2. 检查崩溃恢复
+        if splash:
+            splash.set_message(t("app.splash_check_data"))
+            self.processEvents()
+
         crash_record = check_crash_recovery()
         if crash_record:
+            # 如果有启动页，保持开启作为背景
             message = f"检测到上次操作异常中断：\n\n" \
                      f"操作类型: {crash_record.operation}\n" \
                      f"源路径: {crash_record.source_path}\n" \
@@ -147,9 +156,26 @@ def run_app():
     app._apply_theme(config_service.get_theme())
     app._apply_theme_color(config_service.get_config("theme_color", "system"))
 
-    # 导入并创建主窗口
+    # ========== 创建高级启动界面 ==========
+    from src.gui.components.splash_screen import AppSplashScreen
+    
+    splash = AppSplashScreen()
+    splash.show()
+    
+    # 虽然显示了，但需要处理事件让它渲染出来
+    app.processEvents()
+    # ===================================
+
+    # 执行启动检查（在启动页背景下执行）
+    app._startup_checks(splash)
+
+    # 导入并创建主窗口（耗时操作）
     from .windows.main_window import MainWindow
     window = MainWindow()
+    
+    # 主窗口创建完成，关闭启动界面
+    splash.finish()
+    
     window.show()
 
     sys.exit(app.exec())

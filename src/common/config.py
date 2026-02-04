@@ -7,7 +7,7 @@ from pathlib import Path
 
 # 应用信息
 APP_NAME = "Ghost-Dir"
-APP_VERSION = "7.4.0"
+APP_VERSION = "1.0.0"
 APP_AUTHOR = "Ghost-Dir Team"
 
 # 项目根目录（获取脚本所在目录）
