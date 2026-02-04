@@ -77,14 +77,11 @@ class CategoryTreeDropdown(QFrame):
         super().showEvent(event)
     
     def _apply_style(self):
-        """应用样式"""
+        """应用样式 (严重警告：禁止自定义 TreeWidget 内部项样式，否则会导致背景渲染分块冲突)"""
         from qfluentwidgets import setCustomStyleSheet, isDarkTheme
         
-        # 基础样式常量
-        item_height = 36
-        
-        # 定义通用树项样式（基于类选择器）
-        def get_qss(bg_color, border_color, text_color, hover_color, select_color):
+        # 仅定义容器样式，内部 TreeWidget 项交给官方原生处理以确保渲染一致性
+        def get_container_qss(bg_color, border_color, text_color):
             return f"""
                 CategoryTreeDropdown {{
                     background: {bg_color};
@@ -95,42 +92,20 @@ class CategoryTreeDropdown(QFrame):
                     background: transparent;
                     border: none;
                     outline: none;
-                    margin: 0px;
-                    padding: 0px;
+                    color: {text_color};
                 }}
                 TreeWidget::item {{
                     color: {text_color};
-                    height: {item_height}px;
-                    padding-left: 12px;
-                    margin: 0px;
-                    border: none;
-                }}
-                TreeWidget::item:hover {{
-                    background: {hover_color};
-                }}
-                TreeWidget::item:selected {{
-                    background: {select_color};
-                }}
-                TreeWidget::branch {{
-                    background: transparent;
-                    width: 24px;
                 }}
             """
 
-        light_qss = get_qss(
-            "rgba(255, 255, 255, 0.95)", "rgba(0, 0, 0, 0.15)", 
-            "black", "rgba(0, 0, 0, 0.05)", "rgba(0, 0, 0, 0.1)"
-        )
-        dark_qss = get_qss(
-            "rgba(45, 45, 45, 0.95)", "rgba(255, 255, 255, 0.1)", 
-            "white", "rgba(255, 255, 255, 0.05)", "rgba(255, 255, 255, 0.1)"
-        )
+        light_qss = get_container_qss("rgba(255, 255, 255, 0.98)", "rgba(0, 0, 0, 0.1)", "black")
+        dark_qss = get_container_qss("rgba(45, 45, 45, 0.98)", "rgba(255, 255, 255, 0.1)", "white")
         
         # 1. 设置响应式 QSS
         setCustomStyleSheet(self, light_qss, dark_qss)
-        setCustomStyleSheet(self.tree, light_qss, dark_qss)
         
-        # 2. 核心补丁：对于顶级窗口，有时需要强制应用当前主题的 QSS 以确保立即可见
+        # 2. 核心补丁：对于顶级窗口强制刷新
         target_qss = dark_qss if isDarkTheme() else light_qss
         self.setStyleSheet(target_qss)
     
@@ -154,17 +129,17 @@ class CategoryTreeDropdown(QFrame):
             root_item.setForeground(0, self.palette().link())
             root_item.setToolTip(0, "点击选择此项作为根分类")
         
-        root_categories = self.category_manager.get_category_tree()
-        
-        for category in sorted(root_categories, key=lambda x: x.order):
-            self._add_category_item(category, None)
-        
+        # 修正方法名：CategoryManager 中获取根节点的正确方法是 get_category_tree
+        root_nodes = self.category_manager.get_category_tree()
+        for node in sorted(root_nodes, key=lambda x: x.order):
+            self._add_category_item(node)
+            
         self.tree.expandAll()
     
-    def _add_category_item(self, category: CategoryNode, parent_item: Optional[QTreeWidgetItem] = None):
+    def _add_category_item(self, category: CategoryNode, parent_item: QTreeWidgetItem = None):
         """添加分类项"""
         # 递归检查排除列表（如果分类本身或其祖先在排除列表中，则不显示）
-        if category.id in self.exclude_ids:
+        if self.exclude_ids and category.id in self.exclude_ids:
             return
 
         if parent_item:
@@ -192,7 +167,6 @@ class CategoryTreeDropdown(QFrame):
                 # 仅叶子模式：非叶子节点不可选
                 item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsSelectable)
                 item.setToolTip(0, f"[{full_path_name}]\n此分类包含子分类，请选择具体的子分类")
-                item.setForeground(0, self.palette().placeholderText())
             else:
                 item.setToolTip(0, f"选择分类: {full_path_name}")
         else:
@@ -248,15 +222,40 @@ class CategorySelector(QWidget):
         self.lineEdit.setReadOnly(True)
         self.lineEdit.setCursor(Qt.CursorShape.PointingHandCursor)
         
-        # 核心交互修复：LineEdit 会消费 mousePressEvent，因此需要安装事件过滤器或重写
-        self.lineEdit.installEventFilter(self)
+        # 核心：添加清除按钮（仿官方设计）
+        from qfluentwidgets import TransparentToolButton, FluentIcon
+        self.clearButton = TransparentToolButton(FluentIcon.CLOSE, self.lineEdit)
+        self.clearButton.setFixedSize(28, 28)
+        self.clearButton.setCursor(Qt.CursorShape.ArrowCursor)
+        self.clearButton.setVisible(False)  # 初始隐藏
+        self.clearButton.clicked.connect(self.clear)
+        
+        # 覆写 lineEdit 的 margins，给右侧下拉图标和清除按钮留出位置
+        # 官方 LineEdit 右侧通常有 30px 的按钮空间，我们要留出更多一点
+        self.lineEdit.setTextMargins(0, 0, 24, 0)
+        
         layout.addWidget(self.lineEdit)
-    
+        
+        # 安装过滤器
+        self.lineEdit.installEventFilter(self)
+        
     def eventFilter(self, obj, event):
         if obj == self.lineEdit and event.type() == QEvent.Type.MouseButtonPress:
             self._show_dropdown()
             return True
         return super().eventFilter(obj, event)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        # 将清除按钮定位在右侧（避开自带的下拉箭头位置，或与自带位置对齐）
+        # 官方 ComboBox 风格通常清除按钮在下拉箭头左边
+        self.clearButton.move(self.width() - 62, (self.height() - self.clearButton.height()) // 2)
+
+    def clear(self):
+        """清除选中"""
+        self.set_value(None)
+        # 触发清除信号
+        self.value_changed.emit(None)
 
     def set_manager(self, category_manager: CategoryManager, exclude_ids: Optional[list] = None):
         """设置分类管理器"""
@@ -310,6 +309,10 @@ class CategorySelector(QWidget):
                 self.lineEdit.setToolTip(category_name)
         else:
             self.lineEdit.setToolTip(category_name)
+        
+        # 联动更新清除按钮状态
+        if hasattr(self, 'clearButton'):
+            self.clearButton.setVisible(bool(category_id))
             
         # 触发对外信号
         self.value_changed.emit(category_id)
@@ -320,18 +323,18 @@ class CategorySelector(QWidget):
             self.dropdown.load_categories()
     
     def set_value(self, category_id: Optional[str]):
-        """设置选中的分类 ID"""
+        """设置选中的分类 ID (不触发对外信号以防止循环)"""
+        # 1. 处理清除逻辑 (category_id 为 None)
         if category_id is None:
-            if self.root_visible:
-                from src.gui.i18n import t
-                root_name = t("library.label_root_category")
-                if "[Missing:" in root_name:
-                    root_name = "无 (根分类)"
-                self.selected_category_id = None
-                self.selected_category_name = root_name
-                self.lineEdit.setText(root_name)
+            self.selected_category_id = None
+            self.selected_category_name = None
+            self.lineEdit.clear()
+            self.lineEdit.setToolTip("")
+            if hasattr(self, 'clearButton'):
+                self.clearButton.setVisible(False)
             return
 
+        # 2. 正常设置逻辑
         if not self.category_manager:
             return
         
@@ -347,6 +350,10 @@ class CategorySelector(QWidget):
                 self.lineEdit.setToolTip(category.full_path_name)
             else:
                 self.lineEdit.setToolTip(display_name)
+            
+            # 联动显示清除按钮
+            if hasattr(self, 'clearButton'):
+                self.clearButton.setVisible(True)
     
     def get_value(self) -> Optional[str]:
         """获取当前选中的分类 ID"""

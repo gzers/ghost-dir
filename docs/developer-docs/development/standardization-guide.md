@@ -69,16 +69,39 @@ display_name = get_category_text(link.category_id)
 ### 3.4 ID 驱动原则
 组件间的信号传递 (Signal/Slot) 应优先传递 `category_id` 而非 `category_name`, 以防止名称修改导致逻辑断裂。
 
----
-
-## 4. UI 渲染规范
-
-- **路径显示**: 显示在 Caption 或 Label 上的路径必须经过标准化, 移除 `\\?\` 等技术前缀。
-- **括号处理**: 除非是特定的 UI 装饰需求, 否则不应在代码中硬编码 `[分类名]` 这种修饰, 应保持显示文案的纯净。
+### 3.5 绑定限制 (Binding Restriction)
+模板必须绑定到具体的一级或二级 **叶子分类 (Leaf Category)**。禁止将模板直接绑定到非叶子节点的父分类下，以确保数据结构的清晰。
 
 ---
 
-## 5. 命名与架构规约 (Naming & Architecture)
+## 4. UI 渲染规范 (UI Rendering)
+
+### 4.1 路径显示
+显示在 Caption 或 Label 上的路径必须经过标准化, 移除 `\\?\` 等技术前缀。
+
+### 4.2 括号处理
+除非是特定的 UI 装饰需求, 否则不应在代码中硬编码 `[分类名]` 这种修饰, 应保持显示文案的纯净。
+
+### 4.3 渲染避坑指南 (Critical Rendering Pitfalls)
+> [!IMPORTANT]
+> **原生渲染优先原则**: 严禁过度自定义官方组件（尤其是 TreeWidget, TableWidget 等复杂容器）的内部子项 (::item) 样式。
+- **背景分块问题**: 禁止手动为 `TreeWidget::item:hover` 或 `selected` 设置背景颜色。Fluent 组件自带动态高亮遮罩，手动设置背景会破坏遮罩的层级，导致渲染分块或错位。
+- **文字对齐与可见性**: 在禁用非叶子节点时，务必在 QSS 中显式指定 `TreeWidget` 的 `color` 属性，防止系统自动计算的灰度导致文字在特定主题下“消失”。
+
+### 4.4 布局对齐
+针对对话框表单，优先使用 `QFormLayout` 进行自动对齐，Label 统一右对齐。
+
+---
+
+## 5. 样式引用规范 (Styling Constants)
+严禁在业务逻辑中硬编码像素值或颜色值。应调用 `src.gui.styles` 中的统一接口：
+- **间距**: `get_spacing("md")`
+- **边距**: `get_layout_margins()["compact"]`
+- **主题感知**: 优先使用官方的 `setCustomStyleSheet(widget, lightQss, darkQss)`。
+
+---
+
+## 6. 命名与架构规约 (Naming & Architecture)
 
 ### 5.1 模块后缀分类
 为了从文件名和类名直观区分业务层与执行层, 遵循以下后缀规范:
@@ -122,3 +145,10 @@ display_name = get_category_text(link.category_id)
 
 - **行内反馈**: 在表格单元格操作中, 必须使用 `IndeterminateProgressRing` (16x16) 替代原始文字或按钮。
 - **生命周期绑定**: 加载动画应与异步任务的 `on_start` 和 `on_finished` 回调严格绑定, 禁止让界面进入“无感知的静止”状态。
+
+---
+
+## 7. 常用开发命令 (Dev Cheatsheet)
+- **启动应用**: `python debug_start.py`
+- **语法检查**: `python -m py_compile [file_path]`
+- **安装依赖**: `pip install -r requirements.txt`
