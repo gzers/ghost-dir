@@ -113,16 +113,17 @@ class TemplateTableWidget(BaseTableWidget):
             desc_item.setToolTip(desc if desc else None)
             self.setItem(i, 4, desc_item)
             
-            # 5. 类型
+            # 5. 类型 (使用主题感知的标签)
+            from qfluentwidgets import CaptionLabel
+            from src.gui.styles import apply_muted_text_style
+            
             type_text = '自定义' if template.is_custom else '官方'
-            from PySide6.QtWidgets import QLabel
-            type_container = QWidget()
-            type_container.setStyleSheet("background: transparent; border: none;")
-            type_layout = QHBoxLayout(type_container)
-            type_label = QLabel(type_text)
-            type_layout.addWidget(type_label)
-            type_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            type_layout.setContentsMargins(0, 0, 0, 0)
+            type_container = self.create_alignment_container()
+            type_label = CaptionLabel(type_text)
+            # 应用统一样式：弱化显示以区分主标题
+            apply_muted_text_style(type_label)
+            
+            type_container.layout().addWidget(type_label)
             self.setCellWidget(i, 5, type_container)
             
             # 6. 操作按钮
