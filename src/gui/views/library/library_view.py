@@ -301,41 +301,31 @@ class LibraryView(BasePageView):
     def _on_add_template_clicked(self):
         """新建模板按钮被点击"""
         dialog = TemplateEditDialog(
-            self.template_service.manager,
-            self.category_service.manager,
             mode="create",
             default_category_id=self.current_category_id,
             parent=self
         )
-        if dialog.exec() and dialog.validate():
-            template = dialog.get_template()
-            success, msg = self.template_service.add_template(template)
-            if success:
-                if self.current_category_id:
-                    self._on_category_selected(self.current_category_id)
-                InfoBar.success('添加成功', f'已添加模板 "{template.name}"', parent=self)
+        if dialog.exec():
+            # 由于验证成功后逻辑已在 Service 完成，此处只需刷新 UI
+            if self.current_category_id:
+                self._on_category_selected(self.current_category_id)
             else:
-                InfoBar.error('添加失败', msg, parent=self)
+                self._filter_templates()
+            InfoBar.success('处理成功', '模板已创建', parent=self)
 
     def _on_edit_template_requested(self, template_id: str):
         """请求编辑模板"""
         template = self.template_service.manager.templates.get(template_id)
         if not template: return
         dialog = TemplateEditDialog(
-            self.template_service.manager,
-            self.category_service.manager,
             template=template,
             mode="edit",
             parent=self
         )
-        if dialog.exec() and dialog.validate():
-            updated_template = dialog.get_template()
-            success, msg = self.template_service.update_template(updated_template)
-            if success:
-                self._filter_templates()
-                InfoBar.success('更新成功', f'已更新模板 "{updated_template.name}"', parent=self)
-            else:
-                InfoBar.error('更新失败', msg, parent=self)
+        if dialog.exec():
+            # 业务持久化已在对话框 validate() 调用 Service 完成
+            self._filter_templates()
+            InfoBar.success('处理成功', '模板已更新', parent=self)
 
     def _on_delete_template_requested(self, template_id: str):
         """请求删除模板"""

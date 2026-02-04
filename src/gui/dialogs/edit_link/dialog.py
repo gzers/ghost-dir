@@ -1,13 +1,11 @@
 from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout, QFormLayout, QWidget
 from PySide6.QtCore import Signal, Qt
 from qfluentwidgets import MessageBoxBase, LineEdit, BodyLabel, PushButton, InfoBar, InfoBarPosition
-from src.data.user_manager import UserManager
-from src.data.category_manager import CategoryManager
+from src.core.services.context import service_bus
 from src.gui.components import CategorySelector
 from src.data.model import UserLink, LinkStatus
 from src.gui.i18n import t
 from src.gui.styles import format_required_label
-from src.common.validators import PathValidator
 
 class EditLinkDialog(MessageBoxBase):
     """编辑链接对话框"""
@@ -17,8 +15,8 @@ class EditLinkDialog(MessageBoxBase):
     def __init__(self, link: UserLink, parent=None):
         super().__init__(parent)
         self.link = link
-        self.user_manager = UserManager()
-        self.category_manager = CategoryManager()
+        self.connection_service = service_bus.connection_service
+        self.category_manager = service_bus.category_manager
         
         self.setWindowTitle(t("connected.edit_link"))
         self.is_connected = self.link.status == LinkStatus.CONNECTED
@@ -79,56 +77,28 @@ class EditLinkDialog(MessageBoxBase):
         self.categorySelector.set_value(self.link.category)
 
     def validate(self):
-        """提交验证"""
-        name = self.nameEdit.text().strip()
-        source = self.sourceEdit.text().strip()
-        target = self.targetEdit.text().strip()
-        category_id = self.categorySelector.get_value()
+        """提交验证并更新业务"""
+        data = {
+            "name": self.nameEdit.text(),
+            "source": self.sourceEdit.text(),
+            "target": self.targetEdit.text(),
+            "category_id": self.categorySelector.get_value()
+        }
         
-        def show_warning(content):
+        success, msg = self.connection_service.validate_and_update_link(self.link.id, data)
+        
+        if success:
+            self.link_updated.emit()
+            return True
+        else:
             InfoBar.warning(
                 title="验证失败",
-                content=content,
+                content=msg,
                 orient=Qt.Orientation.Horizontal,
                 position=InfoBarPosition.TOP,
                 duration=3000,
                 parent=self
             )
-
-        if not name:
-            show_warning("连接名称不能为空")
-            return False
-        if not source:
-            show_warning("源路径不能为空")
-            return False
-        if not target:
-            show_warning("目标路径不能为空")
-            return False
-        if not category_id:
-            show_warning("请选择所属分类")
-            return False
-            
-        # 验证分类是否为叶子节点
-        if not self.category_manager.is_leaf(category_id):
-            show_warning("请选择具体的末级分类")
-            return False
-        
-        # 更新对象
-        self.link.name = name
-        self.link.category = category_id
-        
-        # 如果未连接，允许更新路径
-        if not self.is_connected:
-            validator = PathValidator()
-            self.link.source_path = validator.normalize(source)
-            self.link.target_path = validator.normalize(target)
-        
-        # 保存到数据库
-        if self.user_manager.update_link(self.link):
-            self.link_updated.emit()
-            return True
-        else:
-            show_warning("保存失败，请检查路径冲突")
         
         return False
 

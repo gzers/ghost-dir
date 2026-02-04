@@ -1,14 +1,12 @@
-"""
-模板服务 (Template Service)
-负责模板的过滤、搜索、CRUD 以及导入导出业务编排
-"""
-from typing import List, Optional, Tuple, Dict
+import uuid
+from typing import List, Optional, Tuple, Dict, Any
 from dataclasses import dataclass
 
 from src.data.template_manager import TemplateManager
 from src.data.category_manager import CategoryManager
 from src.data.user_manager import UserManager
 from src.data.model import Template
+from src.common.validators import PathValidator
 
 
 @dataclass
@@ -36,6 +34,21 @@ class TemplateService:
         self.manager = template_manager
         self.category_manager = category_manager
         self.user_manager = user_manager
+
+    def _validate_template_data(self, data: dict) -> Tuple[bool, str]:
+        """内部通用验证逻辑"""
+        name = data.get("name", "").strip()
+        source = data.get("default_src", "").strip()
+        category_id = data.get("category_id")
+
+        if not name: return False, "模板名称不能为空"
+        if not source: return False, "源路径不能为空"
+        if not category_id: return False, "请选择所属分类"
+
+        if not self.category_manager.is_leaf(category_id):
+            return False, "请选择具体的末级分类"
+        
+        return True, ""
 
     def get_filtered_templates(
         self, 
@@ -98,29 +111,52 @@ class TemplateService:
             tags=getattr(t, 'tags', [])
         )
 
-    def add_template(self, template: Template) -> Tuple[bool, str]:
-        """添加模板逻辑封装"""
-        try:
-            success = self.user_manager.add_custom_template(template)
-            if success:
-                self.manager.load_templates()
-                return True, "模板添加成功"
-            return False, "持久化失败"
-        except Exception as e:
-            return False, str(e)
+    def add_template_from_data(self, data: dict) -> Tuple[bool, str]:
+        """从原始数据添加模板 (带校验)"""
+        is_valid, msg = self._validate_template_data(data)
+        if not is_valid: return False, msg
 
-    def update_template(self, template: Template) -> Tuple[bool, str]:
-        """更新模板逻辑封装"""
-        try:
-            # 注意：此处逻辑需对齐 UserManager 接口
-            if self.user_manager.has_custom_template(template.id):
-                self.user_manager.remove_custom_template(template.id)
-                self.user_manager.add_custom_template(template)
-                self.manager.load_templates()
-                return True, "模板更新成功"
-            return False, "无法修改内置模板"
-        except Exception as e:
-            return False, str(e)
+        validator = PathValidator()
+        template = Template(
+            id=str(uuid.uuid4()),
+            name=data["name"].strip(),
+            default_src=validator.normalize(data["default_src"].strip()),
+            default_target=validator.normalize(data.get("default_target", "").strip()) if data.get("default_target") else None,
+            category_id=data["category_id"],
+            description=data.get("description", ""),
+            is_custom=True
+        )
+
+        success = self.user_manager.add_custom_template(template)
+        if success:
+            self.manager.load_templates()
+            return True, "模板添加成功"
+        return False, "持久化失败"
+
+    def update_template_from_data(self, template_id: str, data: dict) -> Tuple[bool, str]:
+        """更新模板数据 (带校验)"""
+        if not self.user_manager.has_custom_template(template_id):
+            return False, "无法修改内置模板或模板不存在"
+
+        is_valid, msg = self._validate_template_data(data)
+        if not is_valid: return False, msg
+
+        validator = PathValidator()
+        template = Template(
+            id=template_id,
+            name=data["name"].strip(),
+            default_src=validator.normalize(data["default_src"].strip()),
+            default_target=validator.normalize(data.get("default_target", "").strip()) if data.get("default_target") else None,
+            category_id=data["category_id"],
+            description=data.get("description", ""),
+            is_custom=True
+        )
+
+        self.user_manager.remove_custom_template(template_id)
+        if self.user_manager.add_custom_template(template):
+            self.manager.load_templates()
+            return True, "模板更新成功"
+        return False, "保存失败"
 
     def delete_template(self, template_id: str) -> Tuple[bool, str]:
         """删除模板核心逻辑"""
