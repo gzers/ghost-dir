@@ -74,20 +74,16 @@ class InternalCategoryTree(TreeWidget):
             }}
         """
         
-        # 明亮主题样式
+        # 明亮主题样式（只设置文字颜色，选中效果使用默认）
         light_qss = qss_base + """
             TreeWidget { color: #1F1F1F; }
             TreeWidget::item { color: #1F1F1F; }
-            TreeWidget::item:hover, TreeWidget::item:selected { background: rgba(0, 0, 0, 0.05); }
-            TreeWidget::item:selected { color: #1F1F1F; }
         """
         
-        # 暗黑主题样式
+        # 暗黑主题样式（只设置文字颜色，选中效果使用默认）
         dark_qss = qss_base + """
             TreeWidget { color: #FFFFFF; }
             TreeWidget::item { color: #FFFFFF; }
-            TreeWidget::item:hover, TreeWidget::item:selected { background: rgba(255, 255, 255, 0.08); }
-            TreeWidget::item:selected { color: #FFFFFF; }
         """
         
         setCustomStyleSheet(self, light_qss, dark_qss)
