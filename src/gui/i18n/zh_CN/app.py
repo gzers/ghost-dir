@@ -6,9 +6,9 @@ from src import __app_name__, __version__, __author__, __github_url__
 APP_TEXTS = {
     "name": __app_name__,
     "version": __version__,
-    "subtitle": "目录连接管理器 · 安全迁移 C 盘文件",
+    "subtitle": "目录连接管理器 · 安全迁移系统盘文件",
     "description_line1": f"{__app_name__} 是一款专为 Windows 设计的目录连接管理工具",
-    "description_line2": "帮助您轻松将 C 盘的大型软件数据迁移到其他磁盘",
+    "description_line2": "帮助您轻松将系统盘的大型软件数据迁移到其他磁盘",
     "description_line3": "同时保持软件正常运行，采用事务安全机制，确保数据零丢失",
     "author": __author__,
     "github": "GitHub 仓库",

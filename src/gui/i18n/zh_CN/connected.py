@@ -27,9 +27,9 @@ CONNECTED_TEXTS = {
     
     # 状态说明 (帮助弹窗)
     "status_help_title": "状态定义说明",
-    "status_connected_desc": "文件物理位置已在 D 盘，C 盘为符号链接点。完全不占系统盘空间。",
-    "status_disconnected_desc": "文件物理位置仍在原位置（C 盘），尚未迁移。会持续占用系统盘空间。",
-    "status_ready_desc": "文件已在 D 盘，但 C 盘对应的链接点丢失或未建立。可通过「建立连接」恢复。",
+    "status_connected_desc": "文件物理位置已在目标驱动器，源位置为符号链接点。完全不占源驱动器空间。",
+    "status_disconnected_desc": "文件物理位置仍在源位置，尚未迁移。会持续占用源驱动器空间。",
+    "status_ready_desc": "文件已在目标驱动器，但源位置对应的链接点丢失或未建立。可通过「建立连接」恢复。",
     "status_invalid_desc": "由于路径不存在或原始配置损坏，连接已失效。请检查文件是否存在。",
     
     # 操作按钮
