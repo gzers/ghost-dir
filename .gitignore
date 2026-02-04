@@ -58,3 +58,10 @@ build/
 dist/
 *.exe
 *.zip
+
+# AI Assistant configs
+.agent/
+.claude/
+
+# Debug scripts
+debug_*.py
