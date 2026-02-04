@@ -102,38 +102,69 @@ class AddLinkDialog(MessageBoxBase):
     
     def validate(self):
         """验证并添加"""
+        from qfluentwidgets import InfoBar, InfoBarPosition
+        from PySide6.QtCore import Qt
+        from src.common.validators import PathValidator
+        from src.data.category_manager import CategoryManager
+        
+        # 1. 提取数据
         if self.stackedWidget.currentIndex() == 0:  # 从模版添加
             name = self.templateTab.nameEdit.text().strip()
             source = self.templateTab.sourceEdit.text().strip()
             target = self.templateTab.targetEdit.text().strip()
-            category = self.templateTab.categorySelector.get_value() or "uncategorized"
+            category_id = self.templateTab.categorySelector.get_value()
         else:  # 自定义添加
             name = self.customTab.customNameEdit.text().strip()
             source = self.customTab.customSourceEdit.text().strip()
             target = self.customTab.customTargetEdit.text().strip()
-            category = self.customTab.customCategorySelector.get_value() or "uncategorized"
-        
-        # 验证
-        if not name or not source or not target:
+            category_id = self.customTab.customCategorySelector.get_value()
+            
+        # 2. 必填项校验与统一 UI 提示
+        def show_warning(content):
+            InfoBar.warning(
+                title="验证失败",
+                content=content,
+                orient=Qt.Orientation.Horizontal,
+                isClosable=True,
+                position=InfoBarPosition.TOP,
+                duration=3000,
+                parent=self
+            )
+
+        if not name:
+            show_warning("连接名称不能为空")
+            return False
+        if not source:
+            show_warning("源路径不能为空")
+            return False
+        if not target:
+            show_warning("目标路径不能为空")
+            return False
+        if not category_id:
+            show_warning("请选择所属分类")
             return False
             
-        # 标准化路径
-        from src.common.validators import PathValidator
+        # 3. 验证分类是否为叶子节点 (如果业务要求)
+        cm = CategoryManager()
+        if not cm.is_leaf(category_id):
+            show_warning(f"分类 '{cm.get_category_by_id(category_id).name}' 不是末级分类，请选择子分类")
+            return False
+
+        # 4. 标准化路径
         source = PathValidator().normalize(source)
         target = PathValidator().normalize(target)
         
-        # 创建连接
+        # 5. 执行添加
         link = UserLink(
             id=str(uuid.uuid4()),
             name=name,
             source_path=source,
             target_path=target,
-            category=category,
+            category=category_id,
             template_id=self.selected_template.id if self.selected_template else None,
             icon=self.selected_template.icon if self.selected_template else None
         )
         
-        # 添加到用户数据
         if self.user_manager.add_link(link):
             # 处理保存为模版
             if self.stackedWidget.currentIndex() == 1 and self.customTab.saveAsTemplateBtn.isChecked():
@@ -141,12 +172,14 @@ class AddLinkDialog(MessageBoxBase):
                     id=str(uuid.uuid4()),
                     name=name,
                     default_src=source,
-                    category=category,
+                    category_id=category_id, # 修正字段名保持一致
                     is_custom=True
                 )
                 self.user_manager.add_custom_template(new_template)
             
             self.link_added.emit()
             return True
+        else:
+            show_warning("添加连接失败，请检查路径是否合法或冲突")
         
         return False

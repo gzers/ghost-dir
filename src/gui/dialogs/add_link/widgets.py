@@ -10,7 +10,7 @@ from src.data.category_manager import CategoryManager
 from src.gui.components import CategorySelector, ValidatedLineEdit
 from src.gui.i18n import get_category_text
 from src.common.validators import PathValidator, NameValidator
-from src.gui.styles import get_spacing, get_layout_margins
+from src.gui.styles import get_spacing, get_layout_margins, format_required_label
 
 class TemplateTabWidget(QWidget):
     """从模版库选择标签页"""
@@ -88,12 +88,12 @@ class TemplateTabWidget(QWidget):
         self.nameEdit = ValidatedLineEdit()
         self.nameEdit.addValidator(NameValidator())
         self.nameEdit.setPlaceholderText("输入链接名称")
-        form_layout.addRow(BodyLabel("名称:"), self.nameEdit)
+        form_layout.addRow(BodyLabel(format_required_label("名称:")), self.nameEdit)
         
         self.sourceEdit = ValidatedLineEdit()
         self.sourceEdit.addValidator(PathValidator())
         self.sourceEdit.setPlaceholderText("选择或输入源路径")
-        form_layout.addRow(BodyLabel("源路径:"), self.sourceEdit)
+        form_layout.addRow(BodyLabel(format_required_label("源路径:")), self.sourceEdit)
         
         self.targetEdit = ValidatedLineEdit()
         self.targetEdit.addValidator(PathValidator())
@@ -115,7 +115,7 @@ class TemplateTabWidget(QWidget):
         self.manageCategoryBtn.clicked.connect(self.manage_categories_requested.emit)
         cat_edit_layout.addWidget(self.manageCategoryBtn)
         
-        form_layout.addRow(BodyLabel("所属分类:"), cat_edit_widget)
+        form_layout.addRow(BodyLabel(format_required_label("所属分类:")), cat_edit_widget)
         
         layout.addWidget(form_widget)
         layout.addStretch()
@@ -201,12 +201,12 @@ class CustomTabWidget(QWidget):
         self.customNameEdit = ValidatedLineEdit()
         self.customNameEdit.addValidator(NameValidator())
         self.customNameEdit.setPlaceholderText("例如: 我的项目")
-        form_layout.addRow(BodyLabel("链接名称:"), self.customNameEdit)
+        form_layout.addRow(BodyLabel(format_required_label("链接名称:")), self.customNameEdit)
         
         self.customSourceEdit = ValidatedLineEdit()
         self.customSourceEdit.addValidator(PathValidator())
         self.customSourceEdit.setPlaceholderText("源文件或文件夹的绝对路径...")
-        form_layout.addRow(BodyLabel("源路径:"), self.customSourceEdit)
+        form_layout.addRow(BodyLabel(format_required_label("源路径:")), self.customSourceEdit)
         
         self.customTargetEdit = ValidatedLineEdit()
         self.customTargetEdit.addValidator(PathValidator())
@@ -228,7 +228,7 @@ class CustomTabWidget(QWidget):
         self.customManageBtn.clicked.connect(self.manage_categories_requested.emit)
         cat_row_layout.addWidget(self.customManageBtn)
         
-        form_layout.addRow(BodyLabel("所属分类:"), cat_row_widget)
+        form_layout.addRow(BodyLabel(format_required_label("所属分类:")), cat_row_widget)
         
         layout.addWidget(form_widget)
         
