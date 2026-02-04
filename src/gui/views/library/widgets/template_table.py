@@ -34,15 +34,29 @@ class TemplateTableWidget(BaseTableWidget):
         ])
         
         header = self.horizontalHeader()
+        
+        # 复选框列：固定宽度
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)
         self.setColumnWidth(0, 48)
         
+        # 名称列：根据内容自适应
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
-        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
-        header.setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
-        header.setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)
+        
+        # 源路径列：可交互调整
+        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Interactive)
+        self.setColumnWidth(2, 150)  # 初始宽度 150px
+        
+        # 目标路径列：可交互调整
+        header.setSectionResizeMode(3, QHeaderView.ResizeMode.Interactive)
+        self.setColumnWidth(3, 150)  # 初始宽度 150px
+        
+        # 描述列：拉伸填充剩余空间
+        header.setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)
+        
+        # 类型列：根据内容自适应
         header.setSectionResizeMode(5, QHeaderView.ResizeMode.ResizeToContents)
         
+        # 操作列：固定宽度
         header.setSectionResizeMode(6, QHeaderView.ResizeMode.Fixed)
         self.setColumnWidth(6, 100)
         
