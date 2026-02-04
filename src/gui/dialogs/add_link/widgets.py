@@ -26,35 +26,28 @@ class TemplateTabWidget(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 20, 0, 0)
         
-        # 搜索框
-        search_layout = QHBoxLayout()
+        # 顶部: 分类筛选 + 搜索
+        top_layout = QHBoxLayout()
+        
+        # 分类筛选器
+        self.categoryFilter = CategorySelector()
+        self.category_manager = CategoryManager()
+        self.categoryFilter.set_manager(self.category_manager)
+        self.categoryFilter.value_changed.connect(self._on_category_filter_changed)
+        top_layout.addWidget(BodyLabel("筛选:"))
+        top_layout.addWidget(self.categoryFilter, 1)
+        
         self.searchBox = LineEdit()
         self.searchBox.setPlaceholderText("搜索模版...")
         self.searchBox.textChanged.connect(self._on_search_changed)
-        search_layout.addWidget(self.searchBox)
-        layout.addLayout(search_layout)
+        top_layout.addWidget(self.searchBox, 1)
         
-        # 模版列表
-        self.templateList = QListWidget()
+        layout.addLayout(top_layout)
+        
+        # 模板列表
+        from qfluentwidgets import ListWidget
+        self.templateList = ListWidget()
         self.templateList.itemClicked.connect(self._on_item_clicked)
-        
-        # 使用官方响应式样式方案
-        from qfluentwidgets import setCustomStyleSheet
-        setCustomStyleSheet(
-            self.templateList,
-            lightQss="""
-                QListWidget { background: transparent; border: none; color: #1F1F1F; }
-                QListWidget::item { padding: 8px; border-radius: 4px; color: #1F1F1F; }
-                QListWidget::item:hover { background: rgba(0, 0, 0, 0.05); }
-                QListWidget::item:selected { background: rgba(0, 0, 0, 0.1); }
-            """,
-            darkQss="""
-                QListWidget { background: transparent; border: none; color: #FFFFFF; }
-                QListWidget::item { padding: 8px; border-radius: 4px; color: #FFFFFF; }
-                QListWidget::item:hover { background: rgba(255, 255, 255, 0.05); }
-                QListWidget::item:selected { background: rgba(255, 255, 255, 0.1); }
-            """
-        )
         layout.addWidget(self.templateList)
         
         # 详情区域
@@ -94,26 +87,57 @@ class TemplateTabWidget(QWidget):
         details_layout.addLayout(category_layout)
         
         layout.addLayout(details_layout)
+        
+        # 初始化数据
+        self.current_category_id = "all"
         self.refresh_categories()
+        self._load_templates_by_category("all")
+    
+    def _on_category_filter_changed(self, category_id: str):
+        """分类筛选器切换回调"""
+        self.current_category_id = category_id if category_id else "all"
+        self._load_templates_by_category(self.current_category_id)
+    
+    
+    def _load_templates_by_category(self, category_id: str):
+        """根据分类加载模板"""
+        self.templateList.clear()
+        
+        if category_id == "all":
+            templates = self.template_manager.get_all_templates()
+        else:
+            templates = self.template_manager.get_templates_by_category_recursive(category_id)
+        
+        for template in templates:
+            item = QListWidgetItem()
+            # 两行显示: 名称 + 路径
+            item.setText(f"{template.name}\n{template.default_src}")
+            item.setData(Qt.ItemDataRole.UserRole, template)
+            self.templateList.addItem(item)
 
     def _load_templates(self):
         self.templateList.clear()
         templates = self.template_manager.get_all_templates()
         for template in templates:
-            # 记录：不再在此处手动构建映射，统一走 get_category_text
             cat_name = get_category_text(template.category_id)
             item = QListWidgetItem(f"{template.name} ({cat_name})")
             item.setData(Qt.ItemDataRole.UserRole, template)
             self.templateList.addItem(item)
 
     def _on_search_changed(self, text: str):
-        self.templateList.clear()
-        templates = self.template_manager.search_templates(text) if text else self.template_manager.get_all_templates()
-        for template in templates:
-            cat_name = get_category_text(template.category_id)
-            item = QListWidgetItem(f"{template.name} ({cat_name})")
-            item.setData(Qt.ItemDataRole.UserRole, template)
-            self.templateList.addItem(item)
+        if text:
+            # 搜索模式
+            self.templateList.clear()
+            templates = self.template_manager.search_templates(text)
+            for template in templates:
+                item = QListWidgetItem()
+                cat_name = get_category_text(template.category_id)
+                item.setText(f"{template.name}\n{template.default_src}\n分类: {cat_name}")
+                item.setData(Qt.ItemDataRole.UserRole, template)
+                self.templateList.addItem(item)
+        else:
+            # 恢复分类浏览
+            self._load_templates_by_category(self.current_category_id)
 
     def _on_item_clicked(self, item: QListWidgetItem):
         template = item.data(Qt.ItemDataRole.UserRole)
@@ -136,7 +160,9 @@ class TemplateTabWidget(QWidget):
 
     def refresh_categories(self):
         """刷新分类列表"""
+        self.categoryFilter.refresh()
         self.categorySelector.refresh()
+
 
 class CustomTabWidget(QWidget):
     """自定义标签页"""

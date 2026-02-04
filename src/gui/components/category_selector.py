@@ -205,6 +205,8 @@ class CategoryTreeDropdown(QFrame):
 class CategorySelector(QWidget):
     """分类选择器组件（带下拉树形视图）"""
     
+    value_changed = Signal(str)  # 添加对外信号
+    
     def __init__(self, parent=None, only_leaf: bool = True, root_visible: bool = False):
         super().__init__(parent)
         self.category_manager = None
@@ -291,6 +293,9 @@ class CategorySelector(QWidget):
                 self.lineEdit.setToolTip(category_name)
         else:
             self.lineEdit.setToolTip(category_name)
+            
+        # 触发对外信号
+        self.value_changed.emit(category_id)
     
     def refresh(self):
         """刷新分类列表"""
