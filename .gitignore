@@ -23,7 +23,7 @@ wheels/
 
 # PyInstaller
 *.manifest
-*.spec
+# 注意：Ghost-Dir.spec 需要提交，所以不忽略 *.spec
 
 # IDE
 .vscode/
@@ -38,6 +38,10 @@ config/history.json
 config/template_cache.json  # API 模板缓存（运行时数据）
 *.backup
 
+# Temporary files
+temp_path.txt
+icons.txt
+
 # OS
 .DS_Store
 Thumbs.db
@@ -49,3 +53,8 @@ desktop.ini
 # Data directory (user data, config, logs)
 .ghost-dir/
 
+# Build artifacts
+build/
+dist/
+*.exe
+*.zip
