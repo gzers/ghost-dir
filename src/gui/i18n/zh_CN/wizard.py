@@ -18,7 +18,7 @@ WIZARD_TEXTS = {
     "cancel": "取消",
     
     # 状态文案
-    "scan_idle": "点击扫描开始",
+    "scan_idle": "准备就绪",
     "scan_progress": "正在扫描...",
     "scan_progress_detail": "正在扫描本机，请稍候...",
     "scan_progress_count": "正在扫描: {current}/{total}",

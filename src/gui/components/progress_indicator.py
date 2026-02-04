@@ -35,8 +35,8 @@ class ProgressIndicator(QWidget):
 
         # 状态文本
         self.status_label = BodyLabel("")
-        self.status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        apply_font_style(self.status_label, weight="medium")
+        self.status_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        apply_font_style(self.status_label, weight="medium", color="secondary")
         layout.addWidget(self.status_label)
 
     def set_status(self, text: str):
