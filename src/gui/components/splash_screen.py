@@ -3,9 +3,9 @@
 """
 from PySide6.QtWidgets import QVBoxLayout, QLabel
 from PySide6.QtCore import Qt, QSize
-from PySide6.QtGui import QIcon, QPixmap
+from PySide6.QtGui import QIcon, QPixmap, QPainter, QColor
 from qfluentwidgets import (SplashScreen, TitleLabel, CaptionLabel, 
-                            IndeterminateProgressRing)
+                            IndeterminateProgressRing, isDarkTheme)
 
 from src.common.config import APP_VERSION, WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT
 from src.common.resource_loader import get_resource_path
@@ -13,7 +13,7 @@ from src.gui.i18n import t
 
 
 class AppSplashScreen(SplashScreen):
-    """Ghost-Dir 高级启动界面组件"""
+    """Ghost-Dir 高级启动界面组件（支持主题跟随）"""
 
     def __init__(self, parent=None):
         # 不传图标给基类，彻底堵死基类的图标来源，解决图标重叠问题
@@ -36,8 +36,13 @@ class AppSplashScreen(SplashScreen):
         self.__init_layout(str(icon_path))
 
     def paintEvent(self, event):
-        """覆盖绘图事件，禁止 QSplashScreen 渲染任何内容，防止产生重叠 logo"""
-        pass
+        """自定义绘制事件，支持主题跟随的背景色"""
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        
+        # 根据主题绘制背景色
+        bg_color = QColor("#202020") if isDarkTheme() else QColor("#F3F3F3")
+        painter.fillRect(self.rect(), bg_color)
 
     def drawContents(self, painter):
         """禁止渲染文字内容"""
