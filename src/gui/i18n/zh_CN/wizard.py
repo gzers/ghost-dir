@@ -40,8 +40,8 @@ WIZARD_TEXTS = {
     "config_editor": {
         "title": "高级配置",
         "description": "直接编辑底层配置文件，自定义软件的行为逻辑。",
-        "config_json": "全局设置",
-        "config_json_desc": "管理扫描深度、忽略列表及系统参数。",
+        "config_json": "用户配置",
+        "config_json_desc": "管理用户级配置，如扫描深度、忽略列表等。",
         "categories_json": "分类树定义",
         "categories_json_desc": "自定义左侧导航栏的目录结构与层级。",
         "templates_json": "模板规则",

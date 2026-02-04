@@ -180,7 +180,7 @@ class ConfigEditorCard(CardWidget):
         
         # 配置文件列表
         config_files = [
-            (CONFIG_FILE, FluentIcon.SETTING, "#2F6BFF", 
+            (CONFIG_FILE, FluentIcon.PEOPLE, "#2F6BFF", 
              "config_editor.config_json", "config_editor.config_json_desc"),
             (CATEGORIES_CONFIG, FluentIcon.FOLDER_ADD, "#9A7BFF", 
              "config_editor.categories_json", "config_editor.categories_json_desc"),
