@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout, QFormLayout, QWidget
 from PySide6.QtCore import Signal, Qt
-from qfluentwidgets import MessageBoxBase, LineEdit, BodyLabel, PushButton, InfoBar, InfoBarPosition
+from qfluentwidgets import MessageBoxBase, LineEdit, BodyLabel, PushButton, InfoBar
 from src.core.services.context import service_bus
 from src.gui.components import CategorySelector
 from src.data.model import UserLink, LinkStatus
@@ -95,7 +95,7 @@ class EditLinkDialog(MessageBoxBase):
                 title="验证失败",
                 content=msg,
                 orient=Qt.Orientation.Horizontal,
-                position=InfoBarPosition.TOP_CENTER,
+                position='TopCenter',
                 duration=3000,
                 parent=self
             )

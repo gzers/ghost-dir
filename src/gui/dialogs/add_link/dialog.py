@@ -2,7 +2,7 @@
 新增连接对话框
 """
 from PySide6.QtCore import Signal, Qt
-from qfluentwidgets import MessageBoxBase, InfoBar, InfoBarPosition
+from qfluentwidgets import MessageBoxBase, InfoBar
 from src.core.services.context import service_bus
 from src.gui.dialogs.add_link.widgets import TemplateTabWidget, CustomTabWidget
 
@@ -134,7 +134,7 @@ class AddLinkDialog(MessageBoxBase):
                 title="验证失败",
                 content=msg,
                 orient=Qt.Orientation.Horizontal,
-                position=InfoBarPosition.TOP_CENTER,
+                position='TopCenter',
                 duration=3000,
                 parent=self
             )

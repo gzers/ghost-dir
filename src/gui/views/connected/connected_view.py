@@ -9,7 +9,7 @@ from PySide6.QtWidgets import QSplitter, QWidget, QStackedWidget, QVBoxLayout
 from PySide6.QtCore import Qt
 from qfluentwidgets import (
     PushButton, ToolButton, FluentIcon as FIF, MessageBox, 
-    InfoBar, InfoBarPosition, Pivot, SearchLineEdit, PrimaryPushButton, 
+    InfoBar, Pivot, SearchLineEdit, PrimaryPushButton, 
     TransparentPushButton, StateToolTip, IndeterminateProgressRing
 )
 from src.gui.common import operation_runner
@@ -168,13 +168,14 @@ class ConnectedView(BasePageView):
             # 🆕 UI 反馈：通知表格进入加载状态
             self.category_link_table.set_all_sizes_loading()
             
-            # 显示状态提示
-            self._state_tooltip = StateToolTip(
-                "正在统计空间占用",
-                "计算中，请稍候...",
-                self.window()
+            # 🆕 统一使用 TopCenter InfoBar 代替左上角 StateToolTip
+            InfoBar.info(
+                "正在统计",
+                "正在统计空间占用，请稍候...",
+                duration=2000,
+                position='TopCenter',
+                parent=self.window()
             )
-            self._state_tooltip.show()
 
             # 注意：FlatLinkView 也需要这个支持，如果它是基于列表的视图
             if hasattr(self.list_view, 'table'):
@@ -187,10 +188,14 @@ class ConnectedView(BasePageView):
 
     def _on_size_calculated(self, results: dict):
         """统计完成回调"""
-        if self._state_tooltip:
-            self._state_tooltip.setContent("统计更新完成 ✓")
-            self._state_tooltip.setState(True)
-            self._state_tooltip = None
+        # 显示单次汇总通知
+        InfoBar.success(
+            "统计完成",
+            "统计更新完成 ✓",
+            duration=2000,
+            position='TopCenter',
+            parent=self.window()
+        )
         
     def _on_show_status_help(self):
         """显示状态定义说明"""
@@ -266,7 +271,6 @@ class ConnectedView(BasePageView):
 
     def _on_action_clicked(self, link_id: str, action: str):
         """单项操作"""
-        from qfluentwidgets import InfoBarPosition
         
         if action == "establish":
             operation_runner.run_task_async(
@@ -324,7 +328,7 @@ class ConnectedView(BasePageView):
                     t("common.success"), 
                     t("connected.batch_remove"), 
                     duration=2000, 
-                    position=InfoBarPosition.TOP_CENTER, 
+                    position='TopCenter', 
                     parent=self
                 )
                 self._load_data()

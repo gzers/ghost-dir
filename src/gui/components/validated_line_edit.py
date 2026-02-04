@@ -1,7 +1,7 @@
 # coding:utf-8
 from typing import Optional, List
 from PySide6.QtCore import Qt, Signal
-from qfluentwidgets import LineEdit, InfoBar, InfoBarPosition
+from qfluentwidgets import LineEdit, InfoBar
 from src.common.validators.base import BaseValidator
 
 
@@ -91,7 +91,7 @@ class ValidatedLineEdit(LineEdit):
             content=message,
             orient=Qt.Orientation.Horizontal,
             isClosable=True,
-            position=InfoBarPosition.TOP_CENTER,
+            position='TopCenter',
             duration=2000,
             parent=self.window()
         )

@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
 from qfluentwidgets import (
     MessageBoxBase, SubtitleLabel, LineEdit, ComboBox,
     PushButton, TextEdit, FluentIcon, TransparentToolButton,
-    InfoBar, InfoBarPosition, BodyLabel
+    InfoBar, BodyLabel
 )
 from src.gui.components import CategorySelector, ValidatedLineEdit
 from src.gui.styles import format_required_label
@@ -187,7 +187,7 @@ class TemplateEditDialog(MessageBoxBase):
                 title='验证失败',
                 content=msg,
                 orient=Qt.Orientation.Horizontal,
-                position=InfoBarPosition.TOP_CENTER,
+                position='TopCenter',
                 duration=3000,
                 parent=self
             )

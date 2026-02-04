@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (
 )
 from qfluentwidgets import (
     MessageBoxBase, SubtitleLabel, LineEdit, PushButton,
-    CheckBox, InfoBar, InfoBarPosition
+    CheckBox, InfoBar
 )
 from src.data.template_manager import TemplateManager
 from src.data.category_manager import CategoryManager
@@ -123,7 +123,7 @@ class ExportDialog(MessageBoxBase):
                 content='请选择导出文件路径',
                 orient=Qt.Orientation.Horizontal,
                 isClosable=True,
-                position=InfoBarPosition.TOP_CENTER,
+                position='TopCenter',
                 duration=3000,
                 parent=self
             )
@@ -135,7 +135,7 @@ class ExportDialog(MessageBoxBase):
                 content='请至少选择一项导出内容',
                 orient=Qt.Orientation.Horizontal,
                 isClosable=True,
-                position=InfoBarPosition.TOP_CENTER,
+                position='TopCenter',
                 duration=3000,
                 parent=self
             )

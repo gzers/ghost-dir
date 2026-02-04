@@ -5,7 +5,7 @@ from PySide6.QtGui import QAction
 from qfluentwidgets import (
     MessageBoxBase, SubtitleLabel, PushButton, 
     MessageBox, FluentIcon, TogglePushButton,
-    InfoBar, InfoBarPosition
+    InfoBar
 )
 
 from src.core.services.context import service_bus
@@ -253,7 +253,7 @@ class CategoryManagerDialog(MessageBoxBase):
                         content=msg,
                         orient=Qt.Orientation.Horizontal,
                         isClosable=True,
-                        position=InfoBarPosition.TOP_CENTER,
+                        position='TopCenter',
                         duration=2000,
                         parent=self
                     )
@@ -294,7 +294,7 @@ class CategoryManagerDialog(MessageBoxBase):
                         content=msg,
                         orient=Qt.Orientation.Horizontal,
                         isClosable=True,
-                        position=InfoBarPosition.TOP_CENTER,
+                        position='TopCenter',
                         duration=2000,
                         parent=self
                     )
@@ -372,7 +372,7 @@ class CategoryManagerDialog(MessageBoxBase):
                 content=t("library.msg_delete_success", count=success_count),
                 orient=Qt.Orientation.Horizontal,
                 isClosable=True,
-                position=InfoBarPosition.TOP_CENTER,
+                position='TopCenter',
                 duration=2000,
                 parent=self
             )
@@ -486,7 +486,7 @@ class CategoryManagerDialog(MessageBoxBase):
             content=t("library.msg_sort_cancelled"),
             orient=Qt.Orientation.Horizontal,
             isClosable=True,
-            position=InfoBarPosition.TOP_CENTER,
+            position='TopCenter',
             duration=2000,
             parent=self
         )
@@ -633,7 +633,7 @@ class CategoryManagerDialog(MessageBoxBase):
                 content=msg,
                 orient=Qt.Orientation.Horizontal,
                 isClosable=True,
-                position=InfoBarPosition.TOP_CENTER,
+                position='TopCenter',
                 duration=2000,
                 parent=self
             )

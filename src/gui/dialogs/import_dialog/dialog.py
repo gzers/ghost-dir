@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (
 )
 from qfluentwidgets import (
     MessageBoxBase, SubtitleLabel, LineEdit, PushButton,
-    BodyLabel, InfoBar, InfoBarPosition
+    BodyLabel, InfoBar
 )
 import json
 from src.data.template_manager import TemplateManager
@@ -165,7 +165,7 @@ class ImportDialog(MessageBoxBase):
                 content='请选择导入文件',
                 orient=Qt.Orientation.Horizontal,
                 isClosable=True,
-                position=InfoBarPosition.TOP_CENTER,
+                position='TopCenter',
                 duration=3000,
                 parent=self
             )
@@ -177,7 +177,7 @@ class ImportDialog(MessageBoxBase):
                 content='无法读取导入文件',
                 orient=Qt.Orientation.Horizontal,
                 isClosable=True,
-                position=InfoBarPosition.TOP_CENTER,
+                position='TopCenter',
                 duration=3000,
                 parent=self
             )

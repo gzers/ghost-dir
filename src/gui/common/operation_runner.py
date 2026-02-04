@@ -4,7 +4,7 @@
 """
 import typing
 from PySide6.QtWidgets import QWidget
-from qfluentwidgets import StateToolTip, InfoBar, InfoBarPosition
+from qfluentwidgets import StateToolTip, InfoBar
 from src.gui.common.task_runner import SimpleTaskWorker, BatchTaskWorker
 from src.gui.components.progress_dialog import ProgressDialog
 from src.gui.i18n import t

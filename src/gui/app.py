@@ -13,6 +13,7 @@ from src.core.engine.transaction_engine import check_crash_recovery, recover_fro
 
 
 from src.common.resource_loader import get_resource_path
+import src.gui.common.notification  # 注册自定义置顶居中通知管理器
 
 
 class GhostDirApp(QApplication):

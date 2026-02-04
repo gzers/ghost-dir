@@ -1,6 +1,5 @@
 # coding:utf-8
 from PySide6.QtWidgets import QFileDialog, QWidget
-from qfluentwidgets import PushSettingCard, FluentIcon
 from qfluentwidgets import PushSettingCard, FluentIcon, InfoBar
 from src.gui.i18n import t
 from src.common.validators import PathValidator
@@ -39,6 +38,6 @@ class TargetRootCard(PushSettingCard):
                     t("common.success"),
                     t("settings.path_updated"),
                     duration=2000,
-                    position=InfoBarPosition.TOP_CENTER,
+                    position='TopCenter',
                     parent=parent_window
                 )

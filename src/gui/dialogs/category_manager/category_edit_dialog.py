@@ -11,7 +11,7 @@ from PySide6.QtWidgets import (
 from qfluentwidgets import (
     MessageBoxBase, SubtitleLabel, LineEdit,
     PushButton, SpinBox, FluentIcon, TransparentToolButton,
-    InfoBar, InfoBarPosition, BodyLabel
+    InfoBar, BodyLabel
 )
 from src.data.model import CategoryNode
 from src.data.category_manager import CategoryManager
@@ -141,7 +141,7 @@ class CategoryEditDialog(MessageBoxBase):
                 content=t("library.error_empty_name"),
                 orient=Qt.Orientation.Horizontal,
                 isClosable=True,
-                position=InfoBarPosition.TOP_CENTER,
+                position='TopCenter',
                 duration=3000,
                 parent=self
             )
@@ -159,7 +159,7 @@ class CategoryEditDialog(MessageBoxBase):
                     content=msg,
                     orient=Qt.Orientation.Horizontal,
                     isClosable=True,
-                    position=InfoBarPosition.TOP_CENTER,
+                    position='TopCenter',
                     duration=3000,
                     parent=self
                 )
@@ -184,7 +184,7 @@ class CategoryEditDialog(MessageBoxBase):
                     content=t("library.help_notes_3"), # 复用层级限制说明或者建新key，这里复用
                     orient=Qt.Orientation.Horizontal,
                     isClosable=True,
-                    position=InfoBarPosition.TOP_CENTER,
+                    position='TopCenter',
                     duration=3000,
                     parent=self
                 )

@@ -5,7 +5,7 @@
 from typing import List
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QFormLayout, QListWidget, QListWidgetItem, QLabel
-from qfluentwidgets import MessageBoxBase, SubtitleLabel, BodyLabel, InfoBar, InfoBarPosition
+from qfluentwidgets import MessageBoxBase, SubtitleLabel, BodyLabel, InfoBar
 from src.data.model import Template
 from src.data.category_manager import CategoryManager
 from src.gui.components import CategorySelector
@@ -81,7 +81,7 @@ class BatchMoveDialog(MessageBoxBase):
                 content='请选择目标分类（只能选择叶子分类）',
                 orient=Qt.Orientation.Horizontal,
                 isClosable=True,
-                position=InfoBarPosition.TOP_CENTER,
+                position='TopCenter',
                 duration=3000,
                 parent=self
             )

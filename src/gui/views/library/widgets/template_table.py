@@ -2,7 +2,7 @@ from typing import List, Dict
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtWidgets import QTableWidgetItem, QHeaderView, QWidget, QHBoxLayout
-from qfluentwidgets import FluentIcon, RoundMenu, Action, TransparentToolButton, InfoBar, InfoBarPosition, CheckBox
+from qfluentwidgets import FluentIcon, RoundMenu, Action, TransparentToolButton, InfoBar, CheckBox
 from src.data.model import Template
 from src.gui.components import BaseTableWidget
 
@@ -190,7 +190,7 @@ class TemplateTableWidget(BaseTableWidget):
                     content=f"内容: {item.text()[:20]}...",
                     orient=Qt.Orientation.Horizontal,
                     isClosable=True,
-                    position=InfoBarPosition.TOP_CENTER,
+                    position='TopCenter',
                     duration=2000,
                     parent=self.window()
                 )
