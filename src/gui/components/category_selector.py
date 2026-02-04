@@ -66,56 +66,73 @@ class CategoryTreeDropdown(QFrame):
         
         # 连接信号
         self.tree.itemClicked.connect(self._on_item_clicked)
+        
+        # 核心：监听主题变化信号以便及时更新样式
+        from qfluentwidgets import qconfig
+        qconfig.themeChanged.connect(self._apply_style)
+    
+    def showEvent(self, event):
+        """弹出时强制刷新样式，防止主题滞后"""
+        self._apply_style()
+        super().showEvent(event)
     
     def _apply_style(self):
         """应用样式"""
-        from src.gui.styles import get_font_style, get_text_primary, get_text_secondary, get_accent_color
-        from PySide6.QtWidgets import QApplication
-        from PySide6.QtGui import QPalette
+        from qfluentwidgets import setCustomStyleSheet, isDarkTheme
         
-        font_style = get_font_style(size="md", weight="normal")
-        text_primary = get_text_primary()
+        # 基础样式常量
+        item_height = 36
         
-        palette = QApplication.palette()
-        is_dark = palette.color(QPalette.ColorRole.Window).lightness() < 128
+        # 定义通用树项样式（基于类选择器）
+        def get_qss(bg_color, border_color, text_color, hover_color, select_color):
+            return f"""
+                CategoryTreeDropdown {{
+                    background: {bg_color};
+                    border: 1px solid {border_color};
+                    border-radius: 8px;
+                }}
+                TreeWidget {{
+                    background: transparent;
+                    border: none;
+                    outline: none;
+                    margin: 0px;
+                    padding: 0px;
+                }}
+                TreeWidget::item {{
+                    color: {text_color};
+                    height: {item_height}px;
+                    padding-left: 12px;
+                    margin: 0px;
+                    border: none;
+                }}
+                TreeWidget::item:hover {{
+                    background: {hover_color};
+                }}
+                TreeWidget::item:selected {{
+                    background: {select_color};
+                }}
+                TreeWidget::branch {{
+                    background: transparent;
+                    width: 24px;
+                }}
+            """
+
+        light_qss = get_qss(
+            "rgba(255, 255, 255, 0.95)", "rgba(0, 0, 0, 0.15)", 
+            "black", "rgba(0, 0, 0, 0.05)", "rgba(0, 0, 0, 0.1)"
+        )
+        dark_qss = get_qss(
+            "rgba(45, 45, 45, 0.95)", "rgba(255, 255, 255, 0.1)", 
+            "white", "rgba(255, 255, 255, 0.05)", "rgba(255, 255, 255, 0.1)"
+        )
         
-        if is_dark:
-            bg_color = "rgba(45, 45, 45, 0.95)"
-            border_color = "rgba(255, 255, 255, 0.1)"
-        else:
-            bg_color = "rgba(255, 255, 255, 0.95)"
-            border_color = "rgba(0, 0, 0, 0.15)"
+        # 1. 设置响应式 QSS
+        setCustomStyleSheet(self, light_qss, dark_qss)
+        setCustomStyleSheet(self.tree, light_qss, dark_qss)
         
-        # 修复：在 f-string 中，CSS 的大括号必须写成双大括号 {{ }}
-        qss = f"""
-            #CategoryTreeDropdown {{
-                background: {bg_color};
-                border: 1px solid {border_color};
-                border-radius: 8px;
-            }}
-            TreeWidget {{
-                background: transparent;
-                border: none;
-                outline: none;
-                margin: 0px;
-                padding: 0px;
-                {font_style}
-            }}
-            TreeWidget::item {{
-                color: {text_primary};
-                height: 36px;
-                padding-left: 12px;
-                margin: 0px;
-                border: none;
-            }}
-            TreeWidget::branch {{
-                background: transparent;
-                width: 24px;
-            }}
-        """
-        # 对内部树和外壳都应用样式
-        setCustomStyleSheet(self.tree, qss, qss)
-        self.setStyleSheet(qss)
+        # 2. 核心补丁：对于顶级窗口，有时需要强制应用当前主题的 QSS 以确保立即可见
+        target_qss = dark_qss if isDarkTheme() else light_qss
+        self.setStyleSheet(target_qss)
     
     def load_categories(self):
         """加载分类树"""
