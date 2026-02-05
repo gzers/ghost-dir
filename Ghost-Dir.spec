@@ -7,7 +7,7 @@ a = Analysis(
     binaries=[],
     datas=[
         ('assets', 'assets'),
-        ('config', 'config')
+        ('config', 'config'),  # 打包配置文件到 _internal/config
     ],
     hiddenimports=[],
     hookspath=[],

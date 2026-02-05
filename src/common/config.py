@@ -2,6 +2,7 @@
 全局配置常量
 """
 import os
+import sys
 from pathlib import Path
 
 
@@ -10,28 +11,64 @@ APP_NAME = "Ghost-Dir"
 APP_VERSION = "1.0.0"
 APP_AUTHOR = "Ghost-Dir Team"
 
-# 项目根目录（获取脚本所在目录）
-PROJECT_ROOT = Path(__file__).parent.parent.parent
+# 路径计算：区分开发环境和打包环境
+if getattr(sys, 'frozen', False):
+    # 打包环境：
+    # sys.executable = "D:\Software\Common\Ghost Dir\Ghost-Dir.exe"
+    # exe_dir = "D:\Software\Common\Ghost Dir"
+    exe_dir = Path(sys.executable).parent
+    PROJECT_ROOT = exe_dir / "_internal"  # 只读资源目录（assets）
+    DATA_DIR = exe_dir / ".ghost-dir"      # 用户数据目录（所有配置文件）
+else:
+    # 开发环境：从当前文件向上找到项目根目录
+    PROJECT_ROOT = Path(__file__).parent.parent.parent
+    DATA_DIR = PROJECT_ROOT / ".ghost-dir"
 
-# 数据文件路径（统一使用项目根目录下的 .ghost-dir）
-DATA_DIR = PROJECT_ROOT / ".ghost-dir"
-TEMPLATES_FILE = "assets/templates.json"  # 已废弃，保留用于兼容性
+
+# ========== 配置文件路径（统一在 .ghost-dir 下）==========
+
+# QFluentWidgets UI 配置
+CONFIG_FILE = DATA_DIR / "config.json"
+
+# 用户数据
 USER_DATA_FILE = DATA_DIR / "user_data.json"
+
+# 分类定义
+CATEGORIES_CONFIG = DATA_DIR / "categories.json"
+
+# 默认模板
+DEFAULT_TEMPLATES_CONFIG = DATA_DIR / "default_templates.json"
+
+# 运行时数据
+TEMPLATE_CACHE_FILE = DATA_DIR / "template_cache.json"
+CATEGORY_LOG_FILE = DATA_DIR / "category_log.json"
 LOCK_FILE = DATA_DIR / ".ghost.lock"
 
-# 模板配置文件
-DEFAULT_TEMPLATES_CONFIG = PROJECT_ROOT / "config" / "default_templates.json"  # 内置默认模板（进版本控制）
-TEMPLATE_CACHE_FILE = DATA_DIR / "template_cache.json"  # API 模板缓存（运行时数据）
-CATEGORIES_CONFIG = PROJECT_ROOT / "config" / "categories.json"  # 分类配置文件
-CATEGORY_LOG_FILE = DATA_DIR / "category_log.json"  # 分类操作日志
-
-# 配置和日志目录
-CONFIG_FILE = DATA_DIR / "config.json"
+# 日志目录
 LOG_DIR = DATA_DIR / "logs"
+
+# 已废弃，保留用于兼容性
+TEMPLATES_FILE = "assets/templates.json"
 
 # 确保数据目录和日志目录存在
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 LOG_DIR.mkdir(parents=True, exist_ok=True)
+
+# 打包后首次运行时，从 _internal/config 复制配置文件到 .ghost-dir
+if getattr(sys, 'frozen', False):
+    import shutil
+    builtin_config_dir = PROJECT_ROOT / "config"
+    
+    # 需要复制的配置文件
+    config_files = ["categories.json", "default_templates.json", "config.json"]
+    
+    for config_file in config_files:
+        user_config = DATA_DIR / config_file
+        builtin_config = builtin_config_dir / config_file
+        
+        # 如果用户目录没有该配置文件，且内置配置存在，则复制
+        if not user_config.exists() and builtin_config.exists():
+            shutil.copy2(builtin_config, user_config)
 
 # ========== 应用默认设置 ==========
 # 这些是应用级的默认值常量，不会在运行时改变

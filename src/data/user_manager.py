@@ -52,8 +52,8 @@ class UserManager:
     
     def _ensure_data_dir(self):
         """确保数据目录存在"""
-        from src.common.config import CONFIG_FILE
-        CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
+        from src.common.config import USER_DATA_FILE
+        USER_DATA_FILE.parent.mkdir(parents=True, exist_ok=True)
 
     def reload(self):
         """重新从磁盘加载最新数据，用于多实例同步"""
@@ -61,13 +61,13 @@ class UserManager:
 
     def _load_data(self):
         """加载用户数据"""
-        from src.common.config import CONFIG_FILE
-        if not CONFIG_FILE.exists():
+        from src.common.config import USER_DATA_FILE
+        if not USER_DATA_FILE.exists():
             self._init_default_data()
             return
 
         try:
-            with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+            with open(USER_DATA_FILE, 'r', encoding='utf-8') as f:
                 data = json.load(f)
 
             # v7.4 数据迁移
@@ -157,7 +157,7 @@ class UserManager:
     
     def _save_data(self):
         """保存用户数据"""
-        from src.common.config import CONFIG_FILE
+        from src.common.config import USER_DATA_FILE
         try:
             data = {
                 'links': [asdict(link) for link in self.links],
@@ -173,7 +173,7 @@ class UserManager:
                 'transparency': self.transparency
             }
 
-            with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
+            with open(USER_DATA_FILE, 'w', encoding='utf-8') as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
                 
         except Exception as e:
