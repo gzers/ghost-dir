@@ -77,11 +77,7 @@ python run.py
 pip install pyinstaller
 
 # 打包
-pyinstaller --name="Ghost-Dir" \
-            --windowed \
-            --icon=assets/icon.ico \
-            --add-data="assets;assets" \
-            src/main.py
+pyinstaller --name="Ghost-Dir" --windowed --icon=assets/icon.ico --add-data="assets;assets" src/main.py
 ```
 
 ## 📖 使用指南
