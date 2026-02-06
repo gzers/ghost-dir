@@ -22,6 +22,9 @@ from src.gui.views.settings.widgets.log_folder_card import LogFolderCard
 from src.gui.views.settings.widgets.restore_config_cards import (
     RestoreConfigCard, RestoreCategoriesCard, RestoreTemplatesCard
 )
+from src.gui.views.settings.widgets.backup_cards import (
+    ExportBackupCard, ImportBackupCard
+)
 
 
 class SettingView(BasePageView):
@@ -114,6 +117,14 @@ class SettingView(BasePageView):
         # 恢复默认模板
         self.restoreTemplatesCard = RestoreTemplatesCard(self.configGroup)
         self.configGroup.addSettingCard(self.restoreTemplatesCard)
+        
+        # 导出配置备份
+        self.exportBackupCard = ExportBackupCard(self.configGroup)
+        self.configGroup.addSettingCard(self.exportBackupCard)
+        
+        # 导入配置备份
+        self.importBackupCard = ImportBackupCard(self.configGroup)
+        self.configGroup.addSettingCard(self.importBackupCard)
 
         expand_layout.addWidget(self.configGroup)
 

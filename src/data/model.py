@@ -89,6 +89,32 @@ class CategoryNode:
             full_path_code=data.get("full_path_code", ""),
             full_path_name=data.get("full_path_name", "")
         )
+    
+    def validate(self) -> tuple[bool, str]:
+        """
+        校验分类数据有效性
+        
+        Returns:
+            (是否有效, 错误信息)
+        """
+        # 1. 必需字段校验
+        if not self.id:
+            return False, "分类 ID 不能为空"
+        if not self.name:
+            return False, "分类名称不能为空"
+        
+        # 2. 数据类型校验
+        if not isinstance(self.order, int):
+            return False, "排序权重必须为整数"
+        if not isinstance(self.is_builtin, bool):
+            return False, "is_builtin 必须为布尔值"
+        
+        # 3. 业务规则校验
+        if self.order < 0:
+            return False, "排序权重不能为负数"
+        
+        return True, ""
+
 
 
 @dataclass
@@ -141,6 +167,34 @@ class Template:
             created_at=data.get("created_at", datetime.now().isoformat()),
             updated_at=data.get("updated_at", datetime.now().isoformat())
         )
+    
+    def validate(self) -> tuple[bool, str]:
+        """
+        校验模板数据有效性
+        
+        Returns:
+            (是否有效, 错误信息)
+        """
+        # 1. 必需字段校验
+        if not self.id:
+            return False, "模板 ID 不能为空"
+        if not self.name:
+            return False, "模板名称不能为空"
+        if not self.default_src:
+            return False, "默认源路径不能为空"
+        if not self.category_id:
+            return False, "分类 ID 不能为空"
+        
+        # 2. 路径格式校验
+        if not self.default_src.strip():
+            return False, "默认源路径不能为空白字符"
+        
+        # 3. 数据类型校验
+        if not isinstance(self.is_custom, bool):
+            return False, "is_custom 必须为布尔值"
+        
+        return True, ""
+
 
 
 
@@ -214,6 +268,42 @@ class UserLink:
             created_at=data.get("created_at", datetime.now().isoformat()),
             updated_at=data.get("updated_at", datetime.now().isoformat())
         )
+    
+    def validate(self) -> tuple[bool, str]:
+        """
+        校验链接数据有效性
+        
+        Returns:
+            (是否有效, 错误信息)
+        """
+        # 1. 必需字段校验
+        if not self.id:
+            return False, "链接 ID 不能为空"
+        if not self.name:
+            return False, "链接名称不能为空"
+        if not self.source_path:
+            return False, "源路径不能为空"
+        if not self.target_path:
+            return False, "目标路径不能为空"
+        if not self.category:
+            return False, "分类不能为空"
+        
+        # 2. 路径格式校验
+        if not self.source_path.strip():
+            return False, "源路径不能为空白字符"
+        if not self.target_path.strip():
+            return False, "目标路径不能为空白字符"
+        
+        # 3. 数据类型校验
+        if not isinstance(self.last_known_size, int):
+            return False, "last_known_size 必须为整数"
+        
+        # 4. 业务规则校验
+        if self.last_known_size < 0:
+            return False, "last_known_size 不能为负数"
+        
+        return True, ""
+
 
 
 @dataclass

@@ -86,14 +86,7 @@ class ConfigValidator:
         """
         校验 categories.json 结构
         
-        必需字段：
-        - categories (list)
-        每个分类必须包含：
-        - id (str)
-        - name (str)
-        - parent_id (str | null)
-        - order (int)
-        - is_builtin (bool)
+        使用 CategoryNode.validate() 进行数据校验
         
         Args:
             file_path: categories.json 文件路径
@@ -112,47 +105,31 @@ class ConfigValidator:
             if not isinstance(data["categories"], list):
                 return False, "categories 必须是数组类型"
             
-            # 检查每个分类的字段
-            required_fields = {
-                "id": str,
-                "name": str,
-                "order": int,
-                "is_builtin": bool
-            }
+            # 使用模型校验每个分类
+            from src.data.model import CategoryNode
             
-            for idx, category in enumerate(data["categories"]):
-                for field, expected_type in required_fields.items():
-                    if field not in category:
-                        return False, f"分类 {idx} 缺少必需字段: {field}"
-                    
-                    if not isinstance(category[field], expected_type):
-                        return False, f"分类 {idx} 字段类型错误: {field} 应为 {expected_type.__name__}"
-                
-                # parent_id 可以是 str 或 null
-                if "parent_id" not in category:
-                    return False, f"分类 {idx} 缺少必需字段: parent_id"
-                
-                if category["parent_id"] is not None and not isinstance(category["parent_id"], str):
-                    return False, f"分类 {idx} 字段类型错误: parent_id 应为 str 或 null"
+            for idx, cat_data in enumerate(data["categories"]):
+                try:
+                    category = CategoryNode.from_dict(cat_data)
+                    valid, msg = category.validate()
+                    if not valid:
+                        return False, f"分类 {idx} 校验失败: {msg}"
+                except KeyError as e:
+                    return False, f"分类 {idx} 缺少必需字段: {str(e)}"
+                except Exception as e:
+                    return False, f"分类 {idx} 数据错误: {str(e)}"
             
             return True, ""
         except Exception as e:
             return False, f"结构校验失败: {str(e)}"
+
     
     @staticmethod
     def validate_templates_structure(file_path: Path) -> Tuple[bool, str]:
         """
         校验 default_templates.json 结构
         
-        必需字段：
-        - templates (list)
-        每个模板必须包含：
-        - id (str)
-        - name (str)
-        - default_src (str)
-        - category_id (str)
-        - default_target (str)
-        - is_custom (bool)
+        使用 Template.validate() 进行数据校验
         
         Args:
             file_path: default_templates.json 文件路径
@@ -171,23 +148,19 @@ class ConfigValidator:
             if not isinstance(data["templates"], list):
                 return False, "templates 必须是数组类型"
             
-            # 检查每个模板的字段
-            required_fields = {
-                "id": str,
-                "name": str,
-                "default_src": str,
-                "category_id": str,
-                "default_target": str,
-                "is_custom": bool
-            }
+            # 使用模型校验每个模板
+            from src.data.model import Template
             
-            for idx, template in enumerate(data["templates"]):
-                for field, expected_type in required_fields.items():
-                    if field not in template:
-                        return False, f"模板 {idx} 缺少必需字段: {field}"
-                    
-                    if not isinstance(template[field], expected_type):
-                        return False, f"模板 {idx} 字段类型错误: {field} 应为 {expected_type.__name__}"
+            for idx, tpl_data in enumerate(data["templates"]):
+                try:
+                    template = Template.from_dict(tpl_data)
+                    valid, msg = template.validate()
+                    if not valid:
+                        return False, f"模板 {idx} 校验失败: {msg}"
+                except KeyError as e:
+                    return False, f"模板 {idx} 缺少必需字段: {str(e)}"
+                except Exception as e:
+                    return False, f"模板 {idx} 数据错误: {str(e)}"
             
             return True, ""
         except Exception as e:

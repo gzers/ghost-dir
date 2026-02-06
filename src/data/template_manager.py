@@ -415,17 +415,8 @@ class TemplateManager:
                         t for t in templates
                         if getattr(t, 'category_id', getattr(t, 'category', 'uncategorized')) in category_filter
                     ]
-                templates_data = [
-                    {
-                        "id": t.id,
-                        "name": t.name,
-                        "default_src": t.default_src,
-                        "category_id": getattr(t, 'category_id', getattr(t, 'category', 'uncategorized')),
-                        "default_target": getattr(t, 'default_target', None),
-                        "description": t.description
-                    }
-                    for t in templates
-                ]
+                # 使用 Template.to_dict() 方法
+                templates_data = [t.to_dict() for t in templates]
             
             # 3. 创建 ZIP 压缩包
             with zipfile.ZipFile(file_path, 'w', zipfile.ZIP_DEFLATED) as zf:
@@ -514,7 +505,15 @@ class TemplateManager:
             orphaned_templates = []
             
             for tpl_data in templates_data:
-                template = Template(**tpl_data)
+                # 使用 Template.from_dict() 方法
+                template = Template.from_dict(tpl_data)
+                
+                # 模型数据校验
+                valid, msg = template.validate()
+                if not valid:
+                    # 记录校验失败的模板,但继续导入其他模板
+                    print(f"警告: 模板 {template.id} 校验失败: {msg}")
+                    continue
                 
                 # 修正 category_id
                 if template.category_id in category_id_map:
