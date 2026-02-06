@@ -172,9 +172,12 @@ class ConfigEditorCard(CardWidget):
         
         layout.addLayout(header_layout)
         
-        # 说明文字
+        # 警告横幅
+        self.warning_banner = self._create_warning_banner()
+        layout.addWidget(self.warning_banner)
+        
+        # 说明文字 (正常字体)
         desc_label = BodyLabel(t("wizard.config_editor.description"))
-        apply_muted_text_style(desc_label, size="sm")
         layout.addWidget(desc_label)
         
         # 分隔线
@@ -194,6 +197,26 @@ class ConfigEditorCard(CardWidget):
             row = ConfigFileRow(file_path, icon, color, name_key, desc_key, self)
             layout.addWidget(row)
             self.config_rows[str(file_path)] = row
+    
+    def _create_warning_banner(self) -> QWidget:
+        """创建警告横幅"""
+        banner = QWidget(self)
+        banner_layout = QHBoxLayout(banner)
+        banner_layout.setContentsMargins(12, 8, 12, 8)
+        banner_layout.setSpacing(8)
+        
+        # 警告图标
+        warning_icon = IconWidget(FluentIcon.INFO, banner)
+        warning_icon.setFixedSize(20, 20)
+        banner_layout.addWidget(warning_icon)
+        
+        # 警告文本 (小字体)
+        warning_text = BodyLabel("警告: 直接修改配置文件可能导致应用异常，建议在修改前先备份配置", banner)
+        apply_font_style(warning_text, size="xs")
+        apply_muted_text_style(warning_text)
+        banner_layout.addWidget(warning_text, stretch=1)
+        
+        return banner
     
     def _setup_file_watcher(self):
         """设置文件监控"""
