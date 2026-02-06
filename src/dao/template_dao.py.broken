@@ -1,0 +1,82 @@
+"""
+模板数据访问对象 (DAO)
+负责模板数据的持久化操作
+"""
+from typing import List, Optional
+from src.models.template import Template
+from src.common.config import get_config_path
+import json
+import os
+
+
+class TemplateDAO:
+    """模板 DAO - 负责模板数据的读写"""
+    
+    def __init__(self):
+        self.config_file = get_config_path('templates.json')
+        self._ensure_config_exists()
+    
+    def _ensure_config_exists(self):
+        """确保配置文件存在"""
+        if not os.path.exists(self.config_file):
+            os.makedirs(os.path.dirname(self.config_file), exist_ok=True)
+            self._save_templates([])
+    
+    def _load_templates(self) -> List[dict]:
+        """从文件加载模板数据"""
+        try:
+            with open(self.config_file, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception:
+            return []
+    
+    def _save_templates(self, templates: List[dict]):
+        """保存模板数据到文件"""
+        with open(self.config_file, 'w', encoding='utf-8') as f:
+            json.dump(templates, f, ensure_ascii=False, indent=2)
+    
+    def get_all(self) -> List[Template]:
+        """获取所有模板"""
+        data = self._load_templates()
+        return [Template.from_dict(item) for item in data]
+    
+    def get_by_id(self, template_id: str) -> Optional[Template]:
+        """根据 ID 获取模板"""
+        data = self._load_templates()
+        for item in data:
+            if item.get('id') == template_id:
+                return Template.from_dict(item)
+        return None
+    
+    def get_by_category(self, category_id: str) -> List[Template]:
+        """根据分类获取模板"""
+        data = self._load_templates()
+        return [Template.from_dict(item) for item in data 
+                if item.get('category_id') == category_id]
+    
+    def add(self, template: Template) -> bool:
+        """添加模板"""
+        data = self._load_templates()
+        data.append(template.to_dict())
+        self._save_templates(data)
+        return True
+    
+    def update(self, template: Template) -> bool:
+        """更新模板"""
+        data = self._load_templates()
+        for i, item in enumerate(data):
+            if item.get('id') == template.id:
+                data[i] = template.to_dict()
+                self._save_templates(data)
+                return True
+        return False
+    
+    def delete(self, template_id: str) -> bool:
+        """删除模板"""
+        data = self._load_templates()
+        original_len = len(data)
+        data = [item for item in data if item.get('id') != template_id]
+        if len(data) < original_len:
+            self._save_templates(data)
+            return True
+        return False

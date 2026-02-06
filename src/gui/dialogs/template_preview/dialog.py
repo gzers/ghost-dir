@@ -1,4 +1,4 @@
-"""
+﻿"""
 模板预览对话框
 显示分类下的模板列表，用于添加子分类前的确认
 """
@@ -6,7 +6,7 @@ from typing import List
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem, QHeaderView
 from qfluentwidgets import MessageBoxBase, SubtitleLabel, BodyLabel
-from src.data.model import Template
+from src.models.template import Template  # 新架构
 
 
 class TemplatePreviewDialog(MessageBoxBase):

@@ -1,4 +1,4 @@
-"""
+﻿"""
 分类视图组件
 左树右表布局，复用现有的 CategoryTreeWidget 和 LinkTable 组件
 """
@@ -7,7 +7,7 @@ from PySide6.QtCore import Qt, Signal
 from src.gui.components import CategoryTreeWidget
 from src.gui.components.link_table import LinkTable
 from src.data.user_manager import UserManager
-from src.data.category_manager import CategoryManager
+from src.data.category_manager import CategoryManager CategoryManager
 
 
 class CategoryLinkView(QWidget):

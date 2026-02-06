@@ -10,8 +10,8 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtGui import QCursor
 from qfluentwidgets import LineEdit, TreeWidget, setCustomStyleSheet
-from src.data.category_manager import CategoryManager
-from src.data.model import CategoryNode
+from src.data.category_manager import  # TODO: 迁移到 CategoryService CategoryManager  # TODO: 迁移到 CategoryService
+from src.models.category import CategoryNode  # 新架构: 使用 models 层
 from src.gui.i18n import t, get_category_text
 
 

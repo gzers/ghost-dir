@@ -1,4 +1,4 @@
-"""
+﻿"""
 列表视图组件 (View A)
 极简风格显示全量连接，支持自定义 Delegate
 """
@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, QSize, Signal
 from PySide6.QtGui import QPainter, QIcon
 from qfluentwidgets import BodyLabel, CaptionLabel, TransparentToolButton, FluentIcon
-from src.data.model import UserLink, LinkStatus
+from src.models import Use  # 新架构rLink, LinkStatus
 from src.data.user_manager import UserManager
 from src.gui.i18n import t, get_category_text
 from src.gui.components.status_badge import StatusBadge

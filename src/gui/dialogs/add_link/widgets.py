@@ -1,12 +1,12 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QListWidgetItem, QFormLayout
+﻿from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QListWidgetItem, QFormLayout
 from PySide6.QtCore import Qt, Signal
 from qfluentwidgets import (
     BodyLabel, SubtitleLabel, LineEdit, PushButton, CheckBox, 
     HorizontalSeparator, ListWidget, FluentIcon, StrongBodyLabel
 )
-from src.data.template_manager import TemplateManager
+from src.data.template_manager import TemplateManager TemplateManager
 from src.data.user_manager import UserManager
-from src.data.category_manager import CategoryManager
+from src.data.category_manager import CategoryManager CategoryManager
 from src.gui.components import CategorySelector, ValidatedLineEdit
 from src.gui.i18n import get_category_text
 from src.common.validators import PathValidator, NameValidator

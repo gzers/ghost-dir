@@ -6,7 +6,7 @@
 from pathlib import Path
 from PySide6.QtWidgets import QFileDialog
 from qfluentwidgets import PushSettingCard, FluentIcon, InfoBar, InfoBarPosition, MessageBox
-from src.utils.config_backup_manager import ConfigBackupManager
+# TODO: 迁移到新架构 ConfigBackupManager
 from src.common.config import DATA_DIR
 
 

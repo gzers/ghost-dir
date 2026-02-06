@@ -10,10 +10,18 @@ from qfluentwidgets import (setTheme, Theme, setThemeColor, SystemThemeListener,
                             MessageBox, isDarkTheme, TitleLabel, SubtitleLabel, 
                             CaptionLabel, IndeterminateProgressBar)
 from src.common.signals import signal_bus
-from src.utils.admin import ensure_admin
-from src.core.engine.transaction_engine import check_crash_recovery, recover_from_crash
 from src.common.config import APP_NAME, APP_VERSION
 from src.gui.i18n import t
+
+# 新架构: Drivers 层
+from src.drivers.transaction import check_crash_recovery, recover_from_crash
+from src.drivers.windows import is_admin
+
+# 新架构: DAO 层
+from src.dao import TemplateDAO, LinkDAO, CategoryDAO
+
+# 新架构: Services 层
+from src.services import TemplateService, LinkService, CategoryService
 
 
 from src.common.resource_loader import get_resource_path
@@ -26,6 +34,9 @@ class GhostDirApp(QApplication):
     def __init__(self, argv):
         """初始化应用程序"""
         super().__init__(argv)
+        
+        # 初始化 Service 层 (依赖注入)
+        self._init_services()
 
         # 设置 AppUserModelID 以修复任务栏图标丢失问题
         try:
@@ -61,6 +72,20 @@ class GhostDirApp(QApplication):
         self.system_theme_listener = SystemThemeListener(self)
         # 连接系统主题变更信号
         self.system_theme_listener.systemThemeChanged.connect(self._on_system_theme_changed)
+    
+    def _init_services(self):
+        """初始化 Service 层 (新架构)"""
+        # 1. 初始化 DAO 层
+        self.template_dao = TemplateDAO()
+        self.link_dao = LinkDAO()
+        self.category_dao = CategoryDAO()
+        
+        # 2. 初始化 Service 层 (依赖注入)
+        self.template_service = TemplateService(self.template_dao)
+        self.link_service = LinkService(self.link_dao)
+        self.category_service = CategoryService(self.category_dao)
+        
+        print("✓ Service 层初始化完成")
 
     def _apply_theme(self, theme: str):
         """应用主题设置"""
@@ -116,9 +141,12 @@ class GhostDirApp(QApplication):
         if splash:
             splash.set_message(t("app.splash_check_admin"))
             self.processEvents()
-            
-        from src.utils.admin import ensure_admin
-        ensure_admin()
+        
+        # 使用新架构的 is_admin 检查
+        if not is_admin():
+            from PySide6.QtWidgets import QMessageBox
+            QMessageBox.critical(None, "权限不足", "此程序需要管理员权限才能运行。\n请右键点击程序,选择'以管理员身份运行'。")
+            sys.exit(1)
         
         # 2. 检查崩溃恢复
         if splash:
@@ -148,8 +176,8 @@ def run_app():
     """运行应用程序"""
     app = GhostDirApp(sys.argv)
 
-    # 通过服务中枢加载全局配置
-    from src.core.services.context import service_bus
+    # TODO: 暂时使用旧的 config_service,后续迁移到新架构
+    # TODO: 通过 app 实例访问 Service
     config_service = service_bus.config_service
 
     # 应用主题设置
@@ -171,7 +199,7 @@ def run_app():
 
     # 导入并创建主窗口（耗时操作）
     from .windows.main_window import MainWindow
-    window = MainWindow()
+    window = MainWindow(app)  # 传递 app 实例
     
     # 主窗口创建完成，关闭启动界面
     splash.finish()

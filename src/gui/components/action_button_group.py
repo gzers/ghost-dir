@@ -5,7 +5,7 @@
 from PySide6.QtWidgets import QWidget, QHBoxLayout
 from PySide6.QtCore import Signal
 from qfluentwidgets import PushButton, FluentIcon
-from src.data.model import LinkStatus
+from src.models.link import LinkStatus  # 新架构: 使用 models 层
 from src.gui.styles import get_spacing
 from src.gui.i18n import t
 

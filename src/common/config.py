@@ -25,6 +25,13 @@ else:
     DATA_DIR = PROJECT_ROOT / ".ghost-dir"
 
 
+def get_config_path(filename: str) -> str:
+    """获取配置文件的完整路径"""
+    config_path = DATA_DIR / filename
+    return str(config_path)
+
+
+
 # ========== 配置文件路径 ==========
 
 # --- 官方配置（只读，打包在 _internal/config 或 开发环境的 config/）---

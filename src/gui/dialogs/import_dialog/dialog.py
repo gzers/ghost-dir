@@ -1,4 +1,4 @@
-"""
+﻿"""
 导入对话框
 用于导入模板和分类
 """
@@ -12,8 +12,8 @@ from qfluentwidgets import (
     BodyLabel, InfoBar
 )
 import json
-from src.data.template_manager import TemplateManager
-from src.data.category_manager import CategoryManager
+from src.data.template_manager import  # TODO: 迁移到 TemplateService TemplateManager
+from src.data.category_manager import  # TODO: 迁移到 CategoryService CategoryManager
 from src.common.validators import PathValidator
 
 

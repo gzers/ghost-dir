@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QTableWidgetItem, QHeaderView, QWidget, QHBoxLayou
 from PySide6.QtCore import Qt, Signal
 from qfluentwidgets import PushButton, TransparentToolButton, FluentIcon, IndeterminateProgressRing
 from src.gui.components.base_table import BaseTableWidget
-from src.data.model import UserLink, LinkStatus
+from src.models.link import UserLink, LinkStatus  # 新架构: 使用 models 层
 from src.common.config import format_size
 from src.gui.i18n import get_status_text, get_category_text
 

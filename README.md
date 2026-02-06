@@ -134,25 +134,75 @@ pyinstaller --name="Ghost-Dir" --windowed --icon=assets/icon.ico --add-data="ass
 3. 点击 **"批量建立链接"** 或 **"批量断开链接"**
 4. 程序会依次处理，自动跳过不适用的项目
 
+## 🏗️ 架构设计
+
+### 五层金字塔架构
+
+Ghost-Dir 采用严格的五层金字塔架构,确保代码清晰、可维护、易测试:
+
+```
+               [GUI 表现层]
+                 │    │
+      ┌──────────┘    │
+      │               ↓
+      │          [Services 业务层] ────────────┐
+      │           │            │               │
+      │           ↓            ↓               │
+      │      [Drivers 驱动层] [DAO 数据层]     │
+      │           │            │               │
+      └─────┬─────┴──────┬─────┴───────┘       │
+            │            │                     │
+            ↓            ↓                     │
+        [Models 数据定义] [Common 基础层] <──────┘
+            │            │
+            └─────┬──────┘
+                  ↓
+         [Python 标准库]
+```
+
+### 层级职责
+
+| 层级 | 职责 | 依赖 |
+|------|------|------|
+| **GUI** | 用户交互、数据展示 | Services, Models, Common |
+| **Services** | 业务逻辑编排、流程控制 | DAO, Drivers, Models, Common |
+| **DAO** | 数据持久化 (JSON) | Models, Common |
+| **Drivers** | 系统底层操作 (Junction, 进程) | Models (可选), Common |
+| **Models** | 数据结构定义、基础验证 | Common (仅限) |
+| **Common** | 全局配置、异常、工具 | 无 (只用标准库) |
+
+### 核心原则
+
+- ✅ **依赖单向向下**: 上层依赖下层,绝不反向
+- ✅ **Models 和 Common 是基础**: 所有层都可以使用,但它们不依赖任何层
+- ✅ **职责单一**: 每层只做自己的事,不越界
+- ❌ **严禁循环依赖**: 通过依赖规则防止架构混乱
+
+详细架构文档: [ARCHITECTURE.md](ARCHITECTURE.md)
+
 ## 🏗️ 项目结构
 
 ```
 ghost-dir/
 ├── src/                    # 源代码
-│   ├── common/            # 公共模块
-│   │   ├── config.py      # 全局配置
-│   │   ├── signals.py     # 信号总线
-│   │   └── resource_loader.py  # 资源加载器
-│   ├── core/              # 核心业务逻辑
-│   │   ├── transaction.py # 事务管理器 ⭐
-│   │   ├── safety.py      # 进程卫士 🛡️
-│   │   ├── scanner.py     # 智能扫描器 🔍
-│   │   └── link_opt.py    # 连接点操作
-│   ├── data/              # 数据层
-│   │   ├── model.py       # 数据模型
-│   │   ├── template_manager.py  # 模版管理器
-│   │   └── user_manager.py      # 用户数据管理器
-│   ├── gui/               # 界面层
+│   ├── models/            # Level 4: 数据定义层
+│   │   ├── template.py    # Template 实体
+│   │   ├── link.py        # UserLink 实体
+│   │   └── category.py    # CategoryNode 实体
+│   ├── dao/               # Level 3: 数据访问层
+│   │   ├── template_dao.py # 模板数据持久化
+│   │   ├── link_dao.py     # 链接数据持久化
+│   │   └── category_dao.py # 分类数据持久化
+│   ├── drivers/           # Level 3: 底层驱动层
+│   │   ├── windows.py     # Junction, UAC ⭐
+│   │   ├── fs.py          # 文件系统操作
+│   │   ├── transaction.py # 事务管理器 🛡️
+│   │   └── process.py     # 进程检测 🔍
+│   ├── services/          # Level 2: 业务逻辑层
+│   │   ├── template_svc.py # 模板业务逻辑
+│   │   ├── link_svc.py     # 链接业务逻辑
+│   │   └── category_svc.py # 分类业务逻辑
+│   ├── gui/               # Level 1: 表现层
 │   │   ├── app.py         # 应用程序主类
 │   │   ├── windows/       # 窗口
 │   │   │   └── main_window.py
@@ -166,42 +216,71 @@ ghost-dir/
 │   │   └── components/    # 组件
 │   │       ├── link_table.py    # 连接表格
 │   │       └── status_badge.py  # 状态徽章
-│   ├── utils/             # 工具
-│   │   └── admin.py       # UAC 提权
+│   ├── common/            # Level 5: 全局基础层
+│   │   ├── config.py      # 全局配置
+│   │   ├── signals.py     # 信号总线
+│   │   ├── exceptions.py  # 自定义异常
+│   │   └── utils.py       # 工具函数
 │   └── main.py            # 程序入口
 ├── assets/                # 资源文件
 │   ├── icon.ico           # 应用图标
 │   ├── icon.png           # 应用图标 PNG
 │   └── templates.json     # 模版库
+├── docs/                  # 文档
+│   ├── developer-docs/    # 开发文档
+│   │   └── architecture/  # 架构文档
+│   ├── user-docs/         # 用户文档
+│   └── release/           # 发布说明
+├── ARCHITECTURE.md        # 架构设计文档
 ├── requirements.txt       # 依赖列表
 └── run.py                 # 开发启动脚本
-```
 
 ## 🔧 核心技术
 
-### 事务管理器 (TransactionManager)
+### 事务管理引擎 (TransactionEngine)
+
+位于 `drivers/transaction.py`,提供原子操作保证:
 
 ```python
+from src.drivers import TransactionEngine
+
 # 使用上下文管理器确保安全
-with TransactionManager(src, dst, link_id) as tx:
-    tx.establish_link()  # 自动回滚
+with TransactionEngine(src, dst, link_id) as tx:
+    tx.establish_link()  # 失败自动回滚
 ```
 
 **工作流程**:
 1. 写入锁文件 `.ghost.lock`
 2. 移动文件到目标位置
-3. 创建连接点
+3. 创建 Junction 连接点
 4. 成功：删除锁文件
-5. 失败：自动回滚
+5. 失败：自动回滚到原始状态
 
-### 进程卫士 (ProcessGuard)
+### Windows 驱动 (windows.py)
+
+封装 Windows API 操作:
 
 ```python
-guard = ProcessGuard()
-processes = guard.scan_handles(path)
-if processes:
+from src.drivers.windows import create_junction, is_admin
+
+# 检查管理员权限
+if not is_admin():
+    raise PermissionError("需要管理员权限")
+
+# 创建 Junction
+create_junction(source, target)
+```
+
+### 进程检测 (process.py)
+
+检测文件占用状态:
+
+```python
+from src.drivers.process import is_process_running
+
+if is_process_running("steam.exe"):
     # 显示警告，提供"结束进程"选项
-    guard.kill_processes(processes)
+    pass
 ```
 
 ### 崩溃恢复

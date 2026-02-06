@@ -6,8 +6,8 @@ from typing import Optional, List
 from PySide6.QtCore import Qt, Signal, QSize
 from PySide6.QtWidgets import QTreeWidget, QTreeWidgetItem, QLabel, QWidget
 from qfluentwidgets import FluentIcon, RoundMenu, Action, setCustomStyleSheet, TreeWidget
-from src.data.category_manager import CategoryManager
-from src.data.model import CategoryNode
+from src.data.category_manager import  # TODO: 迁移到 CategoryService CategoryManager  # TODO: 迁移到 CategoryService
+from src.models.category import CategoryNode  # 新架构: 使用 models 层
 from src.gui.styles import get_font_style, get_text_primary, apply_transparent_style
 
 

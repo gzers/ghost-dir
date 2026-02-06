@@ -14,7 +14,7 @@ from src.gui.views.wizard.widgets.scan_result_card import ScanResultCard
 from src.core.services.scan_service import SmartScanner
 
 from src.gui.i18n import t, get_category_text
-from src.core.services.context import service_bus
+# TODO: 通过 app 实例访问 Service
 from src.gui.styles import apply_font_style
 
 

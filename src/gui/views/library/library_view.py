@@ -1,4 +1,4 @@
-import os
+﻿import os
 from typing import List, Optional, Set
 from PySide6.QtCore import Qt, Signal, QPoint
 from PySide6.QtWidgets import (
@@ -10,9 +10,9 @@ from qfluentwidgets import (
     InfoBar, MessageBox, RoundMenu, Action
 )
 from src.gui.i18n import t
-from src.core.services.context import service_bus
+# TODO: 通过 app 实例访问 Service
 from src.common.signals import signal_bus
-from src.data.model import Template, CategoryNode
+from src.models import Template, Catego  # 新架构ryNode
 from src.gui.components import BasePageView, CategoryTreeWidget, BatchToolbar
 from src.gui.views.library.widgets import TemplateTableWidget
 from src.gui.dialogs import (

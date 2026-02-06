@@ -3,7 +3,7 @@
 """
 from PySide6.QtCore import Signal, Qt
 from qfluentwidgets import MessageBoxBase, InfoBar
-from src.core.services.context import service_bus
+# TODO: 通过 app 实例访问 Service,而不是 service_bus
 from src.gui.dialogs.add_link.widgets import TemplateTabWidget, CustomTabWidget
 
 class AddLinkDialog(MessageBoxBase):

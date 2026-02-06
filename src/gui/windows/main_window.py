@@ -10,7 +10,7 @@ from qfluentwidgets import (
     setCustomStyleSheet, isDarkTheme, Theme
 )
 from PySide6.QtCore import Qt, QSize, QTimer
-from src.core.services.context import service_bus
+# TODO: 通过 app 实例访问 Service
 from src.gui.views.links import LinksView
 from src.gui.views.wizard import WizardView
 from src.gui.views.library import LibraryView
@@ -25,11 +25,18 @@ from src.gui.styles import window_style_sheet
 class MainWindow(FluentWindow):
     """主窗口"""
 
-    def __init__(self):
-        """初始化主窗口"""
+    def __init__(self, app=None):
+        """初始化主窗口
+        
+        Args:
+            app: GhostDirApp 实例,提供 Service 层访问
+        """
         super().__init__()
+        
+        # 保存 app 引用以访问新的 Service 层
+        self.app = app
 
-        # 使用服务中枢提供的全局管理器
+        # TODO: 暂时保留旧的 service_bus,逐步迁移
         self.user_manager = service_bus.user_manager
 
         # 创建视图 (构造函数已适配注入模式)

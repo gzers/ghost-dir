@@ -6,7 +6,7 @@
 from qfluentwidgets import PushSettingCard, FluentIcon, MessageBox, InfoBar, InfoBarPosition
 from PySide6.QtCore import Qt
 from src.gui.i18n import t
-from src.core.services.context import service_bus
+# TODO: 通过 app 实例访问 Service
 
 
 class RestoreConfigCard(PushSettingCard):

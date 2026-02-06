@@ -5,7 +5,7 @@
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel
 from PySide6.QtCore import Qt
 from qfluentwidgets import BodyLabel
-from src.data.model import LinkStatus
+from src.models.link import LinkStatus  # 新架构: 使用 models 层
 from src.gui.styles import (
     get_spacing, apply_badge_style, apply_icon_style,
     get_status_icon, get_status_colors, apply_font_style, apply_transparent_background_only

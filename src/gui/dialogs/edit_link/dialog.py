@@ -1,9 +1,9 @@
 from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout, QFormLayout, QWidget
 from PySide6.QtCore import Signal, Qt
 from qfluentwidgets import MessageBoxBase, LineEdit, BodyLabel, PushButton, InfoBar
-from src.core.services.context import service_bus
+# TODO: 通过 app 实例访问 Service,而不是 service_bus
 from src.gui.components import CategorySelector
-from src.data.model import UserLink, LinkStatus
+from src.models.link import UserLink, LinkStatus  # 新架构
 from src.gui.i18n import t
 from src.gui.styles import format_required_label
 

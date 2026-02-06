@@ -1,0 +1,103 @@
+"""
+é¾æ¥æ°æ®è®¿é®å¯¹è±¡
+èè´£: é¾æ¥æ°æ®çæä¹å (è¯»å JSON)
+"""
+import json
+from typing import List, Optional
+from pathlib import Path
+from src.models.link import UserLink
+from src.common.config import USER_LINKS_FILE
+
+
+class LinkDAO:
+    """
+    é¾æ¥æ°æ®è®¿é®å¯¹è±¡
+    
+    èè´£:
+    - è¯»å links.json æä»¶
+    - æä¾ CRUD æ¥å£
+    - ä¸åå«ä¸å¡é»è¾
+    """
+    
+    def __init__(self, file_path: Path = USER_LINKS_FILE):
+        """
+        åå§å?DAO
+        
+        Args:
+            file_path: JSON æä»¶è·¯å¾
+        """
+        self.file_path = file_path
+        self._ensure_file_exists()
+    
+    def _ensure_file_exists(self):
+        """ç¡®ä¿æä»¶å­å¨"""
+        if not self.file_path.exists():
+            self.file_path.parent.mkdir(parents=True, exist_ok=True)
+            self._save_all([])
+    
+    def _load_all(self) -> List[UserLink]:
+        """ä»æä»¶å è½½ææé¾æ?""
+        try:
+            with open(self.file_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            return [UserLink.from_dict(item) for item in data.get('links', [])]
+        except Exception as e:
+            print(f"å è½½é¾æ¥æ°æ®å¤±è´¥: {e}")
+            return []
+    
+    def _save_all(self, links: List[UserLink]):
+        """ä¿å­ææé¾æ¥å°æä»¶"""
+        data = {'links': [link.to_dict() for link in links]}
+        with open(self.file_path, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+    
+    def find_all(self) -> List[UserLink]:
+        """æ¥è¯¢ææé¾æ?""
+        return self._load_all()
+    
+    def find_by_id(self, link_id: str) -> Optional[UserLink]:
+        """æ ¹æ® ID æ¥è¯¢é¾æ¥"""
+        links = self._load_all()
+        for link in links:
+            if link.id == link_id:
+                return link
+        return None
+    
+    def find_by_category(self, category_id: str) -> List[UserLink]:
+        """æ ¹æ®åç±»æ¥è¯¢é¾æ¥"""
+        links = self._load_all()
+        return [link for link in links if link.category == category_id]
+    
+    def find_by_template(self, template_id: str) -> List[UserLink]:
+        """æ ¹æ®æ¨¡æ¿æ¥è¯¢é¾æ¥"""
+        links = self._load_all()
+        return [link for link in links if link.template_id == template_id]
+    
+    def add(self, link: UserLink) -> bool:
+        """æ·»å é¾æ¥"""
+        links = self._load_all()
+        if any(l.id == link.id for l in links):
+            return False  # å·²å­å?
+        links.append(link)
+        self._save_all(links)
+        return True
+    
+    def update(self, link: UserLink) -> bool:
+        """æ´æ°é¾æ¥"""
+        links = self._load_all()
+        for i, l in enumerate(links):
+            if l.id == link.id:
+                links[i] = link
+                self._save_all(links)
+                return True
+        return False
+    
+    def delete(self, link_id: str) -> bool:
+        """å é¤é¾æ¥"""
+        links = self._load_all()
+        original_count = len(links)
+        links = [l for l in links if l.id != link_id]
+        if len(links) < original_count:
+            self._save_all(links)
+            return True
+        return False

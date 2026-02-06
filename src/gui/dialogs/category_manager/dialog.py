@@ -1,4 +1,4 @@
-from typing import Optional
+﻿from typing import Optional
 from PySide6.QtWidgets import QHBoxLayout, QTreeWidgetItem, QAbstractItemView, QMenu
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QAction
@@ -8,8 +8,8 @@ from qfluentwidgets import (
     InfoBar
 )
 
-from src.core.services.context import service_bus
-from src.data.model import CategoryNode
+# TODO: 通过 app 实例访问 Service
+from src.models.category import CategoryNode  # 新架构
 from src.common.signals import signal_bus
 from src.common.config import SYSTEM_CATEGORIES
 from src.gui.i18n import t

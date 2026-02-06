@@ -1,4 +1,4 @@
-"""
+﻿"""
 链接视图 (Links View)
 管理所有已建立或待处理的链接，支持分类查看、列表搜索及批量操作
 """
@@ -14,7 +14,7 @@ from qfluentwidgets import (
 )
 from src.gui.common import operation_runner
 from src.gui.i18n import t
-from src.core.services.context import service_bus
+# TODO: 通过 app 实例访问 Service
 from src.common.signals import signal_bus
 from src.gui.components import BasePageView, CategoryTreeWidget, BatchToolbar, LinkTable
 from src.gui.styles import apply_transparent_style

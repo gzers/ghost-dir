@@ -1,4 +1,4 @@
-"""
+﻿"""
 智能向导视图 (Wizard View)
 引导式操作，快速完成常见任务。已接入 Service 层。
 """
@@ -6,7 +6,7 @@ from PySide6.QtCore import Qt
 from qfluentwidgets import MessageBox
 
 from src.gui.i18n import t
-from src.core.services.context import service_bus
+# TODO: 通过 app 实例访问 Service
 from src.common.signals import signal_bus
 from src.gui.components import BasePageView
 from src.gui.dialogs import ScanFlowDialog

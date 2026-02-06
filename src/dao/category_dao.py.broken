@@ -1,0 +1,107 @@
+"""
+åç±»æ°æ®è®¿é®å¯¹è±¡
+èè´£: åç±»æ°æ®çæä¹å (è¯»å JSON)
+"""
+import json
+from typing import List, Optional, Dict
+from pathlib import Path
+from src.models.category import CategoryNode
+from src.common.config import USER_CATEGORIES_FILE
+
+
+class CategoryDAO:
+    """
+    åç±»æ°æ®è®¿é®å¯¹è±¡
+    
+    èè´£:
+    - è¯»å categories.json æä»¶
+    - æä¾ CRUD æ¥å£
+    - ä¸åå«ä¸å¡é»è¾
+    """
+    
+    def __init__(self, file_path: Path = USER_CATEGORIES_FILE):
+        """
+        åå§å?DAO
+        
+        Args:
+            file_path: JSON æä»¶è·¯å¾
+        """
+        self.file_path = file_path
+        self._ensure_file_exists()
+    
+    def _ensure_file_exists(self):
+        """ç¡®ä¿æä»¶å­å¨"""
+        if not self.file_path.exists():
+            self.file_path.parent.mkdir(parents=True, exist_ok=True)
+            self._save_all([])
+    
+    def _load_all(self) -> List[CategoryNode]:
+        """ä»æä»¶å è½½ææåç±?""
+        try:
+            with open(self.file_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            return [CategoryNode.from_dict(item) for item in data.get('categories', [])]
+        except Exception as e:
+            print(f"å è½½åç±»æ°æ®å¤±è´¥: {e}")
+            return []
+    
+    def _save_all(self, categories: List[CategoryNode]):
+        """ä¿å­ææåç±»å°æä»¶"""
+        data = {'categories': [cat.to_dict() for cat in categories]}
+        with open(self.file_path, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+    
+    def find_all(self) -> List[CategoryNode]:
+        """æ¥è¯¢ææåç±?""
+        return self._load_all()
+    
+    def find_all_as_dict(self) -> Dict[str, CategoryNode]:
+        """æ¥è¯¢ææåç±»å¹¶è¿åå­å¸"""
+        categories = self._load_all()
+        return {cat.id: cat for cat in categories}
+    
+    def find_by_id(self, category_id: str) -> Optional[CategoryNode]:
+        """æ ¹æ® ID æ¥è¯¢åç±»"""
+        categories = self._load_all()
+        for category in categories:
+            if category.id == category_id:
+                return category
+        return None
+    
+    def find_by_parent(self, parent_id: Optional[str]) -> List[CategoryNode]:
+        """æ ¹æ®ç¶åç±»æ¥è¯¢å­åç±»"""
+        categories = self._load_all()
+        return [cat for cat in categories if cat.parent_id == parent_id]
+    
+    def find_root_categories(self) -> List[CategoryNode]:
+        """æ¥è¯¢æææ ¹åç±»"""
+        return self.find_by_parent(None)
+    
+    def add(self, category: CategoryNode) -> bool:
+        """æ·»å åç±»"""
+        categories = self._load_all()
+        if any(cat.id == category.id for cat in categories):
+            return False  # å·²å­å?
+        categories.append(category)
+        self._save_all(categories)
+        return True
+    
+    def update(self, category: CategoryNode) -> bool:
+        """æ´æ°åç±»"""
+        categories = self._load_all()
+        for i, cat in enumerate(categories):
+            if cat.id == category.id:
+                categories[i] = category
+                self._save_all(categories)
+                return True
+        return False
+    
+    def delete(self, category_id: str) -> bool:
+        """å é¤åç±»"""
+        categories = self._load_all()
+        original_count = len(categories)
+        categories = [cat for cat in categories if cat.id != category_id]
+        if len(categories) < original_count:
+            self._save_all(categories)
+            return True
+        return False

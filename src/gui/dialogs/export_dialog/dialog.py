@@ -1,4 +1,4 @@
-"""
+﻿"""
 导出对话框
 用于导出模板和分类
 """
@@ -11,8 +11,8 @@ from qfluentwidgets import (
     MessageBoxBase, SubtitleLabel, LineEdit, PushButton,
     CheckBox, InfoBar
 )
-from src.data.template_manager import TemplateManager
-from src.data.category_manager import CategoryManager
+from src.data.template_manager import  # TODO: 迁移到 TemplateService TemplateManager
+from src.data.category_manager import  # TODO: 迁移到 CategoryService CategoryManager
 
 
 class ExportDialog(MessageBoxBase):

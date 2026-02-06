@@ -11,8 +11,8 @@ from qfluentwidgets import (
 )
 from src.gui.components import CategorySelector, ValidatedLineEdit
 from src.gui.styles import format_required_label
-from src.core.services.context import service_bus
-from src.data.model import Template
+# TODO: 通过 app 实例访问 Service,而不是 service_bus
+from src.models.template import Template  # 新架构
 from src.common.validators import PathValidator, NameValidator
 
 

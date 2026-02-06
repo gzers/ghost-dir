@@ -13,8 +13,8 @@ from qfluentwidgets import (
     PushButton, SpinBox, FluentIcon, TransparentToolButton,
     InfoBar, BodyLabel
 )
-from src.data.model import CategoryNode
-from src.data.category_manager import CategoryManager
+from src.models import CategoryNode  # 新架构
+from src.data.category_manager import  # TODO: 迁移到 CategoryService CategoryManager
 from src.gui.components.category_selector import CategorySelector
 from src.gui.i18n import t
 from src.gui.styles import format_required_label

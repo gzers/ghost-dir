@@ -1,10 +1,10 @@
-from typing import List, Dict
+﻿from typing import List, Dict
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtWidgets import QTableWidgetItem, QHeaderView, QWidget, QHBoxLayout
 from qfluentwidgets import FluentIcon, RoundMenu, Action, TransparentToolButton, InfoBar, CheckBox
-from src.data.model import Template
-from src.gui.components import BaseTableWidget
+from src.models import Template
+f  # 新架构rom src.gui.components import BaseTableWidget
 
 
 class TemplateTableWidget(BaseTableWidget):

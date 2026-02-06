@@ -1,4 +1,4 @@
-"""
+﻿"""
 批量移动对话框
 用于批量移动模板到新分类
 """
@@ -6,8 +6,8 @@ from typing import List
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QFormLayout, QListWidget, QListWidgetItem, QLabel
 from qfluentwidgets import MessageBoxBase, SubtitleLabel, BodyLabel, InfoBar
-from src.data.model import Template
-from src.data.category_manager import CategoryManager
+from src.models.template import Template  # 新架构
+from src.data.category_manager import  # TODO: 迁移到 CategoryService CategoryManager
 from src.gui.components import CategorySelector
 
 

@@ -1,11 +1,11 @@
-"""
+﻿"""
 设置视图
 页面主体 - 负责布局和协调
 """
 from qfluentwidgets import (
     TitleLabel, SettingCardGroup, FluentIcon
 )
-from src.core.services.context import service_bus
+# TODO: 通过 app 实例访问 Service
 from src.common.signals import signal_bus
 from src.gui.components import BasePageView
 from src.gui.i18n import t
