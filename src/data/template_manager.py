@@ -380,10 +380,10 @@ class TemplateManager:
         category_filter: Optional[List[str]] = None
     ) -> Tuple[bool, str]:
         """
-        导出模板库到文件
+        导出模板库到 ZIP 压缩包
         
         Args:
-            file_path: 导出文件路径
+            file_path: 导出文件路径 (ZIP 文件)
             include_categories: 是否包含分类
             include_templates: 是否包含模板
             category_filter: 要导出的分类ID列表（None表示全部）
@@ -392,29 +392,22 @@ class TemplateManager:
             (是否成功, 消息)
         """
         try:
-            export_data = {
-                "export_version": "1.0.0",
-                "export_date": datetime.now().isoformat(),
-                "export_by": f"Ghost-Dir v{APP_VERSION}",
-                "categories": [],
-                "templates": []
-            }
+            import zipfile
+            import tempfile
+            import os
             
+            # 准备导出数据
+            categories_data = []
+            templates_data = []
+            
+            # 1. 准备分类数据
             if include_categories and self.category_manager:
                 categories = self.category_manager.get_all_categories()
                 if category_filter:
                     categories = [c for c in categories if c.id in category_filter]
-                export_data["categories"] = [
-                    {
-                        "id": c.id,
-                        "name": c.name,
-                        "parent_id": c.parent_id,
-                        "icon": c.icon,
-                        "order": c.order
-                    }
-                    for c in categories
-                ]
+                categories_data = [c.to_dict() for c in categories]
             
+            # 2. 准备模板数据
             if include_templates:
                 templates = list(self.templates.values())
                 if category_filter:
@@ -422,23 +415,42 @@ class TemplateManager:
                         t for t in templates
                         if getattr(t, 'category_id', getattr(t, 'category', 'uncategorized')) in category_filter
                     ]
-                export_data["templates"] = [
+                templates_data = [
                     {
                         "id": t.id,
                         "name": t.name,
                         "default_src": t.default_src,
                         "category_id": getattr(t, 'category_id', getattr(t, 'category', 'uncategorized')),
                         "default_target": getattr(t, 'default_target', None),
-                        "icon": t.icon,
                         "description": t.description
                     }
                     for t in templates
                 ]
             
-            with open(file_path, 'w', encoding='utf-8') as f:
-                json.dump(export_data, f, ensure_ascii=False, indent=2)
+            # 3. 创建 ZIP 压缩包
+            with zipfile.ZipFile(file_path, 'w', zipfile.ZIP_DEFLATED) as zf:
+                # 写入分类数据
+                if categories_data:
+                    categories_json = json.dumps(categories_data, ensure_ascii=False, indent=2)
+                    zf.writestr('categories.json', categories_json)
+                
+                # 写入模板数据
+                if templates_data:
+                    templates_json = json.dumps(templates_data, ensure_ascii=False, indent=2)
+                    zf.writestr('templates.json', templates_json)
+                
+                # 写入元数据
+                metadata = {
+                    "export_version": "1.0.0",
+                    "export_date": datetime.now().isoformat(),
+                    "export_by": f"Ghost-Dir v{APP_VERSION}",
+                    "categories_count": len(categories_data),
+                    "templates_count": len(templates_data)
+                }
+                metadata_json = json.dumps(metadata, ensure_ascii=False, indent=2)
+                zf.writestr('metadata.json', metadata_json)
             
-            return True, f"成功导出 {len(export_data['categories'])} 个分类和 {len(export_data['templates'])} 个模板"
+            return True, f"成功导出 {len(categories_data)} 个分类和 {len(templates_data)} 个模板"
         
         except Exception as e:
             return False, f"导出失败: {str(e)}"
@@ -449,33 +461,43 @@ class TemplateManager:
         conflict_strategy: str = "skip"
     ) -> Tuple[bool, str]:
         """
-        从文件导入模板库
+        从 ZIP 压缩包导入模板库
         
         Args:
-            file_path: 导入文件路径
+            file_path: 导入文件路径 (ZIP 文件)
             conflict_strategy: 冲突处理策略 (skip, overwrite, rename)
             
         Returns:
             (是否成功, 消息)
         """
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                import_data = json.load(f)
+            import zipfile
+            import tempfile
             
-            # 验证文件格式
-            if "export_version" not in import_data:
-                return False, "无效的导出文件格式"
+            # 1. 解压 ZIP 文件
+            with zipfile.ZipFile(file_path, 'r') as zf:
+                # 读取分类数据
+                categories_data = []
+                if 'categories.json' in zf.namelist():
+                    categories_json = zf.read('categories.json').decode('utf-8')
+                    categories_data = json.loads(categories_json)
+                
+                # 读取模板数据
+                templates_data = []
+                if 'templates.json' in zf.namelist():
+                    templates_json = zf.read('templates.json').decode('utf-8')
+                    templates_data = json.loads(templates_json)
             
             # ID 映射表：旧ID -> 新ID
             category_id_map = {}
             
-            # 1. 导入分类，记录ID映射
+            # 2. 导入分类，记录ID映射
             imported_categories = 0
             if self.category_manager:
-                for cat_data in import_data.get("categories", []):
+                for cat_data in categories_data:
                     from src.data.model import CategoryNode
                     original_id = cat_data["id"]
-                    category = CategoryNode(**cat_data)
+                    category = CategoryNode.from_dict(cat_data)
                     
                     new_id, renamed = self.category_manager.add_category_with_conflict(
                         category, conflict_strategy
@@ -487,11 +509,11 @@ class TemplateManager:
                     if new_id:
                         imported_categories += 1
             
-            # 2. 导入模板，使用映射表修正 category_id
+            # 3. 导入模板，使用映射表修正 category_id
             imported_templates = 0
             orphaned_templates = []
             
-            for tpl_data in import_data.get("templates", []):
+            for tpl_data in templates_data:
                 template = Template(**tpl_data)
                 
                 # 修正 category_id

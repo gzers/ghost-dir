@@ -122,7 +122,7 @@ class ImportDialog(MessageBoxBase):
             self,
             "选择导入文件",
             "",
-            "JSON Files (*.json)"
+            "ZIP Files (*.zip)"
         )
         if file_path:
             # 标准化路径，移除 \\?\ 等前缀
@@ -134,24 +134,40 @@ class ImportDialog(MessageBoxBase):
     def _load_preview(self):
         """加载预览信息"""
         try:
-            with open(self.import_path, 'r', encoding='utf-8') as f:
-                self.preview_data = json.load(f)
+            import zipfile
             
-            # 验证文件格式
-            if 'export_version' not in self.preview_data:
-                self.previewLabel.setText('无效的导出文件格式')
-                self.preview_data = None
-                return
-            
-            # 显示预览信息
-            category_count = len(self.preview_data.get('categories', []))
-            template_count = len(self.preview_data.get('templates', []))
-            export_date = self.preview_data.get('export_date', '未知')
-            
-            preview_text = f"将导入 {category_count} 个分类和 {template_count} 个模板\n"
-            preview_text += f"导出时间: {export_date}"
-            
-            self.previewLabel.setText(preview_text)
+            # 从 ZIP 文件读取元数据
+            with zipfile.ZipFile(self.import_path, 'r') as zf:
+                # 读取元数据
+                if 'metadata.json' in zf.namelist():
+                    metadata_json = zf.read('metadata.json').decode('utf-8')
+                    metadata = json.loads(metadata_json)
+                    
+                    category_count = metadata.get('categories_count', 0)
+                    template_count = metadata.get('templates_count', 0)
+                    export_date = metadata.get('export_date', '未知')
+                    
+                    preview_text = f"将导入 {category_count} 个分类和 {template_count} 个模板\n"
+                    preview_text += f"导出时间: {export_date}"
+                    
+                    self.previewLabel.setText(preview_text)
+                    self.preview_data = metadata
+                else:
+                    # 没有元数据,尝试读取分类和模板数据
+                    categories_data = []
+                    templates_data = []
+                    
+                    if 'categories.json' in zf.namelist():
+                        categories_json = zf.read('categories.json').decode('utf-8')
+                        categories_data = json.loads(categories_json)
+                    
+                    if 'templates.json' in zf.namelist():
+                        templates_json = zf.read('templates.json').decode('utf-8')
+                        templates_data = json.loads(templates_json)
+                    
+                    preview_text = f"将导入 {len(categories_data)} 个分类和 {len(templates_data)} 个模板"
+                    self.previewLabel.setText(preview_text)
+                    self.preview_data = {'categories_count': len(categories_data), 'templates_count': len(templates_data)}
             
         except Exception as e:
             self.previewLabel.setText(f'读取文件失败: {str(e)}')

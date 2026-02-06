@@ -7,7 +7,7 @@
 from pathlib import Path
 from typing import Tuple
 
-from src.common.config import CONFIG_FILE, CATEGORIES_CONFIG, DEFAULT_TEMPLATES_CONFIG, DATA_DIR
+from src.common.config import USER_CONFIG_FILE, USER_CATEGORIES_FILE, USER_LINKS_FILE, DATA_DIR
 from src.utils.config_validator import ConfigValidator
 from src.utils.config_backup_manager import ConfigBackupManager
 from src.core.services.context import service_bus
@@ -38,12 +38,13 @@ class ConfigFileService:
             return False, error_msg
         
         # 2. 结构校验
-        if file_path == CONFIG_FILE:
+        if file_path == USER_CONFIG_FILE:
             return self.validator.validate_config_structure(file_path)
-        elif file_path == CATEGORIES_CONFIG:
+        elif file_path == USER_CATEGORIES_FILE:
             return self.validator.validate_categories_structure(file_path)
-        elif file_path == DEFAULT_TEMPLATES_CONFIG:
-            return self.validator.validate_templates_structure(file_path)
+        elif file_path == USER_LINKS_FILE:
+            # links.json 的结构校验 (简单校验)
+            return True, ""
         
         return True, ""
     
@@ -58,20 +59,22 @@ class ConfigFileService:
             (是否成功, 错误信息)
         """
         try:
-            if file_path == CONFIG_FILE:
+            if file_path == USER_CONFIG_FILE:
                 # 重载 QFluentWidgets 配置
                 from qfluentwidgets import qconfig
-                qconfig.load(str(CONFIG_FILE))
+                qconfig.load(str(USER_CONFIG_FILE))
+                # 重载应用配置
+                service_bus.app_config_manager._load_config()
             
-            elif file_path == CATEGORIES_CONFIG:
+            elif file_path == USER_CATEGORIES_FILE:
                 # 重载分类管理器
                 service_bus.category_manager.load_categories()
                 # 通知 UI 刷新
                 signal_bus.data_refreshed.emit()
             
-            elif file_path == DEFAULT_TEMPLATES_CONFIG:
-                # 重载模板管理器
-                service_bus.template_service.template_manager.load_templates()
+            elif file_path == USER_LINKS_FILE:
+                # 重载链接数据
+                service_bus.user_manager._load_data()
                 # 通知 UI 刷新
                 signal_bus.data_refreshed.emit()
             
@@ -106,9 +109,9 @@ class ConfigFileService:
         
         if is_success:
             # 重新加载所有配置
-            self.reload_config(CONFIG_FILE)
-            self.reload_config(CATEGORIES_CONFIG)
-            self.reload_config(DEFAULT_TEMPLATES_CONFIG)
+            self.reload_config(USER_CONFIG_FILE)
+            self.reload_config(USER_CATEGORIES_FILE)
+            self.reload_config(USER_LINKS_FILE)
         
         return is_success, error_msg
     

@@ -3,7 +3,7 @@ from typing import List, Optional, Set
 from PySide6.QtCore import Qt, Signal, QPoint
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QStackedWidget,
-    QLabel, QFrame
+    QLabel, QFrame, QFileDialog
 )
 from qfluentwidgets import (
     SearchLineEdit, TransparentToolButton, FluentIcon as FIF,
@@ -17,7 +17,7 @@ from src.gui.components import BasePageView, CategoryTreeWidget, BatchToolbar
 from src.gui.views.library.widgets import TemplateTableWidget
 from src.gui.dialogs import (
     CategoryEditDialog, TemplateEditDialog, TemplatePreviewDialog,
-    BatchMoveDialog, ExportDialog, ImportDialog, CategoryManagerDialog
+    BatchMoveDialog, ImportDialog, CategoryManagerDialog
 )
 
 
@@ -357,15 +357,31 @@ class LibraryView(BasePageView):
 
     def _on_export_requested(self):
         """导出请求"""
-        dialog = ExportDialog(self.template_service.manager, self.category_service.manager, self)
-        if dialog.exec() and dialog.validate():
-            options = dialog.get_export_options()
-            # 从 options 中取出文件路径（假设 dialog 的 key 是 file_path）
-            path = options.pop('file_path', None)
-            if path:
-                success, msg = self.template_service.export_to_file(path, options)
-                if success: InfoBar.success("成功", msg, duration=2000, position='TopCenter', parent=self)
-                else: InfoBar.error("失败", msg, duration=3000, position='TopCenter', parent=self)
+        # 选择导出文件夹
+        folder_path = QFileDialog.getExistingDirectory(
+            self,
+            "选择导出文件夹",
+            ""
+        )
+        
+        if folder_path:
+            # 自动生成压缩包文件名
+            from datetime import datetime
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            file_name = f"template_export_{timestamp}.zip"
+            file_path = f"{folder_path}/{file_name}"
+            
+            # 默认导出所有内容
+            options = {
+                'include_categories': True,
+                'include_templates': True
+            }
+            
+            success, msg = self.template_service.export_to_file(file_path, options)
+            if success:
+                InfoBar.success("成功", msg, duration=2000, position='TopCenter', parent=self)
+            else:
+                InfoBar.error("失败", msg, duration=3000, position='TopCenter', parent=self)
 
     def _on_import_clicked(self):
         """导入请求"""

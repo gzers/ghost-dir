@@ -11,7 +11,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Tuple, List, Dict, Optional
 
-from src.common.config import CONFIG_FILE, CATEGORIES_CONFIG, DEFAULT_TEMPLATES_CONFIG, DATA_DIR, APP_VERSION
+from src.common.config import USER_CONFIG_FILE, USER_CATEGORIES_FILE, USER_LINKS_FILE, DATA_DIR, APP_VERSION
 from src.utils.config_validator import ConfigValidator
 
 
@@ -30,9 +30,9 @@ class ConfigBackupManager:
         
         # 配置文件映射
         self.config_files = {
-            "config.json": CONFIG_FILE,
-            "categories.json": CATEGORIES_CONFIG,
-            "default_templates.json": DEFAULT_TEMPLATES_CONFIG
+            "config.json": USER_CONFIG_FILE,
+            "categories.json": USER_CATEGORIES_FILE,
+            "links.json": USER_LINKS_FILE
         }
     
     def export_all_configs(self, output_path: Path = None) -> Tuple[bool, str]:
