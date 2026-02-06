@@ -16,7 +16,7 @@ from qfluentwidgets import (
 
 from src.gui.i18n import t
 from src.gui.styles import apply_font_style, apply_muted_text_style
-from src.common.config import CONFIG_FILE, CATEGORIES_CONFIG, DEFAULT_TEMPLATES_CONFIG
+from src.common.config import USER_CONFIG_FILE, USER_CATEGORIES_FILE, USER_LINKS_FILE
 from src.core.services.config_file_service import ConfigFileService
 
 
@@ -182,12 +182,12 @@ class ConfigEditorCard(CardWidget):
         
         # 配置文件列表
         config_files = [
-            (CONFIG_FILE, FluentIcon.PEOPLE, "#2F6BFF", 
+            (USER_CONFIG_FILE, FluentIcon.SETTING, "#2F6BFF", 
              "config_editor.config_json", "config_editor.config_json_desc"),
-            (CATEGORIES_CONFIG, FluentIcon.FOLDER_ADD, "#9A7BFF", 
+            (USER_CATEGORIES_FILE, FluentIcon.FOLDER_ADD, "#9A7BFF", 
              "config_editor.categories_json", "config_editor.categories_json_desc"),
-            (DEFAULT_TEMPLATES_CONFIG, FluentIcon.DOCUMENT, "#FF5C34", 
-             "config_editor.templates_json", "config_editor.templates_json_desc"),
+            (USER_LINKS_FILE, FluentIcon.LINK, "#27AE60", 
+             "config_editor.links_json", "config_editor.links_json_desc"),
         ]
         
         for file_path, icon, color, name_key, desc_key in config_files:
