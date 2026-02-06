@@ -52,7 +52,7 @@ DEFAULT_STARTUP_PAGE = "wizard"
 **配置选项**:
 - `THEME_OPTIONS` - 主题模式选项(system/light/dark)
 - `THEME_COLOR_OPTIONS` - 主题色选项(9种预设颜色)
-- `STARTUP_PAGE_OPTIONS` - 启动页选项(wizard/console/library)
+- `STARTUP_PAGE_OPTIONS` - 启动页选项(wizard/links/library)
 
 **安全配置**:
 - `BLACKLIST_PATHS` - 系统路径黑名单,禁止操作系统关键目录

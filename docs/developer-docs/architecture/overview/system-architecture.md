@@ -85,7 +85,7 @@ graph TB
 
 **主要组件**:
 - `app.py` - 应用主类,管理应用生命周期
-- `views/` - 功能视图页面(console, help, library, settings, wizard)
+- `views/` - 功能视图页面(links, help, library, settings, wizard)
 - `dialogs/` - 对话框组件
 - `components/` - 可复用UI组件
 - `windows/` - 主窗口和子窗口

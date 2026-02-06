@@ -1,7 +1,7 @@
 # Service 层架构设计文档 (Service Architecture Design)
 
 ## 1. 背景与目标
-为了解决现有项目中 GUI 视图层（`LibraryView`, `ConnectedView`, `SettingView`）过度耦合业务逻辑的问题，本项目引入 **Service 层**。该层旨在实现业务逻辑、状态管理与 UI 表述的彻底解耦。
+为了解决现有项目中 GUI 视图层（`LibraryView`, `LinksView`, `SettingView`）过度耦合业务逻辑的问题，本项目引入 **Service 层**。该层旨在实现业务逻辑、状态管理与 UI 表述的彻底解耦。
 
 ## 2. 核心架构模式
 系统遵循 **View -> Service -> Data/Core** 的分层模式：
