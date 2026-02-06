@@ -11,7 +11,7 @@ from qfluentwidgets import (
 )
 from PySide6.QtCore import Qt, QSize, QTimer
 from src.core.services.context import service_bus
-from src.gui.views.connected import ConnectedView
+from src.gui.views.links import LinksView
 from src.gui.views.wizard import WizardView
 from src.gui.views.library import LibraryView
 from src.gui.views.help import HelpView
@@ -33,7 +33,7 @@ class MainWindow(FluentWindow):
         self.user_manager = service_bus.user_manager
 
         # 创建视图 (构造函数已适配注入模式)
-        self.connected_view = ConnectedView(self)
+        self.links_view = LinksView(self)
         self.wizard_view = WizardView(self)
         self.library_view = LibraryView(self)
         self.help_view = HelpView(self)
@@ -65,7 +65,7 @@ class MainWindow(FluentWindow):
     def _init_navigation(self):
         """初始化导航栏"""
         # 设置 objectName
-        self.connected_view.setObjectName("connectedView")
+        self.links_view.setObjectName("linksView")
         self.wizard_view.setObjectName("wizardView")
         self.library_view.setObjectName("libraryView")
         self.help_view.setObjectName("helpView")
@@ -80,11 +80,11 @@ class MainWindow(FluentWindow):
             position=NavigationItemPosition.TOP
         )
         
-        # 2. 我的连接
+        # 2. 我的链接
         self.addSubInterface(
-            self.connected_view,
+            self.links_view,
             FluentIcon.IOT,
-            "我的连接",
+            "我的链接",
             position=NavigationItemPosition.TOP
         )
         
@@ -115,7 +115,7 @@ class MainWindow(FluentWindow):
         startup_page = service_bus.config_service.get_startup_page()
         page_map = {
             "wizard": self.wizard_view,
-            "connected": self.connected_view,
+            "links": self.links_view,
             "library": self.library_view
         }
         self.switchTo(page_map.get(startup_page, self.wizard_view))

@@ -23,7 +23,7 @@ COMMON_TEXTS = {
     "loading": "加载中...",
     "startup_page_desc": "选择进入程序后显示的第一个页面",
     "startup_wizard": "引导页面",
-    "startup_connected": "已连接页面",
+    "startup_connected": "链接页面",
     "startup_library": "模版库页面",
     
     "success": "成功",
@@ -36,8 +36,8 @@ COMMON_TEXTS = {
 
 STATUS_TEXTS = {
     # 状态文案
-    "disconnected": "未连接",
-    "connected": "已连接",
+    "disconnected": "未链接",
+    "connected": "已链接",
     "ready": "就绪",
     "invalid": "失效",
     "running": "运行中",
@@ -62,8 +62,8 @@ ERROR_TEXTS = {
 
 DIALOG_TEXTS = {
     # 对话框标题
-    "add_link_title": "新增连接",
-    "edit_link_title": "编辑连接",
+    "add_link_title": "新增链接",
+    "edit_link_title": "编辑链接",
     "category_manager_title": "分类管理",
     "scan_wizard_title": "智能扫描向导",
     "confirm_delete": "确认删除",

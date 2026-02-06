@@ -3,7 +3,7 @@
 组装所有文案模块
 """
 from src.gui.i18n.zh_CN.common import COMMON_TEXTS, STATUS_TEXTS, CATEGORY_TEXTS, ERROR_TEXTS, DIALOG_TEXTS
-from src.gui.i18n.zh_CN.connected import CONNECTED_TEXTS
+from src.gui.i18n.zh_CN.links import LINKS_TEXTS
 from src.gui.i18n.zh_CN.wizard import WIZARD_TEXTS
 from src.gui.i18n.zh_CN.library import LIBRARY_TEXTS
 from src.gui.i18n.zh_CN.help import HELP_TEXTS
@@ -17,7 +17,7 @@ TEXTS = {
     "category": CATEGORY_TEXTS,
     "error": ERROR_TEXTS,
     "dialog": DIALOG_TEXTS,
-    "connected": CONNECTED_TEXTS,
+    "links": LINKS_TEXTS,
     "wizard": WIZARD_TEXTS,
     "library": LIBRARY_TEXTS,
     "help": HELP_TEXTS,

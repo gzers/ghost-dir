@@ -41,7 +41,7 @@ SETTINGS_TEXTS = {
     "startup_page": "启动页面",
     "startup_page_desc": "设置程序启动时显示的页面",
     "startup_wizard": "智能向导",
-    "startup_connected": "我的连接",
+    "startup_connected": "我的链接",
     "startup_library": "模版库",
     "startup_changed": "设置已更新",
     "startup_changed_msg": "首启动页面已设置为 {page}",

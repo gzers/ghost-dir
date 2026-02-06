@@ -1,5 +1,5 @@
 """
-已连接视图 (Connected View)
+链接视图 (Links View)
 管理所有已建立或待处理的链接，支持分类查看、列表搜索及批量操作
 """
 import os
@@ -18,16 +18,16 @@ from src.core.services.context import service_bus
 from src.common.signals import signal_bus
 from src.gui.components import BasePageView, CategoryTreeWidget, BatchToolbar, LinkTable
 from src.gui.styles import apply_transparent_style
-from src.gui.views.connected.widgets import FlatLinkView
+from src.gui.views.links.widgets import FlatLinkView
 
 
-class ConnectedView(BasePageView):
-    """已连接视图 - 管理所有连接状态"""
+class LinksView(BasePageView):
+    """链接视图 - 管理所有链接状态"""
 
     def __init__(self, parent=None):
         super().__init__(
             parent=parent,
-            title=t("connected.title"),
+            title=t("links.title"),
             show_toolbar=True,
             enable_scroll=False,
             content_padding=False,
@@ -61,8 +61,8 @@ class ConnectedView(BasePageView):
         toolbar = self.get_toolbar_layout()
 
         # 添加按钮
-        self.add_btn = PrimaryPushButton(FIF.ADD, t("connected.add_link"))
-        self.scan_btn = TransparentPushButton(FIF.SEARCH, t("connected.scan_apps"))
+        self.add_btn = PrimaryPushButton(FIF.ADD, t("links.add_link"))
+        self.scan_btn = TransparentPushButton(FIF.SEARCH, t("links.scan_apps"))
         toolbar.addWidget(self.add_btn)
         toolbar.addWidget(self.scan_btn)
 
@@ -70,19 +70,19 @@ class ConnectedView(BasePageView):
 
         # 搜索与切换
         self.search_edit = SearchLineEdit()
-        self.search_edit.setPlaceholderText(t("connected.search_placeholder"))
+        self.search_edit.setPlaceholderText(t("links.search_placeholder"))
         self.search_edit.setFixedWidth(260)
         
         self.view_pivot = Pivot()
-        self.view_pivot.addItem("list", t("connected.view_list"))
-        self.view_pivot.addItem("category", t("connected.view_category"))
+        self.view_pivot.addItem("list", t("links.view_list"))
+        self.view_pivot.addItem("category", t("links.view_category"))
         
         self.refresh_btn = ToolButton(FIF.SYNC)
-        self.refresh_btn.setToolTip(t("connected.refresh_status"))
+        self.refresh_btn.setToolTip(t("links.refresh_status"))
         self.refresh_btn.clicked.connect(lambda: self._load_data(refresh_size=True))
 
         self.help_btn = ToolButton(FIF.HELP)
-        self.help_btn.setToolTip(t("connected.status_help_title"))
+        self.help_btn.setToolTip(t("links.status_help_title"))
         self.help_btn.clicked.connect(self._on_show_status_help)
 
         toolbar.addWidget(self.search_edit)
@@ -97,7 +97,7 @@ class ConnectedView(BasePageView):
 
         self.splitter = QSplitter(Qt.Orientation.Horizontal)
         
-        # 分类树（显示连接数量）
+        # 分类树（显示链接数量）
         self.category_tree = CategoryTreeWidget(
             self.category_manager, 
             service_bus.user_manager,
@@ -124,7 +124,7 @@ class ConnectedView(BasePageView):
 
         # 批量工具栏
         self.batch_toolbar = BatchToolbar(self)
-        self.batch_toolbar.set_mode("connected")
+        self.batch_toolbar.set_mode("links")
         self.batch_toolbar.hide()
         content_layout.addWidget(self.batch_toolbar)
 
@@ -204,13 +204,13 @@ class ConnectedView(BasePageView):
         sec_color = get_text_secondary()
         border_color = get_divider_color()
         
-        title = t("connected.status_help_title")
+        title = t("links.status_help_title")
         
         # 封装表格行 html，使用 table 解决换行对齐问题，使用 SVG 圆点解决显示不全问题
         def get_row_html(status_key, label_key):
             color = colors.get(status_key, "#808080")
-            status_name = t(f"connected.status_{status_key}")
-            desc = t(f"connected.{label_key}")
+            status_name = t(f"links.status_{status_key}")
+            desc = t(f"links.{label_key}")
             # 使用简单的 SVG 确保圆点在富文本中不被截断且居中
             dot_svg = f"""<svg width="12" height="12"><circle cx="6" cy="6" r="5" fill="{color}" /></svg>"""
             return f"""
@@ -232,8 +232,8 @@ class ConnectedView(BasePageView):
                 {get_row_html('invalid', 'status_invalid_desc')}
             </table>
             <div style="margin-top: 15px; border-top: 1px solid {border_color}; padding-top: 15px;">
-                <b style="font-size: 14px;">{t('connected.edit_rule_title')}</b>
-                <p style="margin-top: 8px; color: {sec_color}; line-height: 1.5;">{t('connected.edit_rule_desc')}</p>
+                <b style="font-size: 14px;">{t('links.edit_rule_title')}</b>
+                <p style="margin-top: 8px; color: {sec_color}; line-height: 1.5;">{t('links.edit_rule_desc')}</p>
             </div>
         """
         
@@ -276,7 +276,7 @@ class ConnectedView(BasePageView):
             operation_runner.run_task_async(
                 self.connection_service.establish_connection_by_id, 
                 link_id, 
-                title=t("connected.establish"),
+                title=t("links.establish"),
                 parent=self,
                 on_start=lambda: self.category_link_table.show_loading(link_id, True),
                 on_finished=lambda s, m, d: (
@@ -288,7 +288,7 @@ class ConnectedView(BasePageView):
             operation_runner.run_task_async(
                 self.connection_service.disconnect_connection, 
                 link_id, 
-                title=t("connected.disconnect"),
+                title=t("links.disconnect"),
                 parent=self,
                 on_start=lambda: self.category_link_table.show_loading(link_id, True),
                 on_finished=lambda s, m, d: (
@@ -300,7 +300,7 @@ class ConnectedView(BasePageView):
             operation_runner.run_task_async(
                 self.connection_service.reconnect_connection, 
                 link_id, 
-                title=t("connected.reconnect"),
+                title=t("links.reconnect"),
                 parent=self,
                 on_start=lambda: self.category_link_table.show_loading(link_id, True),
                 on_finished=lambda s, m, d: (
@@ -320,13 +320,13 @@ class ConnectedView(BasePageView):
             link = service_bus.user_manager.get_link_by_id(link_id)
             if not link: return
             
-            title = t("connected.confirm_remove_title")
-            msg = t("connected.msg_delete_confirm").format(name=link.name)
+            title = t("links.confirm_remove_title")
+            msg = t("links.msg_delete_confirm").format(name=link.name)
             if MessageBox(title, msg, self).exec():
                 service_bus.user_manager.remove_link(link_id)
                 InfoBar.success(
                     t("common.success"), 
-                    t("connected.batch_remove"), 
+                    t("links.batch_remove"), 
                     duration=2000, 
                     position='TopCenter', 
                     parent=self
@@ -342,7 +342,7 @@ class ConnectedView(BasePageView):
         operation_runner.run_batch_task_async(
             checked_ids,
             self.connection_service.establish_connection_by_id,
-            "批量建立连接",
+            "批量建立链接",
             lambda lid: f"正在建立: {self.user_manager.get_link_by_id(lid).name}",
             parent=self,
             on_finished=lambda s, m, d: (self._load_data(), self._clear_all_selection())
@@ -355,7 +355,7 @@ class ConnectedView(BasePageView):
         operation_runner.run_batch_task_async(
             checked_ids,
             self.connection_service.disconnect_connection,
-            "批量断开连接",
+            "批量断开链接",
             lambda lid: f"正在断开: {self.user_manager.get_link_by_id(lid).name}",
             parent=self,
             on_finished=lambda s, m, d: (self._load_data(), self._clear_all_selection())
@@ -364,7 +364,7 @@ class ConnectedView(BasePageView):
     def _on_batch_remove(self):
         checked_ids = self._get_checked_ids()
         if not checked_ids: return
-        if MessageBox("确认移除", f"确定要移除选中的 {len(checked_ids)} 个连接配置吗？", self).exec():
+        if MessageBox("确认移除", f"确定要移除选中的 {len(checked_ids)} 个链接配置吗？", self).exec():
             operation_runner.run_batch_task_async(
                 checked_ids,
                 self.user_manager.remove_link,
