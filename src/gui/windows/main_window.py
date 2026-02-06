@@ -112,7 +112,7 @@ class MainWindow(FluentWindow):
         )
 
         # 设置默认启动页面
-        startup_page = self.user_manager.get_startup_page() if self.user_manager else "wizard"
+        startup_page = service_bus.config_service.get_startup_page()
         page_map = {
             "wizard": self.wizard_view,
             "connected": self.connected_view,

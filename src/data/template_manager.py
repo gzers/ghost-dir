@@ -178,23 +178,10 @@ class TemplateManager:
     
     def get_all_templates(self) -> List[Template]:
         """
-        获取所有模版（官方 + 自定义）
-        v7.4: 合并用户自定义模版
+        获取所有模版（官方）
+        TODO: 未来支持自定义模版
         """
-        # 官方模版
-        official_templates = list(self.templates.values())
-        
-        # 自定义模版（从 UserManager 获取）
-        try:
-            from src.data.user_manager import UserManager
-            user_manager = UserManager()
-            custom_templates = user_manager.get_custom_templates()
-            
-            # 合并并返回
-            return official_templates + custom_templates
-        except Exception as e:
-            print(f"获取自定义模版时出错: {e}")
-            return official_templates
+        return list(self.templates.values())
     
     def get_official_templates(self) -> List[Template]:
         """仅获取官方模版"""
@@ -202,24 +189,10 @@ class TemplateManager:
     
     def get_template_by_id(self, template_id: str) -> Optional[Template]:
         """
-        根据 ID 获取模版（官方或自定义）
-        v7.4: 支持查找自定义模版
+        根据 ID 获取模版（官方）
+        TODO: 未来支持查找自定义模版
         """
-        # 先查找官方模版
-        if template_id in self.templates:
-            return self.templates[template_id]
-        
-        # 再查找自定义模版
-        try:
-            from src.data.user_manager import UserManager
-            user_manager = UserManager()
-            for template in user_manager.get_custom_templates():
-                if template.id == template_id:
-                    return template
-        except Exception as e:
-            print(f"查找自定义模版时出错: {e}")
-        
-        return None
+        return self.templates.get(template_id)
     
     def search_templates(self, keyword: str) -> List[Template]:
         """搜索模版（支持名称、ID、以及所属分类名称）"""

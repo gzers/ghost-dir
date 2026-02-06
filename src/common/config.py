@@ -25,21 +25,26 @@ else:
     DATA_DIR = PROJECT_ROOT / ".ghost-dir"
 
 
-# ========== 配置文件路径（统一在 .ghost-dir 下）==========
+# ========== 配置文件路径 ==========
 
-# QFluentWidgets UI 配置
-CONFIG_FILE = DATA_DIR / "config.json"
+# --- 官方配置（只读，打包在 _internal/config 或 开发环境的 config/）---
+DEFAULT_CONFIG_FILE = PROJECT_ROOT / "config" / "default_config.json"
+DEFAULT_CATEGORIES_FILE = PROJECT_ROOT / "config" / "default_categories.json"
+DEFAULT_TEMPLATES_FILE = PROJECT_ROOT / "config" / "default_templates.json"
 
-# 用户数据
-USER_DATA_FILE = DATA_DIR / "user_data.json"
+# --- 用户配置（可读写，存储在 .ghost-dir）---
+USER_CONFIG_FILE = DATA_DIR / "config.json"
+USER_CATEGORIES_FILE = DATA_DIR / "categories.json"
+USER_TEMPLATES_FILE = DATA_DIR / "templates.json"
+USER_LINKS_FILE = DATA_DIR / "links.json"
 
-# 分类定义
-CATEGORIES_CONFIG = DATA_DIR / "categories.json"
+# --- 兼容性别名（逐步废弃）---
+CONFIG_FILE = USER_CONFIG_FILE  # 兼容旧代码
+USER_DATA_FILE = USER_LINKS_FILE  # 兼容旧代码
+CATEGORIES_CONFIG = USER_CATEGORIES_FILE  # 兼容旧代码
+DEFAULT_TEMPLATES_CONFIG = DEFAULT_TEMPLATES_FILE  # 兼容旧代码
 
-# 默认模板
-DEFAULT_TEMPLATES_CONFIG = DATA_DIR / "default_templates.json"
-
-# 运行时数据
+# --- 运行时数据 ---
 TEMPLATE_CACHE_FILE = DATA_DIR / "template_cache.json"
 CATEGORY_LOG_FILE = DATA_DIR / "category_log.json"
 LOCK_FILE = DATA_DIR / ".ghost.lock"
@@ -54,21 +59,35 @@ TEMPLATES_FILE = "assets/templates.json"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 
-# 打包后首次运行时，从 _internal/config 复制配置文件到 .ghost-dir
-if getattr(sys, 'frozen', False):
-    import shutil
-    builtin_config_dir = PROJECT_ROOT / "config"
+# 配置文件初始化：首次运行时从官方配置复制到用户目录
+import shutil
+
+# 配置文件映射：官方 → 用户
+config_mapping = {
+    "default_config.json": "config.json",
+    "default_categories.json": "categories.json",
+    "default_templates.json": "templates.json"
+}
+
+for default_name, user_name in config_mapping.items():
+    default_file = DEFAULT_CONFIG_FILE.parent / default_name  # config/default_*.json
+    user_file = DATA_DIR / user_name  # .ghost-dir/*.json
     
-    # 需要复制的配置文件
-    config_files = ["categories.json", "default_templates.json", "config.json"]
-    
-    for config_file in config_files:
-        user_config = DATA_DIR / config_file
-        builtin_config = builtin_config_dir / config_file
-        
-        # 如果用户目录没有该配置文件，且内置配置存在，则复制
-        if not user_config.exists() and builtin_config.exists():
-            shutil.copy2(builtin_config, user_config)
+    # 首次运行：复制官方配置到用户目录
+    if not user_file.exists() and default_file.exists():
+        shutil.copy2(default_file, user_file)
+
+# 兼容旧版本：自动迁移旧配置文件
+old_user_config = DATA_DIR / "user_config.json"
+new_config = DATA_DIR / "config.json"
+if old_user_config.exists() and not new_config.exists():
+    old_user_config.rename(new_config)
+
+old_user_data = DATA_DIR / "user_data.json"
+new_links = DATA_DIR / "links.json"
+if old_user_data.exists() and not new_links.exists():
+    old_user_data.rename(new_links)
+
 
 # ========== 应用默认设置 ==========
 # 这些是应用级的默认值常量，不会在运行时改变

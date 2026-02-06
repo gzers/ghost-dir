@@ -19,6 +19,9 @@ from src.gui.views.settings.widgets.startup_card import StartupCard
 from src.gui.views.settings.widgets.link_view_card import LinkViewCard
 from src.gui.views.settings.widgets.target_root_card import TargetRootCard
 from src.gui.views.settings.widgets.log_folder_card import LogFolderCard
+from src.gui.views.settings.widgets.restore_config_cards import (
+    RestoreConfigCard, RestoreCategoriesCard, RestoreTemplatesCard
+)
 
 
 class SettingView(BasePageView):
@@ -94,6 +97,25 @@ class SettingView(BasePageView):
         self.startupGroup.addSettingCard(self.link_view_card)
 
         expand_layout.addWidget(self.startupGroup)
+
+        # --- 配置管理组 ---
+        self.configGroup = SettingCardGroup("配置管理", self.get_content_container())
+        self.configGroup.setAutoFillBackground(False)
+        apply_transparent_background_only(self.configGroup)
+
+        # 恢复所有默认配置
+        self.restoreAllCard = RestoreConfigCard(self.configGroup)
+        self.configGroup.addSettingCard(self.restoreAllCard)
+
+        # 恢复默认分类
+        self.restoreCategoriesCard = RestoreCategoriesCard(self.configGroup)
+        self.configGroup.addSettingCard(self.restoreCategoriesCard)
+
+        # 恢复默认模板
+        self.restoreTemplatesCard = RestoreTemplatesCard(self.configGroup)
+        self.configGroup.addSettingCard(self.restoreTemplatesCard)
+
+        expand_layout.addWidget(self.configGroup)
 
         # 暴力清理：针对 qfluentwidgets 组件内部可能持有的背景进行穿透化透明处理
         self.setStyleSheet("""

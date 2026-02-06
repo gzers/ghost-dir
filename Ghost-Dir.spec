@@ -5,10 +5,7 @@ a = Analysis(
     ['src\\main.py'],
     pathex=[],
     binaries=[],
-    datas=[
-        ('assets', 'assets'),
-        ('config', 'config'),  # 打包配置文件到 _internal/config
-    ],
+    datas=[('assets', 'assets'), ('config', 'config')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

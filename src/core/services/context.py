@@ -5,10 +5,12 @@
 from src.data.category_manager import CategoryManager
 from src.data.template_manager import TemplateManager
 from src.data.user_manager import UserManager
+from src.data.app_config_manager import AppConfigManager
 from src.core.services.category_service import CategoryService
 from src.core.services.template_service import TemplateService
 from src.core.services.config_service import ConfigService
 from src.core.services.connection_service import ConnectionService
+from src.core.services.config_restore_service import ConfigRestoreService
 
 
 class ServiceContext:
@@ -20,6 +22,7 @@ class ServiceContext:
         self.user_manager = UserManager()
         self.category_manager = CategoryManager()
         self.template_manager = TemplateManager(self.category_manager)
+        self.app_config_manager = AppConfigManager()
         
         # 处理循环引用注入
         self.category_manager.set_template_manager(self.template_manager)
@@ -27,8 +30,9 @@ class ServiceContext:
         # 2. 初始化高层 Service
         self.category_service = CategoryService(self.category_manager, self.template_manager)
         self.template_service = TemplateService(self.template_manager, self.category_manager, self.user_manager)
-        self.config_service = ConfigService(self.user_manager)
+        self.config_service = ConfigService(self.app_config_manager)
         self.connection_service = ConnectionService(self.user_manager)
+        self.config_restore_service = ConfigRestoreService()
 
     @classmethod
     def instance(cls):

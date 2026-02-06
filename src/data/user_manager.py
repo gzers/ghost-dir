@@ -8,10 +8,7 @@ from typing import List, Optional
 from datetime import datetime
 from dataclasses import asdict
 from src.data.model import UserLink, Category, Template
-from src.common.config import (
-    USER_DATA_FILE, DEFAULT_CATEGORY,
-    DEFAULT_TARGET_ROOT, DEFAULT_THEME, DEFAULT_THEME_COLOR, DEFAULT_STARTUP_PAGE, DEFAULT_LINK_VIEW
-)
+from src.common.config import USER_LINKS_FILE, DEFAULT_CATEGORY
 
 
 class UserManager:
@@ -29,19 +26,9 @@ class UserManager:
         if UserManager._initialized:
             return
         
-        self.data_file = USER_DATA_FILE
+        self.data_file = USER_LINKS_FILE
         self.links: List[UserLink] = []
-        self.categories: List[Category] = []
-
-        # v7.4 新增字段
-        self.custom_templates: List[Template] = []      # 用户自定义模版
-        self.ignored_ids: List[str] = []                # 扫描忽略名单
-        self.default_target_root: str = DEFAULT_TARGET_ROOT  # 默认仓库路径
-        self.theme: str = DEFAULT_THEME                      # 主题：light/dark/system
-        self.theme_color: str = DEFAULT_THEME_COLOR          # 主题色
-        self.startup_page: str = DEFAULT_STARTUP_PAGE        # 首次打开：wizard/connected/library
-        self.default_link_view: str = DEFAULT_LINK_VIEW      # 默认视图：list/category
-        self.transparency: bool = True                       # 是否开启透明效果
+        self.ignored_ids: List[str] = []  # 扫描忽略名单
         
         # 集成分类管理器
         from src.data.category_manager import CategoryManager
@@ -52,25 +39,25 @@ class UserManager:
     
     def _ensure_data_dir(self):
         """确保数据目录存在"""
-        from src.common.config import USER_DATA_FILE
-        USER_DATA_FILE.parent.mkdir(parents=True, exist_ok=True)
+        from src.common.config import USER_LINKS_FILE
+        USER_LINKS_FILE.parent.mkdir(parents=True, exist_ok=True)
 
     def reload(self):
         """重新从磁盘加载最新数据，用于多实例同步"""
         self._load_data()
 
     def _load_data(self):
-        """加载用户数据"""
-        from src.common.config import USER_DATA_FILE
-        if not USER_DATA_FILE.exists():
+        """加载用户链接数据"""
+        from src.common.config import USER_LINKS_FILE
+        if not USER_LINKS_FILE.exists():
             self._init_default_data()
             return
 
         try:
-            with open(USER_DATA_FILE, 'r', encoding='utf-8') as f:
+            with open(USER_LINKS_FILE, 'r', encoding='utf-8') as f:
                 data = json.load(f)
 
-            # v7.4 数据迁移
+            # 数据迁移
             data = self._migrate_data(data)
 
             # 加载连接
@@ -79,34 +66,10 @@ class UserManager:
                 for link_data in data.get('links', [])
             ]
 
-            # 加载分类
-            self.categories = [
-                Category(**cat_data)
-                for cat_data in data.get('categories', [])
-            ]
-
-            # v7.4 新增字段
-            self.custom_templates = [
-                Template(**tpl_data)
-                for tpl_data in data.get('custom_templates', [])
-            ]
+            # 加载忽略列表
             self.ignored_ids = data.get('ignored_ids', [])
-            self.default_target_root = data.get('default_target_root', DEFAULT_TARGET_ROOT)
-            self.theme = data.get('theme', DEFAULT_THEME)      # 主题
-            self.theme_color = data.get('theme_color', DEFAULT_THEME_COLOR)  # 主题色
-            self.startup_page = data.get('startup_page', DEFAULT_STARTUP_PAGE)  # 首次打开
-            self.default_link_view = data.get('default_link_view', DEFAULT_LINK_VIEW)  # 默认视图
-            self.transparency = data.get('transparency', True)                         # 透明效果
             
-            # 确保有默认分类
-            if not any(c.name == DEFAULT_CATEGORY for c in self.categories):
-                self.categories.append(Category(
-                    id=str(uuid.uuid4()),
-                    name=DEFAULT_CATEGORY
-                ))
-            
-            print(f"已加载 {len(self.links)} 个连接，{len(self.categories)} 个分类")
-            print(f"已加载 {len(self.custom_templates)} 个自定义模版")
+            print(f"已加载 {len(self.links)} 个连接")
             
             UserManager._initialized = True
             
@@ -115,24 +78,10 @@ class UserManager:
             self._init_default_data()
     
     def _migrate_data(self, data: dict) -> dict:
-        """数据迁移：v1.0 → v7.4"""
-        # 添加新字段（如果不存在）
-        if 'custom_templates' not in data:
-            data['custom_templates'] = []
+        """数据迁移"""
+        # 确保有 ignored_ids 字段
         if 'ignored_ids' not in data:
             data['ignored_ids'] = []
-        if 'default_target_root' not in data:
-            data['default_target_root'] = DEFAULT_TARGET_ROOT
-        if 'theme' not in data:
-            data['theme'] = DEFAULT_THEME
-        if 'theme_color' not in data:
-            data['theme_color'] = DEFAULT_THEME_COLOR
-        if 'startup_page' not in data:
-            data['startup_page'] = DEFAULT_STARTUP_PAGE
-        if 'default_link_view' not in data:
-            data['default_link_view'] = DEFAULT_LINK_VIEW
-        if 'transparency' not in data:
-            data['transparency'] = True
 
         # 补全链接的全路径字段
         for link in data.get('links', []):
@@ -147,33 +96,19 @@ class UserManager:
     def _init_default_data(self):
         """创建默认数据"""
         self.links = []
-        self.categories = [
-            Category(id="games", name="游戏"),
-            Category(id="browsers", name="浏览器"),
-            Category(id="social", name="社交"),
-            Category(id="uncategorized", name=DEFAULT_CATEGORY),
-        ]
+        self.ignored_ids = []
         self._save_data()
     
     def _save_data(self):
-        """保存用户数据"""
-        from src.common.config import USER_DATA_FILE
+        """保存用户链接数据"""
+        from src.common.config import USER_LINKS_FILE
         try:
             data = {
                 'links': [asdict(link) for link in self.links],
-                'categories': [asdict(cat) for cat in self.categories],
-                # v7.4 新增字段
-                'custom_templates': [asdict(tpl) for tpl in self.custom_templates],
-                'ignored_ids': self.ignored_ids,
-                'default_target_root': self.default_target_root,
-                'theme': self.theme,
-                'theme_color': self.theme_color,
-                'startup_page': self.startup_page,
-                'default_link_view': self.default_link_view,
-                'transparency': self.transparency
+                'ignored_ids': self.ignored_ids
             }
 
-            with open(USER_DATA_FILE, 'w', encoding='utf-8') as f:
+            with open(USER_LINKS_FILE, 'w', encoding='utf-8') as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
                 
         except Exception as e:
@@ -256,104 +191,7 @@ class UserManager:
             return self.update_link(link)
         return False
     
-    # ========== 分类管理 ==========
-    
-    def add_category(self, category: Category) -> bool:
-        """添加分类"""
-        try:
-            # 检查是否已存在
-            if any(c.name == category.name for c in self.categories):
-                print(f"分类已存在: {category.name}")
-                return False
-            
-            self.categories.append(category)
-            self._save_data()
-            return True
-            
-        except Exception as e:
-            print(f"添加分类时出错: {e}")
-            return False
-    
-    def remove_category(self, category_id: str) -> bool:
-        """删除分类"""
-        try:
-            # 不允许删除默认分类
-            category = self.get_category_by_id(category_id)
-            if category and category.name == DEFAULT_CATEGORY:
-                print("不能删除默认分类")
-                return False
-            
-            # 将该分类下的连接移到默认分类
-            for link in self.links:
-                if link.category == category_id:
-                    link.category = "uncategorized"
-            
-            self.categories = [c for c in self.categories if c.id != category_id]
-            self._save_data()
-            return True
-            
-        except Exception as e:
-            print(f"删除分类时出错: {e}")
-            return False
-    
-    def get_category_by_id(self, category_id: str) -> Optional[Category]:
-        """根据 ID 获取分类"""
-        for category in self.categories:
-            if category.id == category_id:
-                return category
-        return None
-    
-    def get_all_categories(self) -> List[Category]:
-        """获取所有分类"""
-        # 优先尝试从 CategoryManager 获取最新的树形分类并转换为平铺列表
-        try:
-            from src.data.category_manager import CategoryManager
-            cm = CategoryManager()
-            nodes = cm.get_all_categories()
-            if nodes:
-                # 转换所有节点为 Category 对象，支持 UI 层的 name/id 访问
-                return [Category(id=n.id, name=n.name, icon=getattr(n, 'icon', None)) for n in nodes]
-        except Exception:
-            pass
-            
-        return self.categories
-    
-    # ========== v7.4 新增：自定义模版管理 ==========
-    
-    def add_custom_template(self, template: Template) -> bool:
-        """添加自定义模版"""
-        try:
-            template.is_custom = True  # 标记为自定义
-            self.custom_templates.append(template)
-            self._save_data()
-            return True
-        except Exception as e:
-            print(f"添加自定义模版时出错: {e}")
-            return False
-    
-    def get_custom_templates(self) -> List[Template]:
-        """获取所有自定义模版"""
-        return self.custom_templates
-
-    def has_custom_template(self, template_id: str) -> bool:
-        """检查是否存在该自定义模板"""
-        return any(t.id == template_id for t in self.custom_templates)
-    
-    def remove_custom_template(self, template_id: str) -> bool:
-        """删除自定义模版"""
-        try:
-            initial_count = len(self.custom_templates)
-            self.custom_templates = [t for t in self.custom_templates if t.id != template_id]
-            
-            if len(self.custom_templates) < initial_count:
-                self._save_data()
-                return True
-            return False
-        except Exception as e:
-            print(f"删除自定义模版时出错: {e}")
-            return False
-    
-    # ========== v7.4 新增：忽略名单管理 ==========
+    # ========== 忽略名单管理 ==========
     
     def add_to_ignore_list(self, template_id: str) -> bool:
         """添加到忽略名单"""
@@ -381,108 +219,11 @@ class UserManager:
         """检查是否在忽略名单中"""
         return template_id in self.ignored_ids
     
-    # ========== v7.4 新增：默认仓库路径管理 ==========
-    
-    def set_default_target_root(self, path: str) -> bool:
-        """设置默认仓库路径"""
-        try:
-            self.default_target_root = path
-            self._save_data()
-            return True
-        except Exception as e:
-            print(f"设置默认仓库路径时出错: {e}")
-            return False
-    
-    def get_default_target_root(self) -> str:
-        """获取默认仓库路径"""
-        return self.default_target_root
-    
-    # ========== v7.4 新增：辅助方法 ==========
+    # ========== 辅助方法 ==========
 
     def has_link_for_template(self, template_id: str) -> bool:
         """检查是否已有该模版的连接"""
         return any(link.template_id == template_id for link in self.links)
-
-    # ========== v7.4 新增：主题和首页管理 ==========
-
-    def set_theme(self, theme: str) -> bool:
-        """设置主题：light/dark/system"""
-        if theme not in ['light', 'dark', 'system']:
-            return False
-        try:
-            self.theme = theme
-            self._save_data()
-            return True
-        except Exception as e:
-            print(f"设置主题时出错: {e}")
-            return False
-
-    def get_theme(self) -> str:
-        """获取当前主题"""
-        return self.theme
-
-    def set_startup_page(self, page: str) -> bool:
-        """设置首启动页面：wizard/connected/library"""
-        if page not in ['wizard', 'connected', 'library']:
-            return False
-        try:
-            self.startup_page = page
-            self._save_data()
-            return True
-        except Exception as e:
-            print(f"设置首启动页面时出错: {e}")
-            return False
-
-    def get_startup_page(self) -> str:
-        """获取首启动页面"""
-        return self.startup_page
-
-    def set_default_link_view(self, view: str) -> bool:
-        """设置默认连接视图：list/category"""
-        if view not in ['list', 'category']:
-            return False
-        try:
-            self.default_link_view = view
-            self._save_data()
-            # 发射配置变更信号
-            from src.common.signals import signal_bus
-            signal_bus.config_changed.emit("default_link_view", view)
-            return True
-        except Exception as e:
-            print(f"设置默认连接视图时出错: {e}")
-            return False
-
-    def get_default_link_view(self) -> str:
-        """获取默认连接视图"""
-        return self.default_link_view
-
-    def set_theme_color(self, color: str) -> bool:
-        """设置主题色"""
-        try:
-            self.theme_color = color
-            self._save_data()
-            return True
-        except Exception as e:
-            print(f"设置主题色时出错: {e}")
-            return False
-
-    def get_theme_color(self) -> str:
-        """获取主题色"""
-        return self.theme_color
-
-    def set_transparency(self, enabled: bool) -> bool:
-        """设置透明效果"""
-        try:
-            self.transparency = enabled
-            self._save_data()
-            return True
-        except Exception as e:
-            print(f"设置透明效果时出错: {e}")
-            return False
-
-    def get_transparency(self) -> bool:
-        """获取透明效果状态"""
-        return self.transparency
 
     def _enrich_link_path(self, link: UserLink):
         """为单个链接填充分类全路径信息"""
