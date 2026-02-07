@@ -8,7 +8,7 @@ class StartupCard(ComboBoxSettingCard):
 
     def __init__(self, config_service, parent=None):
         self.config_service = config_service
-        
+
         # 从配置构建映射字典
         self.page_map = {
             t(option["i18n_key"]): option["value"]
@@ -36,10 +36,10 @@ class StartupCard(ComboBoxSettingCard):
 
         # 初始化值
         self._init_value()
-        
+
         # 连接信号
         self.comboBox.currentTextChanged.connect(self._on_page_changed)
-    
+
     def _init_value(self):
         """ 初始化当前选中项 """
         page = self.config_service.get_startup_page()

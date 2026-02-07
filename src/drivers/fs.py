@@ -10,9 +10,9 @@ def create_junction(source: str, target: str) -> bool:
     try:
         if os.path.exists(target):
             return False
-        
+
         os.makedirs(os.path.dirname(target), exist_ok=True)
-        
+
         cmd = f'mklink /J "{target}" "{source}"'
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
         return result.returncode == 0
@@ -25,7 +25,7 @@ def remove_junction(path: str) -> bool:
     try:
         if not os.path.exists(path):
             return True
-        
+
         if is_junction(path):
             os.rmdir(path)
             return True
@@ -39,16 +39,16 @@ def is_junction(path: str) -> bool:
     try:
         if not os.path.exists(path):
             return False
-        
+
         import ctypes
         from ctypes import wintypes
-        
+
         FILE_ATTRIBUTE_REPARSE_POINT = 0x400
         attrs = ctypes.windll.kernel32.GetFileAttributesW(path)
-        
+
         if attrs == -1:
             return False
-        
+
         return bool(attrs & FILE_ATTRIBUTE_REPARSE_POINT)
     except Exception:
         return False

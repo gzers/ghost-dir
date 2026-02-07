@@ -8,7 +8,7 @@ from src.gui.styles.constants.components import COMPONENT_STYLES
 def apply_card_style(widget, size: str = "md"):
     """
     应用标准卡片样式
-    
+
     Args:
         widget: 目标 QWidget
         size: 尺寸（预留，目前使用标准规范）
@@ -19,12 +19,12 @@ def apply_card_style(widget, size: str = "md"):
     border = color_utils.get_border_color()
     radius = spec["border_radius"]
     p = spec["padding"]
-    
+
     # 为组件设置对象名以实现精确定位选择器
     if not widget.objectName():
         widget.setObjectName(f"card_{id(widget)}")
     obj_name = widget.objectName()
-    
+
     style = f"""
         #{obj_name} {{
             background-color: {bg};
@@ -44,12 +44,12 @@ def apply_badge_style(widget, status: str = "invalid"):
     color = status_colors.get(status, status_colors["invalid"])
     radius = spacing_utils.get_radius("sm")
     p = spacing_utils.get_padding("xs")
-    
+
     # 为组件设置对象名以实现精确定位选择器
     if not widget.objectName():
         widget.setObjectName(f"badge_{id(widget)}")
     obj_name = widget.objectName()
-    
+
     style = f"""
         #{obj_name} {{
             background-color: {color}20;
@@ -70,12 +70,12 @@ def apply_accent_badge_style(widget):
     """应用强调色背景的徽章样式 (标准按钮强调色)"""
     color = color_utils.get_accent_color()
     radius = spacing_utils.get_radius("sm")
-    
+
     # 为组件设置对象名
     if not widget.objectName():
         widget.setObjectName(f"accent_badge_{id(widget)}")
     obj_name = widget.objectName()
-    
+
     # 强调色背景，白色文字，半透明边缘感
     style = f"""
         #{obj_name} {{
@@ -100,7 +100,7 @@ def apply_font_style(
     family = typography_utils.get_font_family()
     px_size = typography_utils.get_font_size(size)
     px_weight = typography_utils.get_font_weight(weight)
-    
+
     # 尝试作为预定义颜色层级
     color_map = {
         "primary": color_utils.get_text_primary(),
@@ -109,10 +109,10 @@ def apply_font_style(
         "muted": color_utils.get_text_muted(),
         "disabled": color_utils.get_text_disabled(),
     }
-    
+
     # 如果输入的 color 在 map 中，则使用 map 里的值，否则直接使用 color (作为十六进制字符串等)
     text_color = color_map.get(color, color)
-    
+
     style = f"""
         font-family: {family};
         font-size: {px_size}px;

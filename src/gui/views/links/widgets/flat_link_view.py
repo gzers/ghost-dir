@@ -1,23 +1,23 @@
-﻿"""
+"""
 列表视图组件 (View A)
 极简风格显示全量连接，支持自定义 Delegate
 """
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QListWidget, 
+    QWidget, QVBoxLayout, QHBoxLayout, QListWidget,
     QListWidgetItem, QStyledItemDelegate, QGraphicsOpacityEffect
 )
 from PySide6.QtCore import Qt, QSize, Signal
 from PySide6.QtGui import QPainter, QIcon
 from qfluentwidgets import BodyLabel, CaptionLabel, TransparentToolButton, FluentIcon
-from src.models import Use  # 新架构rLink, LinkStatus
-from src.data.user_manager import UserManager
+from src.models import UserLink, LinkStatus  # 新架构
+from src.common.managers import UserManager
 from src.gui.i18n import t, get_category_text
 from src.gui.components.status_badge import StatusBadge
 from src.common.validators import PathValidator
 
 class FlatLinkView(QListWidget):
     """智能列表视图 - 极简/宽屏模式"""
-    
+
     link_selected = Signal(list)
     action_clicked = Signal(str, str)
 
@@ -25,7 +25,7 @@ class FlatLinkView(QListWidget):
         super().__init__(parent)
         self.user_manager = UserManager()
         self._init_ui()
-    
+
     def _init_ui(self):
         """初始化 UI"""
         self.setObjectName("FlatLinkView")
@@ -48,7 +48,7 @@ class FlatLinkView(QListWidget):
                 border: 1px solid palette(highlight);
             }
         """)
-        
+
         # 连接选择变化信号
         self.itemSelectionChanged.connect(self._on_selection_changed)
 
@@ -59,7 +59,7 @@ class FlatLinkView(QListWidget):
             item = QListWidgetItem(self)
             item.setSizeHint(QSize(0, 72))  # 固定行高 72px
             self.addItem(item)
-            
+
             # 创建自定义小部件
             widget = LinkItemWidget(link, self)
             widget.action_clicked.connect(self.action_clicked.emit)
@@ -97,64 +97,64 @@ class LinkItemWidget(QWidget):
         # 实时标准化路径显示
         self.display_path = PathValidator().normalize(self.link.target_path)
         self._init_ui()
-    
+
     def _init_ui(self):
         layout = QHBoxLayout(self)
         layout.setContentsMargins(16, 8, 16, 8)
         layout.setSpacing(12)
-        
+
         # 图标
         icon_btn = TransparentToolButton(FluentIcon.APPLICATION, self)
         icon_btn.setIconSize(QSize(32, 32))
         layout.addWidget(icon_btn)
-        
+
         # 信息区
         info_layout = QVBoxLayout()
         info_layout.setSpacing(4)
-        
+
         # 第一行：名称 + 分类
         title_layout = QHBoxLayout()
         self.name_label = BodyLabel(self.link.name, self)
-        
+
         # 优先使用全路径名称 (尝试引用 ViewModel 的 category_path 或 DataModel 的 category_path_name)
         full_path = getattr(self.link, 'category_path', "") or getattr(self.link, 'category_path_name', "")
         cat_name = full_path or get_category_text(self.link.category)
         self.category_label = CaptionLabel(cat_name, self)
-        
+
         # 设置分类全路径 Tooltip
         if full_path:
             self.category_label.setToolTip(full_path)
         else:
             self.category_label.setToolTip(get_category_text(self.link.category))
-        
+
         # 使用 QGraphicsOpacityEffect 实现透明度
         op = QGraphicsOpacityEffect(self.category_label)
         op.setOpacity(0.7)
         self.category_label.setGraphicsEffect(op)
-        
+
         title_layout.addWidget(self.name_label)
         title_layout.addSpacing(4)
         title_layout.addWidget(self.category_label)
         title_layout.addStretch()
-        
+
         # 第二行：路径
         self.path_label = CaptionLabel(self.display_path, self)
         self.path_label.setToolTip(self.display_path)
-        
+
         path_op = QGraphicsOpacityEffect(self.path_label)
         path_op.setOpacity(0.6)
         self.path_label.setGraphicsEffect(path_op)
-        
+
         info_layout.addLayout(title_layout)
         info_layout.addWidget(self.path_label)
         layout.addLayout(info_layout)
-        
+
         layout.addStretch(1)
-        
+
         # 状态徽章 (标准可视化组件)
         self.status_badge = StatusBadge(self.link.status, self)
         layout.addWidget(self.status_badge)
-        
+
         # 操作按钮组
         self.setup_actions(layout)
 
@@ -166,14 +166,14 @@ class LinkItemWidget(QWidget):
             btn.setToolTip("建立连接")
             btn.clicked.connect(lambda: self.action_clicked.emit(self.link.id, "establish"))
             layout.addWidget(btn)
-        
+
         # 断开连接：仅适用于“已连接”状态
         elif self.link.status == LinkStatus.CONNECTED:
             btn = TransparentToolButton(FluentIcon.CLOSE, self)
             btn.setToolTip("断开连接")
             btn.clicked.connect(lambda: self.action_clicked.emit(self.link.id, "disconnect"))
             layout.addWidget(btn)
-        
+
         # 编辑按钮
         edit_btn = TransparentToolButton(FluentIcon.EDIT, self)
         edit_btn.setToolTip("编辑记录")

@@ -6,8 +6,8 @@ import ctypes
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
-from qfluentwidgets import (setTheme, Theme, setThemeColor, SystemThemeListener, setFontFamilies, 
-                            MessageBox, isDarkTheme, TitleLabel, SubtitleLabel, 
+from qfluentwidgets import (setTheme, Theme, setThemeColor, SystemThemeListener, setFontFamilies,
+                            MessageBox, isDarkTheme, TitleLabel, SubtitleLabel,
                             CaptionLabel, IndeterminateProgressBar)
 from src.common.signals import signal_bus
 from src.common.config import APP_NAME, APP_VERSION
@@ -15,13 +15,13 @@ from src.gui.i18n import t
 
 # 新架构: Drivers 层
 from src.drivers.transaction import check_crash_recovery, recover_from_crash
-from src.drivers.windows import is_admin
 
 # 新架构: DAO 层
 from src.dao import TemplateDAO, LinkDAO, CategoryDAO
 
 # 新架构: Services 层
 from src.services import TemplateService, LinkService, CategoryService
+from src.common.service_bus import service_bus
 
 
 from src.common.resource_loader import get_resource_path
@@ -34,7 +34,7 @@ class GhostDirApp(QApplication):
     def __init__(self, argv):
         """初始化应用程序"""
         super().__init__(argv)
-        
+
         # 初始化 Service 层 (依赖注入)
         self._init_services()
 
@@ -72,20 +72,20 @@ class GhostDirApp(QApplication):
         self.system_theme_listener = SystemThemeListener(self)
         # 连接系统主题变更信号
         self.system_theme_listener.systemThemeChanged.connect(self._on_system_theme_changed)
-    
+
     def _init_services(self):
         """初始化 Service 层 (新架构)"""
         # 1. 初始化 DAO 层
         self.template_dao = TemplateDAO()
         self.link_dao = LinkDAO()
         self.category_dao = CategoryDAO()
-        
+
         # 2. 初始化 Service 层 (依赖注入)
         self.template_service = TemplateService(self.template_dao)
         self.link_service = LinkService(self.link_dao)
         self.category_service = CategoryService(self.category_dao)
-        
-        print("✓ Service 层初始化完成")
+
+        print("[OK] Service 层初始化完成")
 
     def _apply_theme(self, theme: str):
         """应用主题设置"""
@@ -134,21 +134,10 @@ class GhostDirApp(QApplication):
                 print(f"获取系统强调色失败，使用默认颜色: {e}")
 
         setThemeColor(target_color)
-    
+
     def _startup_checks(self, splash=None):
         """启动时的安全检查"""
-        # 1. 强制检查管理员权限
-        if splash:
-            splash.set_message(t("app.splash_check_admin"))
-            self.processEvents()
-        
-        # 使用新架构的 is_admin 检查
-        if not is_admin():
-            from PySide6.QtWidgets import QMessageBox
-            QMessageBox.critical(None, "权限不足", "此程序需要管理员权限才能运行。\n请右键点击程序,选择'以管理员身份运行'。")
-            sys.exit(1)
-        
-        # 2. 检查崩溃恢复
+        # 检查崩溃恢复
         if splash:
             splash.set_message(t("app.splash_check_data"))
             self.processEvents()
@@ -186,10 +175,10 @@ def run_app():
 
     # ========== 创建高级启动界面 ==========
     from src.gui.components.splash_screen import AppSplashScreen
-    
+
     splash = AppSplashScreen()
     splash.show()
-    
+
     # 虽然显示了，但需要处理事件让它渲染出来
     app.processEvents()
     # ===================================
@@ -200,10 +189,10 @@ def run_app():
     # 导入并创建主窗口（耗时操作）
     from .windows.main_window import MainWindow
     window = MainWindow(app)  # 传递 app 实例
-    
+
     # 主窗口创建完成，关闭启动界面
     splash.finish()
-    
+
     window.show()
 
     sys.exit(app.exec())

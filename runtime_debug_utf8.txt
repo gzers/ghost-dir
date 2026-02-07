@@ -1,0 +1,67 @@
+﻿python : Traceback (most rec
+ent call last):
+所在位置 行:1 字符: 1
++ python diagnostic_run_v2.p
+y > runtime_debug.txt 2>&1
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          
+: N    otSpecified: (Traceba
+ck (mo    st recent call las
+t)::Strin    g) [], RemoteEx
+ception
+    + FullyQualifiedErrorId 
+: N    ativeCommandError
+ 
+  File "D:\Users\15119\WorkS
+pace\Code\tool\ghost-dir\dia
+gnostic_run_v2.py", line 18,
+ in diagnostic_run
+    run_app()
+  File "D:\Users\15119\WorkS
+pace\Code\tool\ghost-dir\src
+\gui\app.py", line 191, in r
+un_app
+    window = MainWindow(app)
+  # 浼犻€?app 瀹炰緥
+             ^^^^^^^^^^^^^^^
+  File "D:\Users\15119\WorkS
+pace\Code\tool\ghost-dir\src
+\gui\windows\main_window.py"
+, line 46, in __init__
+    self.library_view = Libr
+aryView(self)
+                        ^^^^
+^^^^^^^^^^^^^
+  File "D:\Users\15119\WorkS
+pace\Code\tool\ghost-dir\src
+\gui\views\library\library_v
+iew.py", line 50, in __init_
+_
+    self._filter_templates()
+  File "D:\Users\15119\WorkS
+pace\Code\tool\ghost-dir\src
+\gui\views\library\library_v
+iew.py", line 169, in _filte
+r_templates
+    view_models = self.templ
+ate_service.get_filtered_tem
+plates(category_id, search_t
+ext)
+                  ^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^
+AttributeError: 'TemplateSer
+vice' object has no attribut
+e 'get_filtered_templates'. 
+Did you mean: 'get_all_templ
+ates'?
+--- 鍚姩杩愯鏃惰瘖鏂?V2 ---
+TemplateService 瀹炰緥灞炴€? ['__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__getstate__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', 'add_template', 'dao', 'delete_template', 'get_all_templates', 'get_template_by_id', 'get_templates_by_category', 'manager', 'update_template']
+
+[1;33m馃摙 Tips:[0m QFluentWidgets Pro is now released. Click [1;96mhttps://qfluentwidgets.com/pages/pro[0m to learn more about it.
+
+[OK] Service 灞傚垵濮嬪寲瀹屾垚
+
+鉂?鎹曡幏鍒拌繍琛屾椂閿欒:
+

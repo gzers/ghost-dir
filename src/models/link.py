@@ -19,7 +19,7 @@ class UserLink:
     target_path: str
     category: Optional[str] = None
     status: LinkStatus = LinkStatus.DISCONNECTED
-    
+
     @classmethod
     def from_dict(cls, data: dict):
         status_str = data.get('status', 'disconnected')
@@ -27,7 +27,7 @@ class UserLink:
             status = LinkStatus(status_str)
         else:
             status = status_str
-        
+
         return cls(
             id=data.get('id', ''),
             name=data.get('name', ''),
@@ -36,7 +36,7 @@ class UserLink:
             category=data.get('category'),
             status=status
         )
-    
+
     def to_dict(self) -> dict:
         return {
             'id': self.id,

@@ -8,7 +8,7 @@ class TransparencyCard(SwitchSettingCard):
 
     def __init__(self, config_service, parent=None):
         self.config_service = config_service
-        
+
         # 创建一个虚拟的 ConfigItem 用于绑定
         config_item = ConfigItem("Appearance", "EnableTransparency", True, BoolValidator())
 
@@ -22,10 +22,10 @@ class TransparencyCard(SwitchSettingCard):
 
         # 初始化值
         self._init_value()
-        
+
         # 连接信号
         self.checkedChanged.connect(self._on_transparency_changed)
-    
+
     def _init_value(self):
         """ 初始化当前选中状态 """
         enabled = self.config_service.get_transparency()

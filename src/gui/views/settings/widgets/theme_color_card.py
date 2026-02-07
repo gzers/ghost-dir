@@ -9,7 +9,7 @@ class ThemeColorCard(ComboBoxSettingCard):
 
     def __init__(self, config_service, parent=None):
         self.config_service = config_service
-        
+
         # 从配置构建颜色映射字典
         self.color_map = {
             t(option["i18n_key"]): option["value"]
@@ -40,10 +40,10 @@ class ThemeColorCard(ComboBoxSettingCard):
 
         # 初始化值
         self._init_value()
-        
+
         # 连接信号
         self.comboBox.currentTextChanged.connect(self._on_color_changed)
-    
+
     def _init_value(self):
         """ 初始化当前选中项 """
         color = self.config_service.get_theme_color()
@@ -54,6 +54,6 @@ class ThemeColorCard(ComboBoxSettingCard):
     def _on_color_changed(self, text):
         """ 颜色变更回调 """
         color = self.color_map.get(text, DEFAULT_THEME_COLOR)
-        
+
         if self.config_service.set_theme_color(color):
             signal_bus.theme_color_changed.emit(color)

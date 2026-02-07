@@ -7,7 +7,7 @@ from qfluentwidgets import CardWidget
 class Card(CardWidget):
     """
     基础卡片类
-    
+
     继承自 QFluentWidgets 的 CardWidget，提供一致的样式和主题支持。
     """
 

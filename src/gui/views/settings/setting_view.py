@@ -1,4 +1,4 @@
-﻿"""
+"""
 设置视图
 页面主体 - 负责布局和协调
 """
@@ -25,6 +25,7 @@ from src.gui.views.settings.widgets.restore_config_cards import (
 from src.gui.views.settings.widgets.backup_cards import (
     ExportBackupCard, ImportBackupCard
 )
+from src.common.service_bus import service_bus
 
 
 class SettingView(BasePageView):
@@ -39,6 +40,9 @@ class SettingView(BasePageView):
             enable_scroll=True,
             use_expand_layout=True
         )
+        # 重新加载模板
+        service_bus.template_manager.load_templates()
+        signal_bus.data_refreshed.emit()
         self.config_service = service_bus.config_service
         self.user_manager = service_bus.user_manager
 
@@ -55,7 +59,7 @@ class SettingView(BasePageView):
         self.titleLabel = TitleLabel(t("settings.title"), self.get_content_container())
         apply_font_style(self.titleLabel, size="xxl", weight="semibold")
         expand_layout.addWidget(self.titleLabel)
-        
+
         # --- 目录配置组 ---
         self.dirGroup = SettingCardGroup(t("settings.group_path"), self.get_content_container())
         self.dirGroup.setAutoFillBackground(False)
@@ -117,11 +121,11 @@ class SettingView(BasePageView):
         # 恢复默认模板
         self.restoreTemplatesCard = RestoreTemplatesCard(self.configGroup)
         self.configGroup.addSettingCard(self.restoreTemplatesCard)
-        
+
         # 导出配置备份
         self.exportBackupCard = ExportBackupCard(self.configGroup)
         self.configGroup.addSettingCard(self.exportBackupCard)
-        
+
         # 导入配置备份
         self.importBackupCard = ImportBackupCard(self.configGroup)
         self.configGroup.addSettingCard(self.importBackupCard)
@@ -130,7 +134,7 @@ class SettingView(BasePageView):
 
         # 暴力清理：针对 qfluentwidgets 组件内部可能持有的背景进行穿透化透明处理
         self.setStyleSheet("""
-            SettingCardGroup, 
+            SettingCardGroup,
             SettingCardGroup > QWidget {
                 background-color: transparent !important;
                 border: none !important;

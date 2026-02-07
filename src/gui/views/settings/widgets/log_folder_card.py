@@ -17,7 +17,7 @@ class LogFolderCard(PushSettingCard):
         )
 
         self.clicked.connect(self._on_clicked)
-    
+
     def _on_clicked(self):
         """ 打开日志文件夹 """
         if os.path.exists(LOG_DIR):

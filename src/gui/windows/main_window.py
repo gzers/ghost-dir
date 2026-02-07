@@ -6,7 +6,7 @@ from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
 from qfluentwidgets import (
-    FluentWindow, NavigationItemPosition, FluentIcon, 
+    FluentWindow, NavigationItemPosition, FluentIcon,
     setCustomStyleSheet, isDarkTheme, Theme
 )
 from PySide6.QtCore import Qt, QSize, QTimer
@@ -18,8 +18,9 @@ from src.gui.views.help import HelpView
 from src.gui.views.settings import SettingView
 from src.common.resource_loader import get_resource_path
 from src.common.config import WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT
-from src.utils.win_utils import is_transparency_enabled
+from src.drivers.windows import is_transparency_enabled
 from src.gui.styles import window_style_sheet
+from src.common.service_bus import service_bus
 
 
 class MainWindow(FluentWindow):
@@ -27,12 +28,12 @@ class MainWindow(FluentWindow):
 
     def __init__(self, app=None):
         """初始化主窗口
-        
+
         Args:
             app: GhostDirApp 实例,提供 Service 层访问
         """
         super().__init__()
-        
+
         # 保存 app 引用以访问新的 Service 层
         self.app = app
 
@@ -52,13 +53,13 @@ class MainWindow(FluentWindow):
         # 监听主题变更
         from src.common.signals import signal_bus
         signal_bus.theme_changed.connect(self._on_theme_changed)
-    
+
     def _init_window(self):
         """初始化窗口"""
         self.setWindowTitle("Ghost-Dir")
         self.resize(1200, 800)
         self.setMinimumSize(WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT)
-        
+
         # 设置图标
         try:
             icon_path = get_resource_path("assets/icon.png")
@@ -77,7 +78,7 @@ class MainWindow(FluentWindow):
         self.library_view.setObjectName("libraryView")
         self.help_view.setObjectName("helpView")
         self.setting_view.setObjectName("settingView")
-        
+
         # 顶部业务区
         # 1. 智能向导（第一位）
         self.addSubInterface(
@@ -86,7 +87,7 @@ class MainWindow(FluentWindow):
             "智能向导",
             position=NavigationItemPosition.TOP
         )
-        
+
         # 2. 我的链接
         self.addSubInterface(
             self.links_view,
@@ -94,7 +95,7 @@ class MainWindow(FluentWindow):
             "我的链接",
             position=NavigationItemPosition.TOP
         )
-        
+
         # 3. 模版库
         self.addSubInterface(
             self.library_view,
@@ -102,7 +103,7 @@ class MainWindow(FluentWindow):
             "模版库",
             position=NavigationItemPosition.TOP
         )
-        
+
         # 底部功能区
         self.addSubInterface(
             self.help_view,
@@ -110,7 +111,7 @@ class MainWindow(FluentWindow):
             "帮助",
             position=NavigationItemPosition.BOTTOM
         )
-        
+
         self.addSubInterface(
             self.setting_view,
             FluentIcon.SETTING,
@@ -144,7 +145,7 @@ class MainWindow(FluentWindow):
         """处理主题变更"""
         # 重新初始化背景效果
         self._init_window_effect()
-        
+
         # 官方修正：如果开启了云母特效，主题切换后需要通过定时器重新触发系统特效更新
         if self.isMicaEffectEnabled():
             QTimer.singleShot(100, lambda: self.windowEffect.setMicaEffect(self.winId(), isDarkTheme()))

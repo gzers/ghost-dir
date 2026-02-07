@@ -1,9 +1,9 @@
-﻿from typing import Optional
+from typing import Optional
 from PySide6.QtWidgets import QHBoxLayout, QTreeWidgetItem, QAbstractItemView, QMenu
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QAction
 from qfluentwidgets import (
-    MessageBoxBase, SubtitleLabel, PushButton, 
+    MessageBoxBase, SubtitleLabel, PushButton,
     MessageBox, FluentIcon, TogglePushButton,
     InfoBar
 )
@@ -13,25 +13,26 @@ from src.models.category import CategoryNode  # 新架构
 from src.common.signals import signal_bus
 from src.common.config import SYSTEM_CATEGORIES
 from src.gui.i18n import t
+from src.common.service_bus import service_bus
 from .category_tree import CategoryTreeWidget
 
 
 class CategoryManagerDialog(MessageBoxBase):
     """分类管理对话框 - 树形结构"""
-    
+
     categories_changed = Signal()  # 分类变更信号
-    
+
     def __init__(self, parent=None):
         super().__init__(parent)
-        
+
         self.user_manager = service_bus.user_manager
         self.category_manager = service_bus.category_manager
         self.template_manager = service_bus.template_manager
-        
+
         self.setWindowTitle(t("library.category_manager_title"))
         self._init_ui()
         self._load_categories()
-    
+
     def keyPressEvent(self, event):
         """处理键盘事件"""
         # F2 快捷键：编辑分类
@@ -41,123 +42,123 @@ class CategoryManagerDialog(MessageBoxBase):
             event.accept()
         else:
             super().keyPressEvent(event)
-    
+
     def _init_ui(self):
         """初始化 UI"""
         # 标题
         self.titleLabel = SubtitleLabel(t("library.category_manager_title"))
-        
+
         # 工具栏 (CommandBar)
         toolbar_layout = QHBoxLayout()
         toolbar_layout.setSpacing(8)
-        
+
         # 左侧编辑按钮组
         self.addButton = PushButton(FluentIcon.ADD, t("library.btn_new"))
         self.addButton.clicked.connect(self._on_add_category)
         toolbar_layout.addWidget(self.addButton)
-        
+
         self.renameButton = PushButton(FluentIcon.EDIT, t("library.btn_rename"))
         self.renameButton.clicked.connect(self._on_rename_category)
         self.renameButton.setEnabled(False)
         toolbar_layout.addWidget(self.renameButton)
-        
+
         self.deleteButton = PushButton(FluentIcon.DELETE, t("library.btn_delete"))
         self.deleteButton.clicked.connect(self._on_delete_category)
         self.deleteButton.setEnabled(False)
         toolbar_layout.addWidget(self.deleteButton)
-        
+
         # 分隔符
         toolbar_layout.addStretch()
-        
+
         # 右侧功能按钮
         self.sortButton = TogglePushButton(t("library.btn_sort"))
         self.sortButton.setIcon(FluentIcon.SCROLL)
         self.sortButton.toggled.connect(self._on_sort_toggled)
         toolbar_layout.addWidget(self.sortButton)
-        
+
         # 取消按钮（仅在排序模式显示）
         self.cancelSortButton = PushButton(FluentIcon.CLOSE, t("library.btn_cancel_sort"))
         self.cancelSortButton.clicked.connect(self._on_cancel_sort)
         self.cancelSortButton.hide()
         toolbar_layout.addWidget(self.cancelSortButton)
-        
+
         self.helpButton = PushButton(FluentIcon.HELP, t("library.btn_help"))
         self.helpButton.clicked.connect(self._show_help)
         toolbar_layout.addWidget(self.helpButton)
-        
+
         # 分类树
         self.categoryTree = CategoryTreeWidget()
         self.categoryTree.category_manager = self.category_manager  # 共享实例
         self.categoryTree.setHeaderHidden(True)
         self.categoryTree.setMinimumHeight(300)
         self.categoryTree.setMinimumWidth(500)
-        
+
         # 禁用双击编辑
         self.categoryTree.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-        
+
         # 初始禁用拖拽
         self.categoryTree.setDragEnabled(False)
         self.categoryTree.setAcceptDrops(False)
         self.categoryTree.setDragDropMode(QAbstractItemView.DragDropMode.NoDragDrop)
-        
+
         # 单选模式
         self.categoryTree.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
-        
+
         # 启用右键菜单
         self.categoryTree.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.categoryTree.customContextMenuRequested.connect(self._show_context_menu)
-        
+
         # 添加到视图
         self.viewLayout.addWidget(self.titleLabel)
         self.viewLayout.addLayout(toolbar_layout)
         self.viewLayout.addWidget(self.categoryTree)
-        
+
         # 连接信号
         self.categoryTree.itemSelectionChanged.connect(self._on_selection_changed)
         self.categoryTree.itemChanged.connect(self._on_item_changed)
-        
+
         # 按钮
         self.buttonLayout.insertStretch(0, 1)
         self.yesButton.setText(t("library.btn_done"))
         self.buttonLayout.addStretch(1)
         self.cancelButton.hide()
-        
+
         self.widget.setMinimumWidth(700)
-        
+
         # 初始化模式状态
         self._is_sort_mode = False
-    
+
     def _load_categories(self):
         """加载分类树"""
         self.categoryTree.clear()
-        
+
         # 获取根分类
         root_categories = self.category_manager.get_category_tree()
-        
+
         # 递归构建树
         for category in root_categories:
             self._add_category_item(None, category)
-    
+
     def _on_item_changed(self, item, column):
         """Item 变化时的回调 - 实现父子复选框联动"""
         if column != 0:
             return
-        
+
         # 暂时断开信号，避免递归触发
         self.categoryTree.itemChanged.disconnect(self._on_item_changed)
-        
+
         # 获取当前项的勾选状态
         check_state = item.checkState(0)
-        
+
         # 递归设置所有子项的勾选状态
         self._set_children_check_state(item, check_state)
-        
+
         # 重新连接信号
         self.categoryTree.itemChanged.connect(self._on_item_changed)
-        
+
         # 更新删除按钮状态
         self._update_delete_button_state()
-    
+
     def _set_children_check_state(self, parent_item, check_state):
         """递归设置所有子项的勾选状态"""
         for i in range(parent_item.childCount()):
@@ -165,7 +166,7 @@ class CategoryManagerDialog(MessageBoxBase):
             child.setCheckState(0, check_state)
             # 递归设置子项的子项
             self._set_children_check_state(child, check_state)
-    
+
     def _add_category_item(self, parent_item, category: CategoryNode):
         """递归添加分类项"""
         # 创建树节点
@@ -173,77 +174,77 @@ class CategoryManagerDialog(MessageBoxBase):
             item = QTreeWidgetItem(self.categoryTree)
         else:
             item = QTreeWidgetItem(parent_item)
-        
+
         # 设置显示文本
         item.setText(0, category.name)
-        
+
         # 设置复选框
         item.setFlags(
-            item.flags() | 
-            Qt.ItemFlag.ItemIsEnabled | 
+            item.flags() |
+            Qt.ItemFlag.ItemIsEnabled |
             Qt.ItemFlag.ItemIsUserCheckable |
             Qt.ItemFlag.ItemIsSelectable
         )
         item.setCheckState(0, Qt.CheckState.Unchecked)
-        
+
         # 设置数据
         item.setData(0, Qt.ItemDataRole.UserRole, category)
-        
+
         # 系统分类显示为灰色
         if category.is_builtin:
             item.setForeground(0, Qt.GlobalColor.gray)
-        
+
         # 递归添加子分类
         children = self.category_manager.get_children(category.id)
         for child in children:
             self._add_category_item(item, child)
 
-    
+
     def _on_selection_changed(self):
         """选择改变"""
         selected_items = self.categoryTree.selectedItems()
-        
+
         # 重命名按钮：只有选中一个项时启用
         self.renameButton.setEnabled(len(selected_items) == 1 and not self._is_sort_mode)
-        
+
         # 删除按钮：检查是否有勾选的项
         self._update_delete_button_state()
-    
+
     def _update_delete_button_state(self):
         """更新删除按钮状态"""
         # 检查是否有勾选的项
         checked_categories = []
         self._collect_checked_items(self.categoryTree.invisibleRootItem(), checked_categories)
         self.deleteButton.setEnabled(len(checked_categories) > 0)
-    
+
     def _on_add_category(self, parent_id: Optional[str] = None):
         """新建分类"""
         from .category_edit_dialog import CategoryEditDialog
-        
+
         # 信号传输可能带来 bool 值，需要过滤掉
         if isinstance(parent_id, bool):
             parent_id = None
-            
+
         # 如果没有传入 parent_id，尝试从当前选中项获取
         if parent_id is None:
             selected_items = self.categoryTree.selectedItems()
             if selected_items:
                 parent_category = selected_items[0].data(0, Qt.ItemDataRole.UserRole)
                 parent_id = parent_category.id
-            
+
         # 打开分类编辑对话框
         dialog = CategoryEditDialog(
-            self.category_manager, 
-            mode="create", 
+            self.category_manager,
+            mode="create",
             parent=self,
             target_parent_id=parent_id
         )
-        
+
         if dialog.exec():
             if dialog.validate():
                 category = dialog.get_category()
                 success, msg = self.category_manager.add_category(category)
-                
+
                 if success:
                     self._load_categories()
                     self.categories_changed.emit()
@@ -259,32 +260,32 @@ class CategoryManagerDialog(MessageBoxBase):
                     )
                 else:
                     MessageBox(t("common.failed"), msg, self).exec()
-    
+
     def _on_rename_category(self, item: Optional[QTreeWidgetItem] = None):
         """编辑分类"""
         from .category_edit_dialog import CategoryEditDialog
-        
+
         if not item:
             selected_items = self.categoryTree.selectedItems()
             if not selected_items:
                 return
             item = selected_items[0]
-        
+
         category = item.data(0, Qt.ItemDataRole.UserRole)
-        
+
         # 打开分类编辑对话框（使用编辑模式）
         dialog = CategoryEditDialog(
-            self.category_manager, 
-            category=category, 
-            mode="edit", 
+            self.category_manager,
+            category=category,
+            mode="edit",
             parent=self
         )
-        
+
         if dialog.exec():
             if dialog.validate():
                 updated_category = dialog.get_category()
                 success, msg = self.category_manager.update_category(updated_category)
-                
+
                 if success:
                     self._load_categories()
                     self.categories_changed.emit()
@@ -300,71 +301,71 @@ class CategoryManagerDialog(MessageBoxBase):
                     )
                 else:
                     MessageBox(t("common.failed"), msg, self).exec()
-    
+
     def _on_delete_category(self):
         """删除分类"""
         # 收集所有被勾选的分类
         checked_categories = []
         self._collect_checked_items(self.categoryTree.invisibleRootItem(), checked_categories)
-        
+
         if not checked_categories:
             MessageBox(t("library.dialog_hint"), t("library.error_empty_delete_selection"), self).exec()
             return
-        
+
         categories_with_templates = []
         total_templates = 0
-        
+
         for category in checked_categories:
             # 获取该分类下的所有模板
             templates = self.template_manager.get_templates_by_category(category.id)
             if templates:
                 categories_with_templates.append((category, templates))
                 total_templates += len(templates)
-        
+
         # 构建确认消息
         category_names = ", ".join([cat.name for cat in checked_categories])
-        
+
         if categories_with_templates:
             template_info = []
             for category, templates in categories_with_templates:
                 template_names = [t_obj.name for t_obj in templates[:5]]
                 if len(templates) > 5:
                     template_names.append(t("library.template_more", count=len(templates) - 5))
-                
+
                 summary = t("library.template_summary", name=category.name, count=len(templates))
                 template_info.append(summary + "\n    - ".join(template_names))
-            
-            message = t("library.confirm_delete_with_templates", 
-                        count=len(checked_categories), 
-                        names=category_names, 
-                        template_count=total_templates, 
+
+            message = t("library.confirm_delete_with_templates",
+                        count=len(checked_categories),
+                        names=category_names,
+                        template_count=total_templates,
                         template_info="".join(template_info))
         else:
-            message = t("library.confirm_delete_batch", 
-                        count=len(checked_categories), 
+            message = t("library.confirm_delete_batch",
+                        count=len(checked_categories),
                         names=category_names)
-        
+
         reply = MessageBox(t("library.dialog_confirm_delete"), message, self).exec()
-        
+
         if not reply:
             return
-        
+
         # 批量删除分类
         success_count = 0
         failed_count = 0
-        
+
         for category in checked_categories:
             success, msg = self.category_manager.delete_category(category.id)
             if success:
                 success_count += 1
             else:
                 failed_count += 1
-        
+
         # 刷新界面
         self._load_categories()
         self.categories_changed.emit()
         signal_bus.categories_changed.emit()
-        
+
         # 显示结果
         if failed_count == 0:
             InfoBar.success(
@@ -377,10 +378,10 @@ class CategoryManagerDialog(MessageBoxBase):
                 parent=self
             )
         else:
-            MessageBox(t("common.partial_success"), 
-                       t("library.msg_delete_partial", success=success_count, failed=failed_count), 
+            MessageBox(t("common.partial_success"),
+                       t("library.msg_delete_partial", success=success_count, failed=failed_count),
                        self).exec()
-    
+
     def _collect_checked_items(self, parent_item, checked_list):
         """递归收集所有被勾选的分类"""
         for i in range(parent_item.childCount()):
@@ -391,96 +392,96 @@ class CategoryManagerDialog(MessageBoxBase):
                     checked_list.append(category)
             # 递归检查子项
             self._collect_checked_items(child, checked_list)
-    
+
     # ========== 双模式交互 ==========
-    
+
     def _enter_browse_mode(self):
         """进入浏览模式"""
         self._is_sort_mode = False
-        
+
         # 恢复复选框显示
         self._set_checkboxes_visible(True)
-        
+
         # 禁用拖拽
         self.categoryTree.setDragEnabled(False)
         self.categoryTree.setAcceptDrops(False)
         self.categoryTree.setDragDropMode(QAbstractItemView.DragDropMode.NoDragDrop)
-        
+
         # 恢复按钮状态
         self.addButton.setEnabled(True)
         self._on_selection_changed()  # 更新重命名和删除按钮状态
-        
+
         # 恢复对话框按钮
         self.yesButton.setEnabled(True)
-        
+
         # 更新标题和排序按钮
         self.titleLabel.setText(t("library.category_manager_title"))
         self.sortButton.setText(t("library.btn_sort"))
         self.sortButton.setIcon(FluentIcon.SCROLL)
         self.sortButton.setChecked(False)
-        
+
         # 隐藏取消按钮
         self.cancelSortButton.hide()
-        
+
         # 隐藏拖拽手柄
         self._set_drag_handles_visible(False)
-    
+
     def _enter_sort_mode(self):
         """进入排序模式"""
         self._is_sort_mode = True
-        
+
         # 隐藏所有复选框
         self._set_checkboxes_visible(False)
-        
+
         # 启用拖拽
         self.categoryTree.setDragEnabled(True)
         self.categoryTree.setAcceptDrops(True)
         self.categoryTree.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
-        
+
         # 禁用所有编辑按钮
         self.addButton.setEnabled(False)
         self.renameButton.setEnabled(False)
         self.deleteButton.setEnabled(False)
-        
+
         # 禁用对话框按钮（防止在排序模式下关闭）
         self.yesButton.setEnabled(False)
-        
+
         # 更新标题和排序按钮
         self.titleLabel.setText(t("library.category_manager_sort_mode"))
         self.sortButton.setText(t("library.btn_confirm_sort"))
         self.sortButton.setIcon(FluentIcon.ACCEPT)
         self.sortButton.setChecked(True)
-        
+
         # 显示取消按钮
         self.cancelSortButton.setText(t("library.btn_cancel_sort"))
         self.cancelSortButton.setIcon(FluentIcon.CLOSE)
         self.cancelSortButton.show()
-        
+
         # 显示拖拽手柄
         self._set_drag_handles_visible(True)
-    
+
     def _exit_sort_mode(self):
         """退出排序模式"""
         # 保存新的排序到数据库
         self._save_current_order()
-        
+
         # 返回浏览模式
         self._enter_browse_mode()
-    
+
     def _on_sort_toggled(self, checked: bool):
         """排序按钮切换"""
         if checked:
             self._enter_sort_mode()
         else:
             self._exit_sort_mode()
-            
+
     def _on_cancel_sort(self):
         """取消排序 - 不保存直接退出"""
         # 重新加载分类以取消 UI 上的变更
         self.category_manager.load_categories()
         self._load_categories()
         self._enter_browse_mode()
-        
+
         InfoBar.info(
             title=t("common.info"),
             content=t("library.msg_sort_cancelled"),
@@ -490,14 +491,14 @@ class CategoryManagerDialog(MessageBoxBase):
             duration=2000,
             parent=self
         )
-    
+
     def _set_checkboxes_visible(self, visible: bool):
         """显示/隐藏所有复选框"""
         def update_item(item):
             if visible:
                 item.setFlags(
-                    item.flags() | 
-                    Qt.ItemFlag.ItemIsEnabled | 
+                    item.flags() |
+                    Qt.ItemFlag.ItemIsEnabled |
                     Qt.ItemFlag.ItemIsUserCheckable |
                     Qt.ItemFlag.ItemIsSelectable
                 )
@@ -505,41 +506,41 @@ class CategoryManagerDialog(MessageBoxBase):
                 item.setFlags(
                     item.flags() & ~Qt.ItemFlag.ItemIsUserCheckable
                 )
-            
+
             # 递归处理子项
             for i in range(item.childCount()):
                 update_item(item.child(i))
-        
+
         root = self.categoryTree.invisibleRootItem()
         for i in range(root.childCount()):
             update_item(root.child(i))
-            
+
     def _set_drag_handles_visible(self, visible: bool):
         """显示/隐藏拖拽手柄图标 (::)"""
         def update_item(item):
             category = item.data(0, Qt.ItemDataRole.UserRole)
             if not category:
                 return
-                
+
             if visible:
                 # 仅添加手柄，不影响数据
                 item.setText(0, f"⠿  {category.name}")
             else:
                 # 恢复原始文本
                 item.setText(0, category.name)
-            
+
             # 递归处理子项
             for i in range(item.childCount()):
                 update_item(item.child(i))
-        
+
         root = self.categoryTree.invisibleRootItem()
         for i in range(root.childCount()):
             update_item(root.child(i))
-    
+
     def _save_current_order(self):
         """保存当前排序"""
         structure_data = []
-        
+
         # 递归遍历树，收集所有分类的新 parent_id 和 order
         def collect_structure(parent_item, parent_id):
             for i in range(parent_item.childCount()):
@@ -550,80 +551,80 @@ class CategoryManagerDialog(MessageBoxBase):
                     structure_data.append((category.id, parent_id, i))
                     # 递归处理子分类
                     collect_structure(child, category.id)
-        
+
         collect_structure(self.categoryTree.invisibleRootItem(), None)
-        
+
         # 批量更新到数据库
         success, msg = self.category_manager.update_category_structure(structure_data)
-        
+
         if success:
             self.categories_changed.emit()
             signal_bus.categories_changed.emit()
         else:
             MessageBox(t("common.failed"), msg, self).exec()
-    
+
     # ========== 右键菜单和帮助 ==========
-    
+
     def _show_context_menu(self, pos):
         """显示右键菜单"""
         item = self.categoryTree.itemAt(pos)
         if not item:
             return
-        
+
         # 显式选中右键点击的项，方便 UI 反馈和后续操作
         self.categoryTree.setCurrentItem(item)
         item.setSelected(True)
-        
+
         menu = QMenu(self)
-        
+
         # 编辑
         rename_action = QAction(FluentIcon.EDIT.icon(), t("library.menu_rename"), self)
         rename_action.triggered.connect(lambda _: self._on_rename_category(item))
         menu.addAction(rename_action)
-        
+
         # 在此新建
         add_child_action = QAction(FluentIcon.ADD.icon(), t("library.menu_add_child"), self)
-        
+
         # 获取当前点击项的 ID
         current_category = item.data(0, Qt.ItemDataRole.UserRole)
         current_id = current_category.id if current_category else None
-        
+
         add_child_action.triggered.connect(lambda _: self._on_add_category(current_id))
         menu.addAction(add_child_action)
-        
+
         menu.addSeparator()
-        
+
         # 删除此项
         delete_action = QAction(FluentIcon.DELETE.icon(), t("library.menu_delete"), self)
         delete_action.triggered.connect(lambda _: self._delete_single_category(item))
         menu.addAction(delete_action)
-        
+
         menu.exec(self.categoryTree.viewport().mapToGlobal(pos))
-    
+
     def _delete_single_category(self, item):
         """删除单个分类（用于右键菜单）"""
         category = item.data(0, Qt.ItemDataRole.UserRole)
         if not category:
             return
-        
+
         # 检查是否为系统分类
         if category.id in SYSTEM_CATEGORIES:
             MessageBox(t("library.dialog_hint"), t("library.error_system_category_delete"), self).exec()
             return
-        
+
         # 确认删除
         reply = MessageBox(
             t("library.dialog_confirm_delete"),
             t("library.confirm_delete_single", name=category.name),
             self
         ).exec()
-        
+
         if not reply:
             return
-        
+
         # 删除分类
         success, msg = self.category_manager.delete_category(category.id)
-        
+
         if success:
             self._load_categories()
             self.categories_changed.emit()
@@ -639,7 +640,7 @@ class CategoryManagerDialog(MessageBoxBase):
             )
         else:
             MessageBox(t("common.failed"), msg, self).exec()
-    
+
     def _show_help(self):
         """显示帮助提示"""
         help_content = (
@@ -662,24 +663,24 @@ class CategoryManagerDialog(MessageBoxBase):
             t("library.help_notes_3") + "\n" +
             t("library.help_notes_4")
         )
-        
+
         msg = MessageBox(t("library.btn_help"), help_content, self)
         # 仅保留确认按钮
         msg.cancelButton.hide()
         # 限制按钮宽度并居中 (MessageBox 默认已包含 stretch)
         msg.yesButton.setFixedWidth(120)
         msg.exec()
-    
+
     # ========== 工具方法 ==========
-    
+
     def _on_expand_all(self):
         """全部展开"""
         self.categoryTree.expandAll()
-    
+
     def _on_collapse_all(self):
         """全部折叠"""
         self.categoryTree.collapseAll()
-    
+
     def validate(self):
         """验证（用户点击完成按钮时调用）"""
         return True

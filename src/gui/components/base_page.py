@@ -195,18 +195,18 @@ class BasePageView(QFrame):
                     self._content_layout.setContentsMargins(36, 12, 36, 36)
             else:
                 self._content_layout = QVBoxLayout(self._content_container)
-                
+
                 # 设置间距
                 from src.gui.styles.utils import spacing_utils
                 spacing_val = spacing_utils.get_list_spacing().get("group", 20)
                 self._content_layout.setSpacing(spacing_val)
-                
+
                 # 应用内边距 (统一为 36, 12, 36, 36)
                 if self._content_padding:
                     self._content_layout.setContentsMargins(36, 12, 36, 36)
                 else:
                     self._content_layout.setContentsMargins(0, 0, 0, 0)
-                
+
                 if self._add_stretch:
                     self._content_layout.addStretch()
 
@@ -224,16 +224,16 @@ class BasePageView(QFrame):
                     self._content_layout.setContentsMargins(36, 12, 36, 36)
             else:
                 self._content_layout = QVBoxLayout()
-                
+
                 # 应用内边距 (统一为 36, 12, 36, 36)
                 if self._content_padding:
                     self._content_layout.setContentsMargins(36, 12, 36, 36)
                 else:
                     self._content_layout.setContentsMargins(0, 0, 0, 0)
-                
+
                 if self._add_stretch:
                     self._content_layout.addStretch()
-                    
+
                 parent_layout.addLayout(self._content_layout, 10)
 
     def _update_container_style(self):
@@ -348,7 +348,7 @@ class BasePageView(QFrame):
             else:
                 self._content_layout.addWidget(widget)
 
-    def add_fixed_content(self, widget: QWidget, before_scroll: bool = True, use_padding: bool = False, 
+    def add_fixed_content(self, widget: QWidget, before_scroll: bool = True, use_padding: bool = False,
                           top_margin: int = 0, bottom_margin: int = 0, align_left: bool = False):
         """
         添加固定内容（在滚动区域外）
@@ -367,32 +367,32 @@ class BasePageView(QFrame):
             return
 
         target_widget = widget
-        
+
         # 如果需要内边距或对齐，包裹一层容器
         if use_padding or align_left or top_margin > 0 or bottom_margin > 0:
             container = QWidget()
             from PySide6.QtWidgets import QSizePolicy
             container.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
-            
+
             # 使用垂直布局包裹，这样可以精确控制卡片的水平位置和外边距
             layout = QVBoxLayout(container)
             left_p = 36 if use_padding else 0
             right_p = 36 if use_padding else 0
             layout.setContentsMargins(left_p, top_margin, right_p, bottom_margin)
             layout.setSpacing(0)
-            
+
             if align_left:
                 layout.addWidget(widget, 0, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
             else:
                 layout.addWidget(widget, 0, Qt.AlignmentFlag.AlignTop)
-                
+
             target_widget = container
 
         if before_scroll:
             # 插入到滚动区域之前
             index = self._main_layout.indexOf(self._scroll_area)
             if index == -1: # fallback
-                index = self._main_layout.count() - 1 
+                index = self._main_layout.count() - 1
             self._main_layout.insertWidget(index, target_widget)
         else:
             # 添加到滚动区域之后

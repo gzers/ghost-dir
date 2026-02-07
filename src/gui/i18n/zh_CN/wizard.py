@@ -4,19 +4,19 @@
 
 WIZARD_TEXTS = {
     "title": "智能向导",
-    
+
     # 扫描进度卡片
     "scan_card_title": "智能扫描",
     "scan_card_subtitle": "自动发现本机可管理的软件",
     "scan_card_icon": "🔍",
-    
+
     # 按钮文案
     "start_scan": "开始扫描",
     "stop_scan": "停止扫描",
     "import_selected": "一键导入",
     "rescan": "重新扫描",
     "cancel": "取消",
-    
+
     # 状态文案
     "scan_idle": "准备就绪",
     "scan_progress": "正在扫描...",
@@ -25,17 +25,17 @@ WIZARD_TEXTS = {
     "scan_complete": "扫描完成",
     "scan_complete_detail": "扫描完成！发现 {count} 个可管理的软件",
     "scan_error": "扫描失败: {error}",
-    
+
     # 结果统计
     "found_apps": "发现 {count} 个可管理的软件",
     "no_apps_found": "未发现可管理的软件",
     "selected_count": "已选中 {count} 项",
     "import_success": "成功导入 {count} 个软件",
-    
+
     # 其他
     "ignore_forever": "永久忽略",
     "ignored": "已忽略",
-    
+
     # 配置编辑器
     "config_editor": {
         "title": "高级配置",

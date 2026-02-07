@@ -1,4 +1,4 @@
-﻿"""
+"""
 智能向导视图 (Wizard View)
 引导式操作，快速完成常见任务。已接入 Service 层。
 """
@@ -9,8 +9,8 @@ from src.gui.i18n import t
 # TODO: 通过 app 实例访问 Service
 from src.common.signals import signal_bus
 from src.gui.components import BasePageView
-from src.gui.dialogs import ScanFlowDialog
 from src.gui.views.wizard.widgets import ScanProgressCard
+from src.common.service_bus import service_bus
 
 
 class WizardView(BasePageView):
@@ -27,6 +27,7 @@ class WizardView(BasePageView):
         # 依赖注入
         self.template_service = service_bus.template_service
         self.category_service = service_bus.category_service
+        self.category_manager = service_bus.category_manager
 
         # 扫描状态缓存 (UI 状态)
         self.discovered_templates = []
@@ -43,13 +44,13 @@ class WizardView(BasePageView):
         # 扫描进度卡片（固定内容，始终可见）
         self.scan_progress = ScanProgressCard()
         self.add_fixed_content(
-            self.scan_progress, 
-            before_scroll=True, 
+            self.scan_progress,
+            before_scroll=True,
             use_padding=True,
             top_margin=0,
             bottom_margin=12
         )
-        
+
         # 配置编辑器卡片（固定内容）
         from src.gui.views.wizard.widgets import ConfigEditorCard
         self.config_editor = ConfigEditorCard()
@@ -76,13 +77,13 @@ class WizardView(BasePageView):
         self.scan_progress.cancel_clicked.connect(self._on_cancel_clicked)
 
     def _on_scan_clicked(self):
-        """开始扫描 - 统一流程"""
-        # 弹出统一的全功能扫描对话框
-        dialog = ScanFlowDialog(service_bus.category_manager, self)
+        """开始扫描"""
+        from src.gui.dialogs import ScanFlowDialog
+        dialog = ScanFlowDialog(self.category_manager, self)
         if dialog.exec():
             # 通知链接列表刷新
             signal_bus.data_refreshed.emit()
-            
+
         # 刷新进度卡片状态（复位）
         self.scan_progress.reset()
 

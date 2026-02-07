@@ -11,10 +11,10 @@ def get_resource_path(relative_path: str) -> Path:
     """
     获取资源文件的绝对路径
     兼容开发环境和 PyInstaller 打包环境
-    
+
     Args:
         relative_path: 相对于项目根目录的路径
-        
+
     Returns:
         资源文件的绝对路径
     """
@@ -24,17 +24,17 @@ def get_resource_path(relative_path: str) -> Path:
     else:
         # 开发环境：从当前文件向上找到项目根目录
         base_path = Path(__file__).parent.parent.parent
-    
+
     return base_path / relative_path
 
 
 def get_icon_path(icon_name: str) -> Path:
     """
     获取图标文件路径
-    
+
     Args:
         icon_name: 图标文件名
-        
+
     Returns:
         图标文件的绝对路径
     """
@@ -44,10 +44,10 @@ def get_icon_path(icon_name: str) -> Path:
 def get_data_file_path(filename: str) -> Path:
     """
     获取数据文件路径
-    
+
     Args:
         filename: 数据文件名
-        
+
     Returns:
         数据文件的绝对路径
     """

@@ -4,7 +4,7 @@
 from PySide6.QtWidgets import QVBoxLayout, QLabel
 from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QIcon, QPixmap, QPainter, QColor
-from qfluentwidgets import (SplashScreen, TitleLabel, CaptionLabel, 
+from qfluentwidgets import (SplashScreen, TitleLabel, CaptionLabel,
                             IndeterminateProgressRing, isDarkTheme)
 
 from src.common.config import APP_VERSION, WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT
@@ -18,19 +18,19 @@ class AppSplashScreen(SplashScreen):
     def __init__(self, parent=None):
         # 不传图标给基类，彻底堵死基类的图标来源，解决图标重叠问题
         super().__init__(QIcon(), parent)
-        
+
         # 1. 基础配置
         self.resize(WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT)
-        
+
         # 2. 隐藏原生组件
         if hasattr(self, 'titleLabel'):
             self.titleLabel.hide()
         if hasattr(self, 'iconLabel'):
             self.iconLabel.hide()
-            
+
         # 设置无边框
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
-            
+
         # 3. 构建布局
         icon_path = get_resource_path("assets/icon.png")
         self.__init_layout(str(icon_path))
@@ -39,7 +39,7 @@ class AppSplashScreen(SplashScreen):
         """自定义绘制事件，支持主题跟随的背景色"""
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
-        
+
         # 根据主题绘制背景色
         bg_color = QColor("#202020") if isDarkTheme() else QColor("#F3F3F3")
         painter.fillRect(self.rect(), bg_color)
@@ -88,7 +88,7 @@ class AppSplashScreen(SplashScreen):
     def set_message(self, text: str):
         """
         更新进度消息
-        
+
         Args:
             text: 提示文字
         """

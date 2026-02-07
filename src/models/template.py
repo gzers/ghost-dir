@@ -13,7 +13,8 @@ class Template:
     category_id: Optional[str] = None
     description: Optional[str] = None
     order: int = 0
-    
+    is_custom: bool = False
+
     @classmethod
     def from_dict(cls, data: dict):
         return cls(
@@ -23,9 +24,10 @@ class Template:
             default_target=data.get('default_target'),
             category_id=data.get('category_id'),
             description=data.get('description'),
-            order=data.get('order', 0)
+            order=data.get('order', 0),
+            is_custom=data.get('is_custom', False)
         )
-    
+
     def to_dict(self) -> dict:
         return {
             'id': self.id,
@@ -34,5 +36,6 @@ class Template:
             'default_target': self.default_target,
             'category_id': self.category_id,
             'description': self.description,
-            'order': self.order
+            'order': self.order,
+            'is_custom': self.is_custom
         }

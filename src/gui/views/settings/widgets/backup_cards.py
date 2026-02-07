@@ -12,7 +12,7 @@ from src.common.config import DATA_DIR
 
 class ExportBackupCard(PushSettingCard):
     """导出配置备份卡片"""
-    
+
     def __init__(self, parent=None):
         super().__init__(
             "导出备份",
@@ -21,10 +21,10 @@ class ExportBackupCard(PushSettingCard):
             "将所有配置导出为 ZIP 文件",
             parent
         )
-        
+
         # 连接信号
         self.clicked.connect(self._on_export_clicked)
-    
+
     def _on_export_clicked(self):
         """导出按钮被点击"""
         # 选择保存位置
@@ -34,15 +34,15 @@ class ExportBackupCard(PushSettingCard):
             str(Path.home() / "Desktop"),
             QFileDialog.Option.ShowDirsOnly
         )
-        
+
         if not folder:
             return
-        
+
         try:
             # 导出备份
             manager = ConfigBackupManager()
             success, result = manager.export_all_configs(Path(folder))
-            
+
             if success:
                 InfoBar.success(
                     title="导出成功",
@@ -74,7 +74,7 @@ class ExportBackupCard(PushSettingCard):
 
 class ImportBackupCard(PushSettingCard):
     """导入配置备份卡片"""
-    
+
     def __init__(self, parent=None):
         super().__init__(
             "导入备份",
@@ -83,10 +83,10 @@ class ImportBackupCard(PushSettingCard):
             "从 ZIP 文件还原所有配置",
             parent
         )
-        
+
         # 连接信号
         self.clicked.connect(self._on_import_clicked)
-    
+
     def _on_import_clicked(self):
         """导入按钮被点击"""
         # 选择备份文件
@@ -96,19 +96,19 @@ class ImportBackupCard(PushSettingCard):
             str(Path.home() / "Desktop"),
             "ZIP Files (*.zip)"
         )
-        
+
         if not file_path:
             return
-        
+
         # 确认对话框
         if not self._confirm_import():
             return
-        
+
         try:
             # 还原备份
             manager = ConfigBackupManager()
             success, msg = manager.restore_from_backup(Path(file_path))
-            
+
             if success:
                 # 提示重启
                 self._show_restart_dialog()
@@ -130,7 +130,7 @@ class ImportBackupCard(PushSettingCard):
                 duration=3000,
                 parent=self.window()
             )
-    
+
     def _confirm_import(self) -> bool:
         """显示确认对话框"""
         w = MessageBox(
@@ -140,9 +140,9 @@ class ImportBackupCard(PushSettingCard):
         )
         w.yesButton.setText("确定")
         w.cancelButton.setText("取消")
-        
+
         return w.exec()
-    
+
     def _show_restart_dialog(self):
         """显示重启提示对话框"""
         w = MessageBox(

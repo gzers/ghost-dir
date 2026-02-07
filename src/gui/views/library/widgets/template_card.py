@@ -74,7 +74,7 @@ class TemplateCard(Card):
     def _setup_icon(self, layout):
         """设置图标区域"""
         icon_size = 48
-        
+
         # 尝试加载图片图标
         if self.template.icon:
             try:
@@ -102,11 +102,11 @@ class TemplateCard(Card):
         """刷新内部组件的文字与徽章样式"""
         # 标题
         apply_font_style(self.name_label, size="md", weight="semibold")
-        
+
         # 徽章样式
         status = "warning" if self.is_custom else "connected"
         apply_badge_style(self.type_label, status=status)
-        
+
         # 分类与路径
         apply_muted_text_style(self.category_label, size="sm")
         apply_font_style(self.path_label, size="xs", color="disabled")

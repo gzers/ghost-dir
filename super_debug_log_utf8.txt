@@ -1,0 +1,43 @@
+﻿=== 瓒呯骇璇婃柇鍚姩 ===
+[Module] TemplateService defined in: D:\Users\15119\WorkSpace\Code\tool\ghost-dir\src\services\template_service.py
+[Class] Attributes in class: ['add_template', 'delete_template', 'get_all_templates', 'get_template_by_id', 'get_templates_by_category', 'update_template']
+
+[Instance] service_bus.template_service type: <class 'src.services.template_service.TemplateService'>
+[Instance] Memory ID: 2190786766672
+[Instance] Attributes found: ['add_template', 'dao', 'delete_template', 'get_all_templates', 'get_template_by_id', 'get_templates_by_category', 'manager', 'update_template']
+
+[Package] src.services content: ['CategoryService', 'ConfigService', 'LinkService', 'TemplateService', '__all__', '__builtins__', '__cached__', '__doc__', '__file__', '__loader__', '__name__', '__package__', '__path__', '__spec__', 'category_service', 'config_service', 'link_service', 'template_service']
+
+鉁?instance.get_all_templates EXISTS!
+
+[Audit] Checking for dynamic attribute manipulation...
+ServiceBus init source snippet:
+    def __init__(self):
+        if self._initialized:
+            return
+
+        # 鍒濆鍖?DAO 灞?
+        self._template_dao = TemplateDAO()
+        self._link_dao = LinkDAO()
+        self._category_dao = CategoryDAO()
+
+        # 鍒濆鍖?Service 灞?
+        self.template_service = TemplateService(self._template_dao)
+        self.link_service = LinkService(self._link_dao)
+        self.category_service = CategoryService(self._category_dao)
+        self.config_service = ConfigService()  # 閰嶇疆鏈嶅姟
+
+        # 鍒濆鍖?Manager 灞?(涓存椂鍖呰鍣?
+        self.template_manager = TemplateManager()
+        self.category_manager = CategoryManager()
+        self.user_manager = UserManager()
+
+        # 鍏煎鏃т唬鐮佺殑鍒悕
+        self.connection_service = self.link_service
+        self.template_service.manager = self.template_manager
+        self.category_service.manager = self.category_manager
+        self.link_service.manager = self.user_manager
+
+        self._initialized = True
+
+

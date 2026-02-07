@@ -9,7 +9,7 @@ class TargetRootCard(PushSettingCard):
 
     def __init__(self, config_service, parent=None):
         self.config_service = config_service
-        
+
         super().__init__(
             t("settings.select_path"),
             FluentIcon.FOLDER,
@@ -19,18 +19,18 @@ class TargetRootCard(PushSettingCard):
         )
 
         self.clicked.connect(self._on_clicked)
-    
+
     def _on_clicked(self):
         """ 选择路径 """
         # 获取最上层窗口作为父窗口，防止模态阻塞问题
         parent_window = self.window()
-        
+
         path = QFileDialog.getExistingDirectory(
-            parent_window, 
+            parent_window,
             t("settings.select_path"),
             self.config_service.get_default_target_root()
         )
-        
+
         if path:
             if self.config_service.set_default_target_root(path):
                 self.setContent(path)

@@ -79,7 +79,7 @@ config_mapping = {
 for default_name, user_name in config_mapping.items():
     default_file = DEFAULT_CONFIG_FILE.parent / default_name  # config/default_*.json
     user_file = DATA_DIR / user_name  # .ghost-dir/*.json
-    
+
     # 首次运行：复制官方配置到用户目录
     if not user_file.exists() and default_file.exists():
         shutil.copy2(default_file, user_file)
@@ -217,9 +217,9 @@ def format_size(size_bytes: int) -> str:
     """格式化文件大小"""
     if size_bytes == 0:
         return "0 B"
-    
+
     import math
     unit_index = min(int(math.log(size_bytes, 1024)), len(SIZE_UNITS) - 1)
     size = size_bytes / (1024 ** unit_index)
-    
+
     return f"{size:.2f} {SIZE_UNITS[unit_index]}"

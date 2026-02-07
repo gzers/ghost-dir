@@ -49,7 +49,7 @@ def get_font_style(
         CSS 样式字符串
     """
     from src.gui.styles.utils.color_utils import get_text_primary
-    
+
     font_family = get_font_family()
     font_size = get_font_size(size)
     font_weight = get_font_weight(weight)
@@ -64,10 +64,10 @@ def get_font_style(
 def format_required_label(text: str) -> str:
     """
     格式化必填项标签，添加规范化的红色星号及间距
-    
+
     Args:
         text: 标签文字
-        
+
     Returns:
         包含 HTML 样式的字符串
     """

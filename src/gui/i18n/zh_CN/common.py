@@ -25,7 +25,7 @@ COMMON_TEXTS = {
     "startup_wizard": "引导页面",
     "startup_connected": "链接页面",
     "startup_library": "模版库页面",
-    
+
     "success": "成功",
     "failed": "失败",
     "partial_success": "部分成功",

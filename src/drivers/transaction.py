@@ -20,10 +20,10 @@ def recover_from_crash():
         try:
             with open(LOCK_FILE, 'r', encoding='utf-8') as f:
                 data = json.load(f)
-            
+
             # 这里可以添加恢复逻辑
             # 例如回滚未完成的操作
-            
+
             LOCK_FILE.unlink()
         except Exception:
             pass

@@ -13,30 +13,30 @@ LINKS_TEXTS = {
     "refresh_status": "刷新链接状态",
     "clear_selection": "清除选择",
     "selected_count": "已选择 {count} 项",
-    
+
     # 视图切换
     "view_list": "列表视图",
     "view_category": "分类视图",
     "search_placeholder": "搜索软件名称...",
-    
+
     # 状态文案
     "status_connected": "正常",
     "status_invalid": "失效",
     "status_ready": "就绪",
     "status_disconnected": "未链接",
-    
+
     # 状态说明 (帮助弹窗)
     "status_help_title": "状态定义说明",
     "status_connected_desc": "文件物理位置已在目标驱动器，源位置为符号链接点。完全不占源驱动器空间。",
     "status_disconnected_desc": "文件物理位置仍在源位置，尚未迁移。会持续占用源驱动器空间。",
     "status_ready_desc": "文件已在目标驱动器，但源位置对应的链接点丢失或未建立。可通过「建立链接」恢复。",
     "status_invalid_desc": "由于路径不存在或原始配置损坏，链接已失效。请检查文件是否存在。",
-    
+
     # 操作按钮
     "establish": "建立链接",
     "disconnect": "断开链接",
     "reconnect": "重新链接",
-    
+
     # 表格列
     "col_name": "名称",
     "col_category": "分类",
@@ -45,12 +45,12 @@ LINKS_TEXTS = {
     "col_size": "占用空间",
     "col_status": "状态",
     "col_actions": "操作",
-    
+
     # 空状态
     "empty_title": "暂无链接",
     "empty_desc": "点击「新增链接」或「扫描本机应用」开始管理",
     "empty_action": "开始使用",
-    
+
     # 消息提示
     "msg_establish_success": "已成功建立链接:{name}",
     "msg_establish_failed": "建立链接失败:{name}",
@@ -62,19 +62,19 @@ LINKS_TEXTS = {
     "msg_batch_complete": "成功: {success}/{total}",
     "msg_no_establish_items": "没有可建立链接的项目",
     "msg_no_disconnect_items": "没有可断开链接的项目",
-    
+
     # 进程占用
     "process_warning_title": "文件占用警告",
     "process_warning_msg": "检测到以下进程正在占用文件:\n\n{processes}\n\n是否结束这些进程并继续?",
     "process_target_warning_msg": "检测到以下进程正在占用目标文件:\n\n{processes}\n\n是否结束这些进程并继续?",
-    
+
     # 空间统计
     "refresh_size_confirm": "将计算 {count} 个链接的空间占用,可能需要一些时间。\n是否继续?",
     "refresh_size_progress": "正在计算",
     "refresh_size_complete": "计算完成 ✓",
     "refresh_size_result": "已更新 {count} 个链接的空间统计",
     "refresh_size_empty": "没有需要统计的链接",
-    
+
     # 编辑链接
     "edit_link": "编辑链接",
     "link_name": "软件名称",

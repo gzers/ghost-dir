@@ -4,7 +4,7 @@
 
 SETTINGS_TEXTS = {
     "title": "设置",
-    
+
     # 路径配置
     "group_path": "路径配置",
     "default_target_root": "默认仓库根路径",
@@ -12,7 +12,7 @@ SETTINGS_TEXTS = {
     "log_folder": "调试日志目录",
     "view_log": "查看日志",
     "path_updated": "路径已更新",
-    
+
     # 外观设置
     "group_appearance": "外观设置",
     "theme": "应用主题",
@@ -35,7 +35,7 @@ SETTINGS_TEXTS = {
     "theme_color_deep_plum_purple": "深醇梅紫",
     "transparency": "窗口透明效果",
     "transparency_desc": "开启后将为应用窗口应用云母或丙烯酸半透明效果",
-    
+
     # 启动设置
     "group_startup": "启动设置",
     "startup_page": "启动页面",
@@ -45,7 +45,7 @@ SETTINGS_TEXTS = {
     "startup_library": "模版库",
     "startup_changed": "设置已更新",
     "startup_changed_msg": "首启动页面已设置为 {page}",
-    
+
     # 视图模式
     "default_view": "默认展示视图",
     "default_view_desc": "设置进入‘已连接’页面时默认显示的视图模式",

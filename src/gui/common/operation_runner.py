@@ -24,7 +24,7 @@ def run_task_async(
 ):
     """
     运行单体异步任务并提供反馈
-    
+
     Args:
         func: 要执行的函数
         *args: 函数参数
@@ -37,7 +37,7 @@ def run_task_async(
         on_start()
 
     worker = SimpleTaskWorker(func, *args, **kwargs)
-    
+
     def _on_done(success: bool, msg: str, data: typing.Any):
         # 统一使用原生带图标的 InfoBar 反馈内容
         # 位置统一修正为项目定义的 'TopCenter' (字符串驱动)
@@ -45,16 +45,16 @@ def run_task_async(
             InfoBar.error(t("common.error"), msg, duration=5000, position='TopCenter', parent=parent)
         else:
             InfoBar.success(t("common.success"), msg, duration=2000, position='TopCenter', parent=parent)
-        
+
         if on_finished:
             on_finished(success, msg, data)
-        
+
         # 延迟清理引用
         task_id = f"task_{id(worker)}"
         _runners.pop(task_id, None)
 
     worker.signals.finished.connect(_on_done)
-    
+
     # 保持强引用
     task_id = f"task_{id(worker)}"
     _runners[task_id] = worker
@@ -70,7 +70,7 @@ def run_batch_task_async(
 ):
     """
     运行批量异步任务并提供进度条反馈
-    
+
     Args:
         items: 项目列表
         func: 针对每个项目执行的函数
@@ -81,13 +81,13 @@ def run_batch_task_async(
     """
     dlg = ProgressDialog(title, "正在准备...", parent.window() if parent else None)
     dlg.show()
-    
+
     worker = BatchTaskWorker(items, func, item_title_func)
-    
+
     def on_progress(p, text):
         dlg.setProgress(p)
         dlg.setDescription(text)
-        
+
     def _on_done(success: bool, msg: str, data: typing.Any):
         dlg.close()
         if on_finished:
@@ -96,17 +96,17 @@ def run_batch_task_async(
             # 默认反馈
             target = parent if parent else None
             InfoBar.success(t("common.success"), msg, position='TopCenter', parent=target)
-            
+
         # 清理引用
         task_id = f"batch_{id(worker)}"
         _runners.pop(task_id, None)
 
     worker.signals.progress.connect(on_progress)
     worker.signals.finished.connect(_on_done)
-    
+
     # 手动取消绑定
     dlg.cancelButton.clicked.connect(worker.cancel)
-    
+
     # 保持强引用
     task_id = f"batch_{id(worker)}"
     _runners[task_id] = worker

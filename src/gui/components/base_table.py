@@ -7,16 +7,16 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QHeaderView, QWidget, QHBoxLayout, QTableWidgetItem
 from qfluentwidgets import TableWidget, CheckBox, setCustomStyleSheet
 from src.gui.styles import (
-    get_font_style, get_text_primary, apply_transparent_style, 
+    get_font_style, get_text_primary, apply_transparent_style,
     get_text_secondary
 )
 
 
 class BaseTableWidget(TableWidget):
     """表格基类 - 封装统一样式和全选逻辑"""
-    
+
     checked_changed = Signal(int)  # 勾选状态改变信号 (选中的数量)
-    
+
     def __init__(self, parent=None, enable_checkbox: bool = True):
         """
         初始化表格基类
@@ -27,7 +27,7 @@ class BaseTableWidget(TableWidget):
         self.checkboxes: Dict[int, CheckBox] = {}
         self.header_checkbox: Optional[CheckBox] = None
         self.header_checkbox_container: Optional[QWidget] = None
-        
+
         self._init_base_ui()
         self._connect_base_signals()
 
@@ -36,7 +36,7 @@ class BaseTableWidget(TableWidget):
         self.setBorderRadius(8)
         self.setBorderVisible(False)
         self.setSelectRightClickedRow(True)
-        
+
         # 默认表格属性
         self.setEditTriggers(TableWidget.EditTrigger.NoEditTriggers)
         self.setSelectionBehavior(TableWidget.SelectionBehavior.SelectRows)
@@ -45,23 +45,23 @@ class BaseTableWidget(TableWidget):
         self.setSortingEnabled(True)
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.setShowGrid(False)
-        
+
         # 隐藏垂直表头以对齐视觉
         self.verticalHeader().setVisible(False)
         self.verticalHeader().setDefaultSectionSize(40)
         self.horizontalHeader().setFixedHeight(36)
-        
+
         apply_transparent_style(self)
-        
+
         if self.enable_checkbox:
             self._setup_header_checkbox()
-            
+
         self._apply_base_style()
 
     def _setup_header_checkbox(self):
         """设置表头全选复选框并实现动态对齐"""
         header = self.horizontalHeader()
-        
+
         # 创建容器和布局
         self.header_checkbox_container = QWidget(header)
         container_layout = QHBoxLayout(self.header_checkbox_container)
@@ -69,12 +69,12 @@ class BaseTableWidget(TableWidget):
         container_layout.addWidget(self.header_checkbox)
         container_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         container_layout.setContentsMargins(0, 0, 0, 0)
-        
+
         # 连接状态信号
         self.header_checkbox.stateChanged.connect(self._on_header_checked_changed)
         # 连接尺寸同步信号，确保列宽变动时依然居中
         header.sectionResized.connect(self._on_header_section_resized)
-        
+
         # 初始对齐
         self._update_header_checkbox_pos()
 
@@ -82,7 +82,7 @@ class BaseTableWidget(TableWidget):
         """当表头列宽改变时重新对齐"""
         if index == 0:
             self._update_header_checkbox_pos()
-            
+
     def _update_header_checkbox_pos(self):
         """精确计算并更新复选框容器位置和大小"""
         if not self.header_checkbox_container:
@@ -97,7 +97,7 @@ class BaseTableWidget(TableWidget):
         header_text_color = get_text_secondary()
         text_primary = get_text_primary()
         font_style = get_font_style(size="md", weight="normal")
-        
+
         qss = f"""
             QTableWidget {{
                 background: transparent;
@@ -143,14 +143,14 @@ class BaseTableWidget(TableWidget):
         """为特定行创建并设置复选框单元格，返回该复选框对象"""
         container = self.create_alignment_container()
         container.setObjectName("checkboxContainer")
-        
+
         cb = CheckBox()
         cb.setEnabled(enabled)
         cb.setText("")
         container.layout().addWidget(cb)
-        
+
         self.setCellWidget(row, 0, container)
-        
+
         # 连接信号
         cb.stateChanged.connect(self._on_row_checked_changed)
         return cb
@@ -160,7 +160,7 @@ class BaseTableWidget(TableWidget):
         checked_rows = self.get_checked_rows()
         count = len(checked_rows)
         self.checked_changed.emit(count)
-        
+
         # 同步表头复选框状态
         if self.header_checkbox:
             self.header_checkbox.blockSignals(True)

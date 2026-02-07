@@ -56,7 +56,7 @@ class StatusBadge(QWidget):
 
         layout.addWidget(icon_label)
         layout.addWidget(text_label)
-    
+
     def update_status(self, status: LinkStatus):
         """更新状态"""
         self.status = status

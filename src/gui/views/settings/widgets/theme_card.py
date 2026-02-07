@@ -9,7 +9,7 @@ class ThemeCard(ComboBoxSettingCard):
 
     def __init__(self, config_service, parent=None):
         self.config_service = config_service
-        
+
         # 从配置构建映射字典
         self.theme_map = {
             t(option["i18n_key"]): option["value"]
@@ -37,10 +37,10 @@ class ThemeCard(ComboBoxSettingCard):
 
         # 初始化值
         self._init_value()
-        
+
         # 连接信号
         self.comboBox.currentTextChanged.connect(self._on_theme_changed)
-    
+
     def _init_value(self):
         """ 初始化当前选中项 """
         theme = self.config_service.get_theme()
@@ -50,7 +50,7 @@ class ThemeCard(ComboBoxSettingCard):
     def _on_theme_changed(self, text):
         """ 主题变更回调 """
         theme = self.theme_map.get(text, DEFAULT_THEME)
-        
+
         if self.config_service.set_theme(theme):
             signal_bus.theme_changed.emit(theme)
             # 同时也发送通用的配置变更信号

@@ -1,0 +1,71 @@
+﻿python : Traceback (most rec
+ent call last):
+所在位置 行:1 字符: 1
++ python deep_trace.py > dee
+p_trace_log.txt 2>&1; powers
+hell -Command " ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          
+    : NotSpecified: (Trace  
+  back (most recent call    
+ last)::String) [], Remo    
+teException
+    + FullyQualifiedErrorId 
+    : NativeCommandError
+ 
+  File "D:\Users\15119\WorkS
+pace\Code\tool\ghost-dir\dee
+p_trace.py", line 31, in dee
+p_inspect
+    run_app()
+  File "D:\Users\15119\WorkS
+pace\Code\tool\ghost-dir\src
+\gui\app.py", line 191, in r
+un_app
+    window = MainWindow(app)
+  # 浼犻€?app 瀹炰緥
+             ^^^^^^^^^^^^^^^
+  File "D:\Users\15119\WorkS
+pace\Code\tool\ghost-dir\src
+\gui\windows\main_window.py"
+, line 46, in __init__
+    self.library_view = Libr
+aryView(self)
+                        ^^^^
+^^^^^^^^^^^^^
+  File "D:\Users\15119\WorkS
+pace\Code\tool\ghost-dir\src
+\gui\views\library\library_v
+iew.py", line 48, in __init_
+_
+    self._filter_templates()
+  File "D:\Users\15119\WorkS
+pace\Code\tool\ghost-dir\src
+\gui\views\library\library_v
+iew.py", line 167, in _filte
+r_templates
+    view_models = self.templ
+ate_service.get_filtered_tem
+plates(category_id, search_t
+ext)
+                  ^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^
+AttributeError: 'TemplateSer
+vice' object has no attribut
+e 'get_filtered_templates'. 
+Did you mean: 'get_all_templ
+ates'?
+--- 娣卞害灞炴€ц拷韪惎鍔?---
+[Instance] Type: <class 'src.services.template_service.TemplateService'>
+[Instance] Module: src.services.template_service
+[Instance] Attributes: ['add_template', 'dao', 'delete_template', 'get_all_templates', 'get_template_by_id', 'get_templates_by_category', 'update_template']
+鉁?灞炴€?get_all_templates 瀛樺湪
+
+[1;33m馃摙 Tips:[0m QFluentWidgets Pro is now released. Click [1;96mhttps://qfluentwidgets.com/pages/pro[0m to learn more about it.
+
+[OK] Service 灞傚垵濮嬪寲瀹屾垚
+
+鉂?鎹曡幏鍒伴敊璇?
+

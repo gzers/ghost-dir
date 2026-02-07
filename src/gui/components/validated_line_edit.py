@@ -6,10 +6,10 @@ from src.common.validators.base import BaseValidator
 
 
 class ValidatedLineEdit(LineEdit):
-    """ 
-    集成校验逻辑的增强型 LineEdit 
     """
-    
+    集成校验逻辑的增强型 LineEdit
+    """
+
     # 校验状态改变信号 (is_valid, error_message)
     validationChanged = Signal(bool, str)
 
@@ -19,7 +19,7 @@ class ValidatedLineEdit(LineEdit):
         self._is_valid = True
         self._error_message = ""
         self._auto_normalize = True
-        
+
         # 连接信号
         self.textChanged.connect(self._on_text_changed)
         self.editingFinished.connect(self._on_editing_finished)
@@ -45,43 +45,43 @@ class ValidatedLineEdit(LineEdit):
             normalized_text = text
             for v in self.validators:
                 normalized_text = v.normalize(normalized_text)
-            
+
             if normalized_text != text:
                 self.setText(normalized_text)
-        
+
         self.validate(silent=False)
 
     def validate(self, silent: bool = False) -> bool:
-        """ 
-        执行验证 
-        
+        """
+        执行验证
+
         Args:
             silent: 是否静默验证 (不弹出提示)
         """
         text = self.text()
         is_valid = True
         error_msg = ""
-        
+
         for v in self.validators:
             valid, msg = v.validate(text)
             if not valid:
                 is_valid = False
                 error_msg = msg
                 break
-        
+
         self._is_valid = is_valid
         self._error_message = error_msg
-        
+
         # 更新 UI 状态 - 使用 QFluentWidgets 官方方法
         self.setError(not is_valid)
-        
+
         # 发送信号
         self.validationChanged.emit(is_valid, error_msg)
-        
+
         # 如果不是静默模式且验证失败，显示提示
         if not silent and not is_valid:
             self._show_error_tip(error_msg)
-            
+
         return is_valid
 
     def _show_error_tip(self, message: str):

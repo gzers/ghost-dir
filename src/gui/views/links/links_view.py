@@ -1,4 +1,4 @@
-﻿"""
+"""
 链接视图 (Links View)
 管理所有已建立或待处理的链接，支持分类查看、列表搜索及批量操作
 """
@@ -8,12 +8,13 @@ from typing import List, Optional
 from PySide6.QtWidgets import QSplitter, QWidget, QStackedWidget, QVBoxLayout
 from PySide6.QtCore import Qt
 from qfluentwidgets import (
-    PushButton, ToolButton, FluentIcon as FIF, MessageBox, 
-    InfoBar, Pivot, SearchLineEdit, PrimaryPushButton, 
+    PushButton, ToolButton, FluentIcon as FIF, MessageBox,
+    InfoBar, Pivot, SearchLineEdit, PrimaryPushButton,
     TransparentPushButton, StateToolTip, IndeterminateProgressRing
 )
 from src.gui.common import operation_runner
 from src.gui.i18n import t
+from src.common.service_bus import service_bus
 # TODO: 通过 app 实例访问 Service
 from src.common.signals import signal_bus
 from src.gui.components import BasePageView, CategoryTreeWidget, BatchToolbar, LinkTable
@@ -39,7 +40,7 @@ class LinksView(BasePageView):
         self.config_service = service_bus.config_service
         self.category_manager = service_bus.category_manager
         self.user_manager = service_bus.user_manager
-        
+
         self.current_category_id: str = "all"
         self._state_tooltip: Optional[StateToolTip] = None
 
@@ -72,11 +73,11 @@ class LinksView(BasePageView):
         self.search_edit = SearchLineEdit()
         self.search_edit.setPlaceholderText(t("links.search_placeholder"))
         self.search_edit.setFixedWidth(260)
-        
+
         self.view_pivot = Pivot()
         self.view_pivot.addItem("list", t("links.view_list"))
         self.view_pivot.addItem("category", t("links.view_category"))
-        
+
         self.refresh_btn = ToolButton(FIF.SYNC)
         self.refresh_btn.setToolTip(t("links.refresh_status"))
         self.refresh_btn.clicked.connect(lambda: self._load_data(refresh_size=True))
@@ -96,30 +97,30 @@ class LinksView(BasePageView):
         content_layout = self.get_content_layout()
 
         self.splitter = QSplitter(Qt.Orientation.Horizontal)
-        
+
         # 分类树（显示链接数量）
         self.category_tree = CategoryTreeWidget(
-            self.category_manager, 
+            self.category_manager,
             service_bus.user_manager,
             show_count=True,
             count_provider=lambda cid: len(self.user_manager.get_links_by_category(cid)) if cid != "all" else len(self.user_manager.get_all_links())
         )
         self.category_tree.setFixedWidth(240)
-        
+
         # 堆栈视图
         self.view_stack = QStackedWidget()
         self.category_link_table = LinkTable()
         self.list_view = FlatLinkView()
         self.view_stack.addWidget(self.category_link_table)
         self.view_stack.addWidget(self.list_view)
-        
+
         self.splitter.addWidget(self.category_tree)
         self.splitter.addWidget(self.view_stack)
         self.splitter.setStretchFactor(1, 1)
         self.splitter.setHandleWidth(1)
         self.splitter.setStyleSheet("QSplitter::handle { background: transparent; }")
         apply_transparent_style(self.splitter)
-        
+
         content_layout.addWidget(self.splitter, 1)
 
         # 批量工具栏
@@ -135,9 +136,9 @@ class LinksView(BasePageView):
         self.search_edit.textChanged.connect(self._on_search_changed)
         self.view_pivot.currentItemChanged.connect(self._on_view_pivot_changed)
         # 刷新按钮已在 _setup_toolbar 中绑定 explicit refresh_size=True
-        
+
         self.category_tree.category_selected.connect(self._on_category_selected)
-        
+
         # 表格操作
         for view in [self.category_link_table, self.list_view]:
             view.link_selected.connect(self._on_links_selected)
@@ -157,17 +158,17 @@ class LinksView(BasePageView):
     def _load_data(self, refresh_size: bool = False):
         """加载数据"""
         view_models = self.connection_service.get_all_links(self.current_category_id)
-        
+
         # 即使数据项目前暂时不支持 ViewModel，但在 View 层通过 DTO 桥接或强制转换适配
         # 这里演示注入 ViewModel 列表
         self.category_link_table.load_links(view_models)
         self.list_view.load_links(view_models)
-        
+
         # 触发空间统计 (仅在需要时)
         if refresh_size and view_models:
             # 🆕 UI 反馈：通知表格进入加载状态
             self.category_link_table.set_all_sizes_loading()
-            
+
             # 🆕 统一使用 TopCenter InfoBar 代替左上角 StateToolTip
             InfoBar.info(
                 "正在统计",
@@ -196,16 +197,16 @@ class LinksView(BasePageView):
             position='TopCenter',
             parent=self.window()
         )
-        
+
     def _on_show_status_help(self):
         """显示状态定义说明"""
         from src.gui.styles.utils.color_utils import get_status_colors, get_text_secondary, get_divider_color
         colors = get_status_colors()
         sec_color = get_text_secondary()
         border_color = get_divider_color()
-        
+
         title = t("links.status_help_title")
-        
+
         # 封装表格行 html，使用 table 解决换行对齐问题，使用 SVG 圆点解决显示不全问题
         def get_row_html(status_key, label_key):
             color = colors.get(status_key, "#808080")
@@ -236,7 +237,7 @@ class LinksView(BasePageView):
                 <p style="margin-top: 8px; color: {sec_color}; line-height: 1.5;">{t('links.edit_rule_desc')}</p>
             </div>
         """
-        
+
         # 使用 MessageBox 并配置单一居中按钮
         msg = MessageBox(title, "", self)
         msg.titleLabel.setText(title)
@@ -271,11 +272,11 @@ class LinksView(BasePageView):
 
     def _on_action_clicked(self, link_id: str, action: str):
         """单项操作"""
-        
+
         if action == "establish":
             operation_runner.run_task_async(
-                self.connection_service.establish_connection_by_id, 
-                link_id, 
+                self.connection_service.establish_connection_by_id,
+                link_id,
                 title=t("links.establish"),
                 parent=self,
                 on_start=lambda: self.category_link_table.show_loading(link_id, True),
@@ -286,8 +287,8 @@ class LinksView(BasePageView):
             )
         elif action == "disconnect":
             operation_runner.run_task_async(
-                self.connection_service.disconnect_connection, 
-                link_id, 
+                self.connection_service.disconnect_connection,
+                link_id,
                 title=t("links.disconnect"),
                 parent=self,
                 on_start=lambda: self.category_link_table.show_loading(link_id, True),
@@ -298,8 +299,8 @@ class LinksView(BasePageView):
             )
         elif action == "reconnect":
             operation_runner.run_task_async(
-                self.connection_service.reconnect_connection, 
-                link_id, 
+                self.connection_service.reconnect_connection,
+                link_id,
                 title=t("links.reconnect"),
                 parent=self,
                 on_start=lambda: self.category_link_table.show_loading(link_id, True),
@@ -315,20 +316,20 @@ class LinksView(BasePageView):
                 dialog = EditLinkDialog(link, self)
                 if dialog.exec():
                     self._load_data()
-            return 
+            return
         elif action == "delete":
             link = service_bus.user_manager.get_link_by_id(link_id)
             if not link: return
-            
+
             title = t("links.confirm_remove_title")
             msg = t("links.msg_delete_confirm").format(name=link.name)
             if MessageBox(title, msg, self).exec():
                 service_bus.user_manager.remove_link(link_id)
                 InfoBar.success(
-                    t("common.success"), 
-                    t("links.batch_remove"), 
-                    duration=2000, 
-                    position='TopCenter', 
+                    t("common.success"),
+                    t("links.batch_remove"),
+                    duration=2000,
+                    position='TopCenter',
                     parent=self
                 )
                 self._load_data()
@@ -338,7 +339,7 @@ class LinksView(BasePageView):
     def _on_batch_establish(self):
         checked_ids = self._get_checked_ids()
         if not checked_ids: return
-        
+
         operation_runner.run_batch_task_async(
             checked_ids,
             self.connection_service.establish_connection_by_id,
@@ -351,7 +352,7 @@ class LinksView(BasePageView):
     def _on_batch_disconnect(self):
         checked_ids = self._get_checked_ids()
         if not checked_ids: return
-        
+
         operation_runner.run_batch_task_async(
             checked_ids,
             self.connection_service.disconnect_connection,

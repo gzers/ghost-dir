@@ -1,4 +1,4 @@
-﻿import os
+import os
 from typing import List, Optional, Set
 from PySide6.QtCore import Qt, Signal, QPoint
 from PySide6.QtWidgets import (
@@ -11,14 +11,11 @@ from qfluentwidgets import (
 )
 from src.gui.i18n import t
 # TODO: 通过 app 实例访问 Service
+from src.common.service_bus import service_bus
 from src.common.signals import signal_bus
-from src.models import Template, Catego  # 新架构ryNode
+from src.models import Template, CategoryNode  # 新架构
 from src.gui.components import BasePageView, CategoryTreeWidget, BatchToolbar
 from src.gui.views.library.widgets import TemplateTableWidget
-from src.gui.dialogs import (
-    CategoryEditDialog, TemplateEditDialog, TemplatePreviewDialog,
-    BatchMoveDialog, ImportDialog, CategoryManagerDialog
-)
 
 
 class LibraryView(BasePageView):
@@ -37,13 +34,15 @@ class LibraryView(BasePageView):
         # 注入服务
         self.category_service = service_bus.category_service
         self.template_service = service_bus.template_service
-        
+        self.template_manager = service_bus.template_manager
+        self.category_manager = service_bus.category_manager
+
         self.current_category_id: Optional[str] = None
 
         # 设置页面内容
         self._setup_content()
         self._connect_signals()
-        
+
         # 初始加载
         self._validate_and_load()
         self._filter_templates()
@@ -51,10 +50,10 @@ class LibraryView(BasePageView):
     def _setup_content(self):
         """设置页面内容"""
         content_layout = self.get_content_layout()
-        
+
         # 顶部工具栏 (由 BasePageView 提供容器)
         toolbar_layout = self.get_toolbar_layout()
-        
+
         # 1. 标题和统计
         self.count_label = QLabel(self)
         self.count_label.setStyleSheet("color: gray;")
@@ -87,8 +86,8 @@ class LibraryView(BasePageView):
 
         # 左侧分类树
         self.category_tree = CategoryTreeWidget(
-            service_bus.category_manager, 
-            service_bus.user_manager, 
+            service_bus.category_manager,
+            service_bus.user_manager,
             parent=self
         )
         self.category_tree.setFixedWidth(240)
@@ -139,7 +138,7 @@ class LibraryView(BasePageView):
 
     def _validate_and_load(self):
         """验证模板并加载"""
-        orphaned = self.template_service.manager.validate_all_templates()
+        orphaned = self.template_manager.validate_all_templates()
         if orphaned:
             InfoBar.warning(
                 title=t("library.orphaned_warning_title"),
@@ -164,19 +163,19 @@ class LibraryView(BasePageView):
         """调用 Service 层执行统一过滤"""
         search_text = self.search_edit.text()
         category_id = self.current_category_id or "all"
-        
+
         view_models = self.template_service.get_filtered_templates(category_id, search_text)
-        
-        is_leaf = self.category_service.manager.is_leaf(category_id) if category_id != "all" else False
+
+        is_leaf = self.category_manager.is_leaf(category_id) if category_id != "all" else False
         allow_ops = (category_id == "all") or is_leaf
         self.add_template_btn.setEnabled(allow_ops)
         self.template_table.set_templates(view_models, category_id, allow_operations=allow_ops)
-        
+
         if search_text:
-            all_templates = self.template_service.manager.get_all_templates()
+            all_templates = self.template_manager.get_all_templates()
             matched_categories = set()
             for tpl in all_templates:
-                if (search_text in tpl.name.lower() or 
+                if (search_text in tpl.name.lower() or
                     (tpl.description and search_text in tpl.description.lower())):
                     matched_categories.add(tpl.category_id)
             self.category_tree.highlight_categories(matched_categories)
@@ -184,17 +183,17 @@ class LibraryView(BasePageView):
         else:
             self.category_tree.clear_highlights()
             if category_id == "all":
-                total_categories = len(self.category_service.manager.get_all_categories())
+                total_categories = len(self.category_manager.get_all_categories())
                 self.count_label.setText(t("library.stats_total", categories=total_categories, templates=len(view_models)))
             else:
-                category = self.category_service.manager.get_category_by_id(category_id)
+                category = self.category_manager.get_category_by_id(category_id)
                 name = category.name if category else "未知"
                 self.count_label.setText(t("library.stats_category", name=name, count=len(view_models)))
 
     def _on_refresh_clicked(self):
         """刷新按钮被点击"""
-        self.template_service.manager.load_templates()
-        self.category_service.manager.load_categories()
+        self.template_manager.load_templates()
+        self.category_manager.load_categories()
         self.category_tree.load_categories()
         self._filter_templates()
         InfoBar.success(t("common.success"), t("library.refresh_success"), duration=2000, position='TopCenter', parent=self)
@@ -206,12 +205,13 @@ class LibraryView(BasePageView):
         menu.addAction(Action(FIF.UP, t("library.import"), self, triggered=self._on_import_clicked))
         menu.addSeparator()
         menu.addAction(Action(FIF.SETTING, t("library.manage_categories"), self, triggered=self._on_manage_categories))
-        
+
         pos = self.more_btn.mapToGlobal(QPoint(0, self.more_btn.height()))
         menu.exec(pos, ani=True)
 
     def _on_manage_categories(self):
         """管理分类"""
+        from src.gui.dialogs import CategoryManagerDialog
         dialog = CategoryManagerDialog(self)
         dialog.exec()
         self._on_categories_changed()
@@ -219,7 +219,7 @@ class LibraryView(BasePageView):
     def _on_categories_changed(self):
         """分类数据变更回调"""
         last_selected = self.current_category_id
-        self.category_service.manager.load_categories()
+        self.category_manager.load_categories()
         self.category_tree.load_categories()
         if last_selected:
             self.category_tree.select_category(last_selected)
@@ -228,31 +228,32 @@ class LibraryView(BasePageView):
     def _on_add_category_requested(self, parent_id: Optional[str] = None):
         """请求添加分类"""
         if parent_id:
-            can_add, msg = self.category_service.manager.can_add_child_category(parent_id)
+            can_add, msg = self.category_manager.can_add_child_category(parent_id)
             if not can_add:
-                templates = self.template_service.manager.get_templates_by_category(parent_id)
-                parent = self.category_service.manager.get_category_by_id(parent_id)
+                templates = self.template_manager.get_templates_by_category(parent_id)
+                parent = self.category_manager.get_category_by_id(parent_id)
+                from src.gui.dialogs import TemplatePreviewDialog, BatchMoveDialog
                 preview_dialog = TemplatePreviewDialog(parent.name, templates, self)
                 if preview_dialog.exec():
-                    move_dialog = BatchMoveDialog(self.category_service.manager, templates, self)
+                    move_dialog = BatchMoveDialog(self.category_manager, templates, self)
                     if move_dialog.exec():
                         target_category_id = move_dialog.get_target_category_id()
                         for t in templates:
                             t.category_id = target_category_id
-                        self.template_service.manager.load_templates()
+                        self.template_manager.load_templates()
                     else:
                         return
                 else:
                     return
-        
-        from src.gui.dialogs.category_manager import CategoryEditDialog
-        dialog = CategoryEditDialog(self.category_service.manager, mode="create", parent=self)
+
+        from src.gui.dialogs import CategoryEditDialog
+        dialog = CategoryEditDialog(self.category_manager, mode="create", parent=self)
         if parent_id:
             for i in range(dialog.parentCombo.count()):
                 if dialog.parentCombo.itemData(i) == parent_id:
                     dialog.parentCombo.setCurrentIndex(i)
                     break
-        
+
         if dialog.exec():
             if dialog.validate():
                 category = dialog.get_category()
@@ -265,9 +266,10 @@ class LibraryView(BasePageView):
 
     def _on_edit_category_requested(self, category_id: str):
         """请求编辑分类"""
-        category = self.category_service.manager.get_category_by_id(category_id)
+        from src.gui.dialogs import CategoryEditDialog
+        category = self.category_manager.get_category_by_id(category_id)
         if not category: return
-        dialog = CategoryEditDialog(self.category_service.manager, category=category, mode="edit", parent=self)
+        dialog = CategoryEditDialog(self.category_manager, category=category, mode="edit", parent=self)
         if dialog.exec():
             if dialog.validate():
                 updated_category = dialog.get_category()
@@ -300,6 +302,7 @@ class LibraryView(BasePageView):
 
     def _on_add_template_clicked(self):
         """新建模板按钮被点击"""
+        from src.gui.dialogs import TemplateEditDialog
         dialog = TemplateEditDialog(
             mode="create",
             default_category_id=self.current_category_id,
@@ -315,7 +318,8 @@ class LibraryView(BasePageView):
 
     def _on_edit_template_requested(self, template_id: str):
         """请求编辑模板"""
-        template = self.template_service.manager.templates.get(template_id)
+        from src.gui.dialogs import TemplateEditDialog
+        template = self.template_manager.templates.get(template_id)
         if not template: return
         dialog = TemplateEditDialog(
             template=template,
@@ -329,7 +333,7 @@ class LibraryView(BasePageView):
 
     def _on_delete_template_requested(self, template_id: str):
         """请求删除模板"""
-        template = self.template_service.manager.templates.get(template_id)
+        template = self.template_manager.templates.get(template_id)
         if not template: return
         msg_box = MessageBox('确认删除', f'确定要删除模板 "{template.name}" 吗？', self)
         if msg_box.exec():
@@ -363,20 +367,20 @@ class LibraryView(BasePageView):
             "选择导出文件夹",
             ""
         )
-        
+
         if folder_path:
             # 自动生成压缩包文件名
             from datetime import datetime
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             file_name = f"template_export_{timestamp}.zip"
             file_path = f"{folder_path}/{file_name}"
-            
+
             # 默认导出所有内容
             options = {
                 'include_categories': True,
                 'include_templates': True
             }
-            
+
             success, msg = self.template_service.export_to_file(file_path, options)
             if success:
                 InfoBar.success("成功", msg, duration=2000, position='TopCenter', parent=self)
@@ -385,7 +389,8 @@ class LibraryView(BasePageView):
 
     def _on_import_clicked(self):
         """导入请求"""
-        dialog = ImportDialog(self.template_service.manager, self.category_service.manager, self)
+        from src.gui.dialogs import ImportDialog
+        dialog = ImportDialog(self.template_manager, self.category_manager, self)
         if dialog.exec() and dialog.validate():
             options = dialog.get_import_options()
             path = options.pop('file_path', None)
@@ -411,6 +416,6 @@ class LibraryView(BasePageView):
 
     def _update_count(self):
         """更新全局统计"""
-        total_categories = len(self.category_service.manager.get_all_categories())
-        total_templates = len(self.template_service.manager.get_all_templates())
+        total_categories = len(self.category_manager.get_all_categories())
+        total_templates = len(self.template_manager.get_all_templates())
         self.count_label.setText(t("library.stats_total", categories=total_categories, templates=total_templates))

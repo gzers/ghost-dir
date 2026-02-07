@@ -11,7 +11,7 @@ class CategoryNode:
     parent_id: Optional[str] = None
     order: int = 0
     children: List['CategoryNode'] = field(default_factory=list)
-    
+
     @classmethod
     def from_dict(cls, data: dict):
         node = cls(
@@ -23,7 +23,7 @@ class CategoryNode:
         children_data = data.get('children', [])
         node.children = [cls.from_dict(child) for child in children_data]
         return node
-    
+
     def to_dict(self) -> dict:
         return {
             'id': self.id,
