@@ -3,6 +3,7 @@
 Temporary Manager Wrappers
 Decouples UI from the new Service layer during transition.
 """
+from typing import List
 from src.dao import TemplateDAO, LinkDAO, CategoryDAO
 from src.services import TemplateService, LinkService, CategoryService
 
@@ -104,3 +105,6 @@ class UserManager:
 
     def remove_link(self, link_id: str):
         return self._service.delete_link(link_id)
+
+    def remove_links(self, link_ids: List[str]):
+        return self._service.delete_links(link_ids)

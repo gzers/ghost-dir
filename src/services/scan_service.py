@@ -8,8 +8,9 @@ from src.models.template import Template
 class SmartScanner:
     """智能扫描引擎"""
     
-    def __init__(self, templates: List[Template]):
+    def __init__(self, templates: List[Template], link_service=None):
         self.templates = templates
+        self.link_service = link_service
         self.progress_callback: Optional[Callable[[str], None]] = None
 
     def set_progress_callback(self, callback: Callable[[str], None]):
@@ -121,5 +122,35 @@ class SmartScanner:
         return results
 
     def import_templates(self, templates: List[Template]) -> int:
-        """导入选中的模板（此处仅模拟返回导入数量）"""
-        return len(templates)
+        """
+        导入选中的模板
+        将模板转换为 UserLink 对象并持久化到数据库中
+        """
+        if not self.link_service:
+            print("ERROR: LinkService not configured for SmartScanner")
+            return 0
+
+        import uuid
+        from src.models.link import UserLink, LinkStatus
+
+        count = 0
+        for tpl in templates:
+            # 这里的 default_src 在扫描完成后可能是更新后的真实探测路径
+            # default_target 默认为硬盘备份路径，如果为空，则使用一个合理的默认位置
+            target = tpl.default_target or f"D:\\Ghost_Library\\{tpl.id}"
+            
+            # 创建 UserLink 对象
+            link = UserLink(
+                id=str(uuid.uuid4()).split('-')[0], # 生成短 ID
+                name=tpl.name,
+                source_path=tpl.default_src,
+                target_path=target,
+                category=tpl.category_id,
+                status=LinkStatus.DISCONNECTED
+            )
+            
+            # 写入数据库
+            if self.link_service.add_link(link):
+                count += 1
+                
+        return count

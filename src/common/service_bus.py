@@ -36,8 +36,8 @@ class ServiceBus:
         self.category_manager = CategoryManager()
         self.user_manager = UserManager()
 
-        # 别名兼容
         self.connection_service = self.link_service
+        self.main_window = None  # 增加主窗口全局引用
 
         self._initialized = True
 

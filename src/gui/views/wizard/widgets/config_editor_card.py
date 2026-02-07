@@ -244,13 +244,7 @@ class ConfigEditorCard(CardWidget):
 
         # TODO: ConfigFileService 尚未实现，暂时跳过校验和重载
         if self.config_service is None:
-            InfoBar.info(
-                t("common.info"),
-                "配置文件已更改，但校验功能尚未实现",
-                duration=2000,
-                position='TopCenter',
-                parent=self.window()
-            )
+            # 静默处理：校验功能尚未实现时不弹出无意义的 InfoBar，避免干扰批量操作
             return
 
         # 调用服务层校验

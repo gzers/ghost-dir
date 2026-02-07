@@ -19,7 +19,7 @@ class EditLinkDialog(MessageBoxBase):
         self.connection_service = service_bus.connection_service
         self.category_manager = service_bus.category_manager
 
-        self.setWindowTitle(t("connected.edit_link"))
+        self.setWindowTitle(t("links.edit_link"))
         self.is_connected = self.link.status == LinkStatus.CONNECTED
         self._init_ui()
         self._load_data()
@@ -35,31 +35,31 @@ class EditLinkDialog(MessageBoxBase):
 
         # 软件名称
         self.nameEdit = LineEdit()
-        self.nameEdit.setPlaceholderText(t("connected.link_name_placeholder"))
-        form_layout.addRow(BodyLabel(format_required_label(t("connected.link_name"))), self.nameEdit)
+        self.nameEdit.setPlaceholderText(t("links.link_name_placeholder"))
+        form_layout.addRow(BodyLabel(format_required_label(t("links.link_name"))), self.nameEdit)
 
         # 源路径
         self.sourceEdit = LineEdit()
         self.sourceEdit.setPlaceholderText("C:\\...")
         self.sourceEdit.setReadOnly(self.is_connected)
-        form_layout.addRow(BodyLabel(format_required_label(t("connected.source_path"))), self.sourceEdit)
+        form_layout.addRow(BodyLabel(format_required_label(t("links.source_path"))), self.sourceEdit)
 
         # 目标路径
         self.targetEdit = LineEdit()
         self.targetEdit.setPlaceholderText("D:\\...")
         self.targetEdit.setReadOnly(self.is_connected)
-        form_layout.addRow(BodyLabel(format_required_label(t("connected.target_path"))), self.targetEdit)
+        form_layout.addRow(BodyLabel(format_required_label(t("links.target_path"))), self.targetEdit)
 
         # 锁定提示
         if self.is_connected:
-            tip_label = BodyLabel(t("connected.edit_path_locked_tip"))
+            tip_label = BodyLabel(t("links.edit_path_locked_tip"))
             tip_label.setStyleSheet("color: #E21; font-size: 12px; font-weight: semibold;")
             form_layout.addRow("", tip_label)
 
         # 分类
         self.categorySelector = CategorySelector()
         self.categorySelector.set_manager(self.category_manager)
-        form_layout.addRow(BodyLabel(format_required_label(t("connected.category"))), self.categorySelector)
+        form_layout.addRow(BodyLabel(format_required_label(t("links.category"))), self.categorySelector)
 
         # 将表单添加到主视图
         self.viewLayout.addWidget(form_widget)

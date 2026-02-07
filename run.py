@@ -16,5 +16,8 @@ if __name__ == "__main__":
         run_as_admin()
     else:
         # 已有管理员权限，正常启动应用
+        from src.services.link_service import LinkService
+        print(f"RUNTIME CHECK: LinkService has calculate_sizes_async: {hasattr(LinkService, 'calculate_sizes_async')}")
+        
         from src.gui.app import run_app
         run_app()

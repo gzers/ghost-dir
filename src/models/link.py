@@ -8,6 +8,8 @@ from typing import Optional
 class LinkStatus(Enum):
     DISCONNECTED = "disconnected"
     CONNECTED = "connected"
+    READY = "ready"      # 就绪状态（但未连接）
+    INVALID = "invalid"  # 失效状态
     ERROR = "error"
 
 
@@ -19,6 +21,7 @@ class UserLink:
     target_path: str
     category: Optional[str] = None
     status: LinkStatus = LinkStatus.DISCONNECTED
+    last_known_size: int = 0  # 上次计算的占用空间大小（字节）
 
     @classmethod
     def from_dict(cls, data: dict):
@@ -34,7 +37,8 @@ class UserLink:
             source_path=data.get('source_path', ''),
             target_path=data.get('target_path', ''),
             category=data.get('category'),
-            status=status
+            status=status,
+            last_known_size=data.get('last_known_size', 0)
         )
 
     def to_dict(self) -> dict:
@@ -44,5 +48,6 @@ class UserLink:
             'source_path': self.source_path,
             'target_path': self.target_path,
             'category': self.category,
-            'status': self.status.value if isinstance(self.status, LinkStatus) else self.status
+            'status': self.status.value if isinstance(self.status, LinkStatus) else self.status,
+            'last_known_size': self.last_known_size
         }

@@ -24,6 +24,7 @@ class FlatLinkView(QListWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.user_manager = UserManager()
+        self.loading_ids = set() # 正在计算大小的 ID 集合
         self._init_ui()
 
     def _init_ui(self):
@@ -64,6 +65,34 @@ class FlatLinkView(QListWidget):
             widget = LinkItemWidget(link, self)
             widget.action_clicked.connect(self.action_clicked.emit)
             self.setItemWidget(item, widget)
+            
+            # 恢复加载状态
+            if link.id in self.loading_ids:
+                widget.set_loading(True)
+
+    def set_all_sizes_loading(self):
+        """全量设置加载状态"""
+        self.loading_ids.clear()
+        for i in range(self.count()):
+            item = self.item(i)
+            widget = self.itemWidget(item)
+            if isinstance(widget, LinkItemWidget):
+                self.loading_ids.add(widget.link.id)
+                widget.set_loading(True)
+
+    def update_row_size(self, link_id: str, size_text: str):
+        """更新单行大小"""
+        if link_id in self.loading_ids:
+            self.loading_ids.remove(link_id)
+        
+        for i in range(self.count()):
+            item = self.item(i)
+            widget = self.itemWidget(item)
+            if isinstance(widget, LinkItemWidget) and widget.link.id == link_id:
+                widget.set_loading(False)
+                # 刷新路径标签处的占用提示（可选，或者在 ItemWidget 中增加专门的 Label）
+                widget.update_size_info(size_text)
+                break
 
     def clear_selection(self):
         """清除选择"""
@@ -155,8 +184,33 @@ class LinkItemWidget(QWidget):
         self.status_badge = StatusBadge(self.link.status, self)
         layout.addWidget(self.status_badge)
 
+        # 🆕 空间占用显示 (初始隐藏)
+        self.size_label = CaptionLabel("", self)
+        self.size_label.setVisible(False)
+        layout.addWidget(self.size_label)
+
+        # 🆕 加载环 (初始隐藏)
+        from qfluentwidgets import IndeterminateProgressRing
+        self.loading_ring = IndeterminateProgressRing(self)
+        self.loading_ring.setFixedSize(16, 16)
+        self.loading_ring.setStrokeWidth(2)
+        self.loading_ring.setVisible(False)
+        layout.addWidget(self.loading_ring)
+
         # 操作按钮组
         self.setup_actions(layout)
+
+    def set_loading(self, is_loading: bool):
+        """切换加载动画状态"""
+        self.loading_ring.setVisible(is_loading)
+        if is_loading:
+            self.size_label.setVisible(False)
+
+    def update_size_info(self, size_text: str):
+        """更新并显示空间占用文案"""
+        self.size_label.setText(size_text)
+        self.size_label.setVisible(True)
+        self.loading_ring.setVisible(False)
 
     def setup_actions(self, layout):
         """根据状态设置操作按钮"""

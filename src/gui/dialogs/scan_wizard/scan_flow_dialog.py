@@ -62,9 +62,9 @@ class ScanFlowDialog(MessageBoxBase):
         self.template_manager = service_bus.template_manager
         self.user_manager = service_bus.user_manager
         
-        # 实例化扫描器
+        # 实例化扫描器 (注入 link_service 以支持持久化导出)
         all_templates = service_bus.template_service.get_all_templates()
-        self.scanner = SmartScanner(all_templates)
+        self.scanner = SmartScanner(all_templates, link_service=service_bus.link_service)
 
         self.discovered = []
         self.result_cards = {}
@@ -241,6 +241,16 @@ class ScanFlowDialog(MessageBoxBase):
 
     def _on_import_finished(self, count: int):
         """导入完成回调"""
+        from qfluentwidgets import InfoBar
+        if count > 0:
+            InfoBar.success(
+                t("common.success"),
+                f"成功导入 {count} 个连接",
+                duration=3000,
+                position='TopCenter',
+                parent=service_bus.main_window or self.window()
+            )
+        
         self.scan_completed.emit(count)
         # 手动触发表单接受并关闭对话框
         self.accept()

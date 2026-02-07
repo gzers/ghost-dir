@@ -52,8 +52,12 @@ class LinkDAO:
         return False
 
     def delete(self, lid: str) -> bool:
+        return self.delete_batch([lid])
+
+    def delete_batch(self, lids: List[str]) -> bool:
+        if not lids: return False
         data = [l.to_dict() for l in self.get_all()]
-        new_data = [item for item in data if item.get('id') != lid]
+        new_data = [item for item in data if item.get('id') not in lids]
         if len(new_data) < len(data):
             with open(self.config_file, 'w', encoding='utf-8') as f:
                 json.dump(new_data, f, ensure_ascii=False, indent=2)

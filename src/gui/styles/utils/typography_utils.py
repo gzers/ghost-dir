@@ -14,7 +14,8 @@ def get_font_size(size: typing.Union[str, int] = "md") -> int:
     """获取字体大小像素值"""
     if isinstance(size, int):
         return size if size > 0 else 14
-    return typography.FONT_SIZES.get(str(size), 14)
+    val = typography.FONT_SIZES.get(str(size), 14)
+    return val if val > 0 else 14
 
 def get_font_weight(weight: str = "normal") -> int:
     """获取字体粗细数值"""

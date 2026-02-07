@@ -36,9 +36,7 @@ class MainWindow(FluentWindow):
 
         # 保存 app 引用以访问新的 Service 层
         self.app = app
-
-        # TODO: 暂时保留旧的 service_bus,逐步迁移
-        self.user_manager = service_bus.user_manager
+        service_bus.main_window = self  # 注册全局主窗口引用
 
         # 创建视图 (构造函数已适配注入模式)
         self.links_view = LinksView(self)

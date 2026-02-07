@@ -23,6 +23,7 @@ class LinkTable(BaseTableWidget):
         """初始化表格"""
         super().__init__(parent, enable_checkbox=True)
         self.links: List[UserLink] = []
+        self.loading_ids = set() # 正在计算大小的 ID 集合
         self._setup_columns()
 
     def _setup_columns(self):
@@ -61,6 +62,9 @@ class LinkTable(BaseTableWidget):
         self.setRowCount(len(links))
         for row, link in enumerate(links):
             self._create_row(row, link)
+            # 如果该 ID 正在加载列表中，恢复其加载动画
+            if link.id in self.loading_ids:
+                self.set_row_size_loading(row, True)
 
         self.setSortingEnabled(True)
         self.ensure_row_height()
@@ -118,8 +122,7 @@ class LinkTable(BaseTableWidget):
         # 交互逻辑统一化：失效、就绪、断开均视为“待建立”
         to_connect_statues = [
             LinkStatus.DISCONNECTED.value if hasattr(LinkStatus.DISCONNECTED, 'value') else LinkStatus.DISCONNECTED,
-            LinkStatus.READY.value if hasattr(LinkStatus.READY, 'value') else LinkStatus.READY,
-            LinkStatus.INVALID.value if hasattr(LinkStatus.INVALID, 'value') else LinkStatus.INVALID
+            LinkStatus.ERROR.value if hasattr(LinkStatus.ERROR, 'value') else LinkStatus.ERROR
         ]
 
         if status_val in to_connect_statues:
@@ -183,6 +186,11 @@ class LinkTable(BaseTableWidget):
     def set_all_sizes_loading(self):
         """将所有行设置为加载状态"""
         for row in range(self.rowCount()):
+            item = self.item(row, 1)
+            if item:
+                lid = item.data(Qt.ItemDataRole.UserRole)
+                if lid:
+                    self.loading_ids.add(lid)
             self.set_row_size_loading(row, True)
 
     def set_row_size_loading(self, row: int, is_loading: bool):
@@ -194,7 +202,7 @@ class LinkTable(BaseTableWidget):
                 size_item.setText("")
 
             # 2. 插入进度环 (使用标准对齐容器)
-            container = self.create_alignment_container()
+            container = self.create_alignment_container(Qt.AlignmentFlag.AlignCenter)
             ring = IndeterminateProgressRing(container)
             ring.setFixedSize(16, 16)
             ring.setStrokeWidth(2)
@@ -204,10 +212,24 @@ class LinkTable(BaseTableWidget):
             # 清除单元格中的 Widget (ProgressRing)
             self.removeCellWidget(row, 4)
 
-    def show_loading(self, link_id: str, is_loading: bool):
-        """根据 ID 查找行并显示加载状态"""
+    def update_row_size(self, link_id: str, size_text: str):
+        """更新指定行的空间显示，并停止加载动画"""
+        if link_id in self.loading_ids:
+            self.loading_ids.remove(link_id)
+
         for row in range(self.rowCount()):
             item = self.item(row, 1)
             if item and item.data(Qt.ItemDataRole.UserRole) == link_id:
-                self.set_row_size_loading(row, is_loading)
+                # 1. 彻底移除 CellWidget (关键：防止 Widget 遮挡 Item 文字)
+                self.removeCellWidget(row, 4)
+                
+                # 2. 获取或创建 Item
+                size_item = self.item(row, 4)
+                if not size_item:
+                    size_item = QTableWidgetItem()
+                    self.setItem(row, 4, size_item)
+                
+                # 3. 强制刷入文字并设置对齐
+                size_item.setText(size_text)
+                size_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter)
                 break

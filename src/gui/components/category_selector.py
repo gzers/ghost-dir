@@ -344,9 +344,10 @@ class CategorySelector(QWidget):
             self.selected_category_name = display_name
             self.lineEdit.setText(display_name)
 
-            # 设置全路径 Tooltip
-            if category.full_path_name:
-                self.lineEdit.setToolTip(category.full_path_name)
+            # 设置全路径 Tooltip (防御属性缺失)
+            full_path = getattr(category, 'full_path_name', None)
+            if full_path:
+                self.lineEdit.setToolTip(full_path)
             else:
                 self.lineEdit.setToolTip(display_name)
 

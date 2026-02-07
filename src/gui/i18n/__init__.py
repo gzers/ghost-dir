@@ -67,8 +67,8 @@ def get_category_text(category: str) -> str:
         return t("category.uncategorized")
 
     try:
-        from src.common.managers import UserManager
-        cat_mgr = UserManager().category_manager
+        from src.common.service_bus import service_bus
+        cat_mgr = service_bus.category_manager
         cat_node = cat_mgr.get_category_by_id(category)
         if cat_node and cat_node.name:
             return cat_node.name

@@ -7,6 +7,7 @@ import typing
 from typing import List, Optional
 from PySide6.QtWidgets import QSplitter, QWidget, QStackedWidget, QVBoxLayout
 from PySide6.QtCore import Qt
+from PySide6 import QtCore
 from qfluentwidgets import (
     PushButton, ToolButton, FluentIcon as FIF, MessageBox,
     InfoBar, Pivot, SearchLineEdit, PrimaryPushButton,
@@ -158,42 +159,66 @@ class LinksView(BasePageView):
     def _load_data(self, refresh_size: bool = False):
         """加载数据"""
         view_models = self.connection_service.get_all_links(self.current_category_id)
-
-        # 即使数据项目前暂时不支持 ViewModel，但在 View 层通过 DTO 桥接或强制转换适配
-        # 这里演示注入 ViewModel 列表
         self.category_link_table.load_links(view_models)
         self.list_view.load_links(view_models)
 
-        # 触发空间统计 (仅在需要时)
+        # 如果需要彻底刷新（点击同步按钮时）
         if refresh_size and view_models:
-            # 🆕 UI 反馈：通知表格进入加载状态
-            self.category_link_table.set_all_sizes_loading()
-
-            # 🆕 统一使用 TopCenter InfoBar 代替左上角 StateToolTip
-            InfoBar.info(
-                "正在统计",
-                "正在统计空间占用，请稍候...",
-                duration=2000,
-                position='TopCenter',
-                parent=self.window()
-            )
-
-            # 注意：FlatLinkView 也需要这个支持，如果它是基于列表的视图
-            if hasattr(self.list_view, 'table'):
-                self.list_view.table.set_all_sizes_loading()
-            elif hasattr(self.list_view, 'set_all_sizes_loading'):
-                 self.list_view.set_all_sizes_loading()
-
             ids = [vm.id for vm in view_models]
-            self.connection_service.calculate_sizes_async(ids, self._on_size_calculated)
+            
+            # 1. 启动异步状态探测
+            self.connection_service.refresh_status_async(
+                ids,
+                self._on_single_status_refreshed,
+                self._on_all_status_finished
+            )
+            
+            # 2. 只有在状态刷新完成后，流程才会自动衔接到空间统计（或者并发进行）
+            # 为了更好的用户反馈，我们这里先让表格转圈
+            self.category_link_table.set_all_sizes_loading()
+            if hasattr(self.list_view, 'set_all_sizes_loading'):
+                self.list_view.set_all_sizes_loading()
 
-    def _on_size_calculated(self, results: dict):
-        """统计完成回调"""
-        # 显示单次汇总通知
+    @QtCore.Slot(str, object)
+    def _on_single_status_refreshed(self, link_id: str, status: object):
+        """单条状态刷新完成"""
+        # 刷新 UI 上的状态显示
+        # 这里可以直接触发一轮数据重载，或者更精细地更新行状态
+        # 为了稳定性，我们等全部状态刷新完后再统一 reload 一次数据或者由具体 Table 处理
+        pass
+
+    @QtCore.Slot(dict)
+    def _on_all_status_finished(self, results: dict):
+        """状态探测全部完成 -> 接续进行空间统计"""
+        # 再次执行空间统计
+        view_models = self.connection_service.get_all_links(self.current_category_id)
+        ids = [vm.id for vm in view_models]
+        
+        self.connection_service.calculate_sizes_async(
+            ids, 
+            self._on_single_size_calculated,
+            self._on_all_sizes_finished
+        )
+
+    @QtCore.Slot(str, object)
+    def _on_single_size_calculated(self, link_id: str, size: object):
+        """单行统计完成：即时显示到表格"""
+        from src.common.config import format_size
+        size_val = int(size) if size is not None else 0
+        size_text = format_size(size_val) if size_val > 0 else "未计算"
+        
+        # 更新表格 UI
+        self.category_link_table.update_row_size(link_id, size_text)
+        if hasattr(self.list_view, 'update_row_size'):
+            self.list_view.update_row_size(link_id, size_text)
+
+    @QtCore.Slot(dict)
+    def _on_all_sizes_finished(self, results: dict):
+        """全部统计完成：发送单一汇总通知"""
         InfoBar.success(
             "统计完成",
-            "统计更新完成 ✓",
-            duration=2000,
+            f"已完成 {len(results)} 项空间占用统计项目流程图",
+            duration=3000,
             position='TopCenter',
             parent=self.window()
         )
@@ -365,12 +390,16 @@ class LinksView(BasePageView):
     def _on_batch_remove(self):
         checked_ids = self._get_checked_ids()
         if not checked_ids: return
-        if MessageBox("确认移除", f"确定要移除选中的 {len(checked_ids)} 个链接配置吗？", self).exec():
-            operation_runner.run_batch_task_async(
+        
+        # 使用 i18n 文案
+        title = t("links.confirm_remove_title")
+        msg = t("links.confirm_remove_msg", count=len(checked_ids))
+        
+        if MessageBox(title, msg, self).exec():
+            operation_runner.run_task_async(
+                self.user_manager.remove_links,
                 checked_ids,
-                self.user_manager.remove_link,
-                "批量移除配置",
-                lambda lid: f"正在移除: {self.user_manager.get_link_by_id(lid).name}",
+                title=t("links.batch_remove"),
                 parent=self,
                 on_finished=lambda s, m, d: (self._load_data(), self._clear_all_selection())
             )
