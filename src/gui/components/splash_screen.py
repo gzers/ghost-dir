@@ -28,18 +28,53 @@ class AppSplashScreen(SplashScreen):
         if hasattr(self, 'iconLabel'):
             self.iconLabel.hide()
 
-        # 设置无边框并根据主题设置背景
+        # 设置无边框
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
-        bg_color = "#202020" if isDarkTheme() else "#F3F3F3"
-        self.setStyleSheet(f"background-color: {bg_color}; border: none;")
 
         # 3. 构建布局
         icon_path = get_resource_path("assets/icon.png")
         self.__init_layout(str(icon_path))
-
-    def drawContents(self, painter):
-        """禁止基类在该窗口绘制任何内容，由子布局接管"""
-        pass
+        
+        # 4. 样式应用
+        self.update_theme()
+        
+    def update_theme(self):
+        """同步用户配置的主题，刷新背景和文字颜色"""
+        from qfluentwidgets import isDarkTheme
+        from PySide6.QtGui import QPalette, QColor
+        
+        is_dark = isDarkTheme()
+        # 符合 Fluent 设计的底色 (不再使用 Alpha 以免导致渲染黑块)
+        bg_color = QColor(32, 32, 32) if is_dark else QColor(243, 243, 243)
+        text_color = "white" if is_dark else "black"
+        
+        # 1. 彻底解决背景问题：使用 QPalette + AutoFillBackground
+        # 这是 Qt 中最稳健的背景色设置方式，不会干扰子控件绘制
+        palette = self.palette()
+        palette.setColor(QPalette.Window, bg_color)
+        palette.setColor(QPalette.WindowText, QColor(text_color))
+        self.setPalette(palette)
+        self.setAutoFillBackground(True)
+        
+        # 2. 局部样式表：仅作用于根容器和 QLabel，保护 ProgressRing 不被干扰
+        self.setStyleSheet(f"""
+            AppSplashScreen {{
+                background-color: {bg_color.name()};
+                border: none;
+            }}
+            QLabel {{
+                color: {text_color};
+                background: transparent;
+            }}
+        """)
+        
+        # 3. 进度条颜色适配 (强制强调色，确保可见)
+        if hasattr(self, 'progress_ring'):
+            # 尝试获取主题主色，如果失败则使用显眼的蓝绿色
+            from qfluentwidgets import themeColor
+            self.progress_ring.setCustomBarColor(themeColor(), themeColor())
+            self.progress_ring.raise_()
+            self.progress_ring.show()
 
     def __init_layout(self, icon_path):
         """初始化 UI 布局"""
@@ -60,11 +95,12 @@ class AppSplashScreen(SplashScreen):
         self.title_label.setAlignment(Qt.AlignCenter)
         self.v_layout.addWidget(self.title_label)
 
-        self.v_layout.addSpacing(10)
+        self.v_layout.addSpacing(20)
 
         # 加载动画 (圆环进度条)
         self.progress_ring = IndeterminateProgressRing(self)
-        self.progress_ring.setFixedSize(48, 48)
+        self.progress_ring.setFixedSize(60, 60)
+        self.progress_ring.setStrokeWidth(5) # 强化线条
         self.v_layout.addWidget(self.progress_ring, 0, Qt.AlignCenter)
 
         self.v_layout.addStretch(1)

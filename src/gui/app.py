@@ -1,34 +1,8 @@
-"""
-主应用程序类
-"""
-import sys
-import os
-import time
-import ctypes
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QIcon
-from qfluentwidgets import (setTheme, Theme, setThemeColor, SystemThemeListener, setFontFamilies,
-                            MessageBox, isDarkTheme, TitleLabel, SubtitleLabel,
-                            CaptionLabel, IndeterminateProgressBar)
-from src.common.signals import signal_bus
+
+# 核心信息导入（轻量）
 from src.common.config import APP_NAME, APP_VERSION
-from src.gui.i18n import t
-
-# 新架构: Drivers 层
-from src.drivers.transaction import check_crash_recovery, recover_from_crash
-
-# 新架构: DAO 层
-from src.dao import TemplateDAO, LinkDAO, CategoryDAO
-
-# 新架构: Services 层
-from src.services import TemplateService, LinkService, CategoryService
-from src.common.service_bus import service_bus
-
-
-from src.common.resource_loader import get_resource_path
-import src.gui.common.notification  # 注册自定义置顶居中通知管理器
-
 
 class GhostDirApp(QApplication):
     """Ghost-Dir 主应用程序"""
@@ -37,25 +11,28 @@ class GhostDirApp(QApplication):
         """初始化应用程序"""
         super().__init__(argv)
 
-        # 初始化 Service 层 (依赖注入)
+        # 1. 立即执行 Service 初始化 (采用按需导入)
         self._init_services()
 
-        # 设置 AppUserModelID 以修复任务栏图标丢失问题
+        # 2. 设置 AppUserModelID
         try:
-            myappid = 'ghost-dir.app.1.0'  # 任意唯一字符串
+            import ctypes
+            myappid = 'ghost-dir.app.1.0'
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
         except Exception:
             pass
 
-        # 设置应用程序信息
+        # 3. 设置应用程序信息
         self.setApplicationName(APP_NAME)
         self.setApplicationVersion(APP_VERSION)
         self.setOrganizationName("Ghost-Dir Team")
 
-        # 字体标准化（QFluentWidgets 标准）
+        # 4. 样式与图标（延迟导入）
+        from qfluentwidgets import setFontFamilies
         setFontFamilies(['Segoe UI', 'Microsoft YaHei', 'PingFang SC'])
 
-        #设置应用图标
+        from PySide6.QtGui import QIcon
+        from src.common.resource_loader import get_resource_path
         try:
             icon_path = get_resource_path("assets/icon.png")
             self.setWindowIcon(QIcon(str(icon_path)))
@@ -66,17 +43,27 @@ class GhostDirApp(QApplication):
         self.setAttribute(Qt.ApplicationAttribute.AA_EnableHighDpiScaling)
         self.setAttribute(Qt.ApplicationAttribute.AA_UseHighDpiPixmaps)
 
+        # 5. 主题系统（延迟导入）
+        self._init_theme_system()
+
+    def _init_theme_system(self):
+        """初始化主题系统，避免顶部导入阻塞"""
+        from src.common.signals import signal_bus
+        from qfluentwidgets import SystemThemeListener
+
         # 连接主题变更信号
         signal_bus.theme_changed.connect(self._apply_theme)
         signal_bus.theme_color_changed.connect(self._apply_theme_color)
 
-        # 系统主题监听器（用于跟随系统主题）
+        # 系统主题监听器
         self.system_theme_listener = SystemThemeListener(self)
-        # 连接系统主题变更信号
         self.system_theme_listener.systemThemeChanged.connect(self._on_system_theme_changed)
 
     def _init_services(self):
-        """初始化 Service 层 (新架构)"""
+        """初始化 Service 层 (按需导入，彻底阻断级联加载)"""
+        from src.dao import TemplateDAO, LinkDAO, CategoryDAO
+        from src.services import TemplateService, LinkService, CategoryService
+
         # 1. 初始化 DAO 层
         self.template_dao = TemplateDAO()
         self.link_dao = LinkDAO()
@@ -91,6 +78,7 @@ class GhostDirApp(QApplication):
 
     def _apply_theme(self, theme: str):
         """应用主题设置"""
+        from qfluentwidgets import setTheme, Theme
         try:
             theme_map = {
                 "system": Theme.AUTO,
@@ -98,48 +86,44 @@ class GhostDirApp(QApplication):
                 "dark": Theme.DARK
             }
             setTheme(theme_map.get(theme, Theme.AUTO))
-
-            # 主题切换完成后处理
             self._onThemeChangedFinished()
         except Exception as e:
             print(f"应用主题失败: {e}")
 
-    def _on_system_theme_changed(self, theme: Theme):
+    def _on_system_theme_changed(self, theme):
         """系统主题变化回调"""
-        # 触发自定义信号以通知其他组件
+        from src.common.signals import signal_bus
         signal_bus.theme_changed.emit("system")
 
     def _onThemeChangedFinished(self):
         """主题切换完成后的处理"""
-        # 刷新窗口云母特效（如果有主窗口实例）
         from PySide6.QtCore import QTimer
         QTimer.singleShot(200, self._refresh_mica_effect)
 
     def _refresh_mica_effect(self):
         """刷新窗口云母特效"""
-        # 获取主窗口并刷新特效
         window = self.topLevelWidgets()[0] if self.topLevelWidgets() else None
         if window and hasattr(window, '_init_window_effect'):
             window._init_window_effect()
 
     def _apply_theme_color(self, color: str):
         """应用主题色"""
+        from qfluentwidgets import setThemeColor
         target_color = color
         if color == "system":
-            # 使用 qframelesswindow 的 getSystemAccentColor 获取系统强调色
             try:
                 from qframelesswindow.utils import getSystemAccentColor
                 target_color = getSystemAccentColor()
-            except (ImportError, Exception) as e:
-                # 如果获取失败，使用默认的 Teal 颜色
+            except Exception:
                 target_color = "#009FAA"
-                print(f"获取系统强调色失败，使用默认颜色: {e}")
-
         setThemeColor(target_color)
 
     def _startup_checks(self, splash=None):
         """启动时的安全检查"""
-        # 检查崩溃恢复
+        from src.drivers.transaction import check_crash_recovery, recover_from_crash
+        from qfluentwidgets import MessageBox
+        from src.gui.i18n import t
+
         if splash:
             splash.set_message(t("app.splash_check_data"))
             self.processEvents()
@@ -164,57 +148,68 @@ class GhostDirApp(QApplication):
 
 
 def run_app():
-    """运行应用程序"""
+    """运行应用程序 (三段式隔离启动)"""
+    import sys
+    
+    # --- PHASE 1: 毫秒级首屏 (不加载任何业务逻辑) ---
     app = GhostDirApp(sys.argv)
-
-    # TODO: 暂时使用旧的 config_service,后续迁移到新架构
-    # TODO: 通过 app 实例访问 Service
-    config_service = service_bus.config_service
-
-    # 应用主题设置
-    app._apply_theme(config_service.get_theme())
-    app._apply_theme_color(config_service.get_config("theme_color", "system"))
-
-    # ========== 创建高级启动界面 ==========
+    
+    # 局部导入启动组件
     from src.gui.components.splash_screen import AppSplashScreen
-
     splash = AppSplashScreen()
     splash.show()
-
-    # 多次刷新事件循环，确保动画启动
-    for _ in range(20):
-        app.processEvents()
-
-    # 执行启动检查（在启动页背景下执行）
-    splash.set_message(t("app.splash_check_data"))
-    app.processEvents()
-    app._startup_checks(splash)
-    app.processEvents()
-
-    # 导入并创建主窗口（耗时操作）
-    splash.set_message(t("app.splash_loading_main"))
-    app.processEvents()
     
-    from .windows.main_window import MainWindow
-    window = MainWindow(app)
-    
-    # [关键修复] 窗口平滑交接逻辑
-    # 1. 先确保主窗口已经完全加载并初步渲染
-    app.processEvents()
-    
-    # 2. 先隐藏启动页，防止其 FramelessWindowHint 干扰主窗口的几何形状
-    splash.close() 
-    app.processEvents()
-    
-    # 3. 显式设置主窗口尺寸并强制触发布局更新
-    window.resize(1200, 800)
-    window.show()
-    
-    # 4. 强制刷新一次事件循环，解决渲染卡死/残留问题
+    # 释放 CPU 确保启动页第一时间绘制，循环 5 次以确保动画圆环开始旋转
     for _ in range(5):
         app.processEvents()
 
+    # --- PHASE 2: 核心配置载入 (启动页背景下执行) ---
+    from src.common.service_bus import service_bus
+    from src.gui.i18n import t
+    
+    config_service = service_bus.config_service
+    app.processEvents()
+
+    # 应用视觉主题
+    splash.set_message(t("app.splash_check_data"))
+    for _ in range(5):
+        app.processEvents()
+    
+    app._apply_theme(config_service.get_theme())
+    app._apply_theme_color(config_service.get_config("theme_color", "system"))
+    
+    # 配置载入后立即同步启动页背景色
+    splash.update_theme()
+    for _ in range(5):
+        app.processEvents()
+
+    # --- PHASE 3: 业务层初始化与主窗口载入 ---
+    app._startup_checks(splash)
+    for _ in range(5):
+        app.processEvents()
+
+    # [核心增强] 在导入重型模块前，注入 Pulse Drive（脉冲驱动）
+    # 给予 CPU 时间切片来处理动画定时器，确保圆环进入高频旋转状态
+    splash.set_message(t("app.splash_loading_main"))
+    import time
+    for _ in range(30):
+        app.processEvents()
+        time.sleep(0.01) # 10ms 物理延迟，强制让动画步进完成初次同步
+    
+    from src.gui.windows.main_window import MainWindow
+    window = MainWindow(app)
+    app.processEvents()
+    
+    # 平滑切换
+    app.processEvents()
+    splash.close() 
+    app.processEvents()
+    
+    window.resize(1200, 800)
+    window.show()
+    
+    # 最终渲染刷新
+    for _ in range(3):
+        app.processEvents()
+
     sys.exit(app.exec())
-
-
-
