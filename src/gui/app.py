@@ -198,18 +198,29 @@ def run_app():
     
     from src.gui.windows.main_window import MainWindow
     window = MainWindow(app)
-    app.processEvents()
     
-    # 平滑切换
-    app.processEvents()
-    splash.close() 
-    app.processEvents()
-    
-    window.resize(1200, 800)
+    # [核心修复] 先确保窗口标志位正确，允许焦点抢占
+    window.setWindowFlags(window.windowFlags() | Qt.WindowStaysOnTopHint)
     window.show()
     
-    # 最终渲染刷新
-    for _ in range(3):
+    # 暴力提升层级并唤醒焦点 (解决主界面由于卡顿掉入后台的问题)
+    window.raise_()
+    window.activateWindow()
+    app.processEvents()
+    
+    # 释放启动页 (修正：部分版本 SplashScreen.finish 不接受参数)
+    splash.finish()
+    
+    # [再次加固] 移除置顶标志（否则窗口会一直置顶挡住别人），并再次索要焦点
+    # 这是一个经典的 Qt/Windows 焦点夺回 Trick
+    window.setWindowFlags(window.windowFlags() & ~Qt.WindowStaysOnTopHint)
+    window.show() # 刷新 Flags
+    window.resize(1200, 800) # [关键修正] 标志位切换后必须重设尺寸
+    window.raise_()
+    window.activateWindow()
+
+    # 最终渲染刷新，确保主窗口首页组件加载完成
+    for _ in range(10):
         app.processEvents()
 
     sys.exit(app.exec())
