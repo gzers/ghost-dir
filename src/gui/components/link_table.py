@@ -255,10 +255,19 @@ class LinkTable(BaseTableWidget):
             ring = IndeterminateProgressRing(container)
             ring.setFixedSize(16, 16)
             ring.setStrokeWidth(2)
+            ring.start()  # 【关键】启动动画
             container.layout().addWidget(ring)
             self.setCellWidget(row, 4, container)
         else:
-            # 清除单元格中的 Widget (ProgressRing)
+            # 【关键】停止并移除 ProgressRing
+            old_widget = self.cellWidget(row, 4)
+            if old_widget:
+                # 找到 ProgressRing 并停止动画
+                ring = old_widget.findChild(IndeterminateProgressRing)
+                if ring:
+                    ring.stop()
+                old_widget.setParent(None)
+                old_widget.deleteLater()
             self.removeCellWidget(row, 4)
 
     def update_row_size(self, link_id: str, size_text: str):
@@ -273,6 +282,10 @@ class LinkTable(BaseTableWidget):
                 # 1. 物理移除并销毁 ProgressRing (关键修复)
                 old_widget = self.cellWidget(row, 4)
                 if old_widget:
+                    # 【关键】找到并停止动画
+                    ring = old_widget.findChild(IndeterminateProgressRing)
+                    if ring:
+                        ring.stop()
                     old_widget.setParent(None)
                     old_widget.deleteLater()
                 self.removeCellWidget(row, 4)

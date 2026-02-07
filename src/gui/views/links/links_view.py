@@ -167,27 +167,28 @@ class LinksView(BasePageView):
         if refresh_size and view_models:
             ids = [vm.id for vm in view_models]
             
-            # 1. 启动异步状态探测 (立即开始，完成后仅更新状态列)
-            self.connection_service.refresh_status_async(
-                ids,
-                self._on_single_status_refreshed,
-                None # 状态探测完成不需要触发后续动作，因为它已并行启动
-            )
-            
-            # 2. 启动异步空间统计 (立即开始，不再等待状态探测)
-            self.connection_service.calculate_sizes_async(
-                ids, 
-                self._on_single_size_calculated,
-                self._on_all_sizes_finished
-            )
-            
-            # 3. 同步启动视觉加载反馈
+            # 【关键修复】先设置加载动画，再启动异步任务
+            # 1. 同步启动视觉加载反馈（必须在异步任务前）
             self.category_link_table.set_all_status_loading()
             self.category_link_table.set_all_sizes_loading()
             if hasattr(self.list_view, 'set_all_status_loading'):
                 self.list_view.set_all_status_loading()
             if hasattr(self.list_view, 'set_all_sizes_loading'):
                 self.list_view.set_all_sizes_loading()
+            
+            # 2. 启动异步状态探测（在动画设置后）
+            self.connection_service.refresh_status_async(
+                ids,
+                self._on_single_status_refreshed,
+                None  # 状态探测完成不需要触发后续动作
+            )
+            
+            # 3. 启动异步空间统计（在动画设置后）
+            self.connection_service.calculate_sizes_async(
+                ids, 
+                self._on_single_size_calculated,
+                self._on_all_sizes_finished
+            )
 
     # --- 专题优化：UI 节流更新逻辑 ---
     def _init_throttling(self):
@@ -215,7 +216,9 @@ class LinksView(BasePageView):
 
         # 执行批量 UI 刷新
         from src.common.config import format_size
+        print(f"[DEBUG LinksView] Processing {len(status_updates)} status updates")
         for lid, status in status_updates.items():
+            print(f"[DEBUG LinksView] Updating status for {lid}: {status}")
             self.category_link_table.update_row_status(lid, status)
             if hasattr(self.list_view, 'update_row_status'):
                 self.list_view.update_row_status(lid, status)
@@ -235,6 +238,7 @@ class LinksView(BasePageView):
     @QtCore.Slot(str, object)
     def _on_single_status_refreshed(self, link_id: str, status: object):
         """单条状态刷新完成 - 入队节流"""
+        print(f"[DEBUG LinksView] _on_single_status_refreshed: link_id={link_id}, status={status}")
         self._update_queue.append(('status', link_id, status))
 
     @QtCore.Slot(str, object)

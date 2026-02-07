@@ -97,34 +97,62 @@ class ServiceWorker(QObject):
         self.all_finished.emit(results)
 
     def detect_status(self, link_ids: List[str], dao: LinkDAO):
-        """[专题重组] 并发状态探测"""
+        print(f"[DEBUG ServiceWorker] detect_status called with {len(link_ids)} link_ids")
+        self.is_aborted = False  # 重置中止标志
         results = {}
         all_links = dao.get_all()
         link_map = {l.id: l for l in all_links}
+        aborted = self.is_aborted  # 缓存到本地变量，避免线程中访问 self
 
         def _get_status(lid):
-            if self.is_aborted: return lid, LinkStatus.DISCONNECTED
+            print(f"[DEBUG ServiceWorker] _get_status called for {lid}")
+            print(f"[DEBUG ServiceWorker] Checking is_aborted")
+            if aborted: return lid, LinkStatus.DISCONNECTED
+            print(f"[DEBUG ServiceWorker] Getting link from link_map")
             link = link_map.get(lid)
+            print(f"[DEBUG ServiceWorker] Got link: {link is not None}")
             if not link: return lid, LinkStatus.INVALID
-            return lid, self._check_single_link(link)
+            print(f"[DEBUG ServiceWorker] Calling _check_single_link")
+            result = lid, ServiceWorker._check_single_link(link)
+            print(f"[DEBUG ServiceWorker] _get_status returning {result}")
+            return result
 
+        print(f"[DEBUG ServiceWorker] Creating ThreadPoolExecutor with {min(len(link_ids), 16)} workers")
         with concurrent.futures.ThreadPoolExecutor(max_workers=min(len(link_ids), 16)) as executor:
             future_to_id = {executor.submit(_get_status, lid): lid for lid in link_ids}
+            print(f"[DEBUG ServiceWorker] Submitted {len(future_to_id)} tasks")
+            print(f"[DEBUG ServiceWorker] Waiting for tasks to complete...")
             for future in concurrent.futures.as_completed(future_to_id):
-                if self.is_aborted: break
-                lid, status = future.result()
-                results[lid] = status
-                
-                link = link_map.get(lid)
-                if link and status != link.status:
-                    link.status = status
-                    dao.update(link)
-                self.item_finished.emit(lid, status)
+                print(f"[DEBUG ServiceWorker] Got completed future")
+                if aborted: 
+                    print(f"[DEBUG ServiceWorker] Aborted, breaking loop")
+                    break
+                try:
+                    print(f"[DEBUG ServiceWorker] Calling future.result()")
+                    result = future.result()
+                    print(f"[DEBUG ServiceWorker] future.result() returned: {result}")
+                    lid, status = result
+                    results[lid] = status
+                    
+                    link = link_map.get(lid)
+                    if link and status != link.status:
+                        link.status = status
+                        dao.update(link)
+                    print(f"[DEBUG ServiceWorker] Emitting item_finished for {lid}: {status}")
+                    self.item_finished.emit(lid, status)
+                except Exception as e:
+                    print(f"[DEBUG ServiceWorker] ERROR processing {future_to_id.get(future, 'UNKNOWN')}: {e}")
+                    import traceback
+                    traceback.print_exc()
 
+        print(f"[DEBUG ServiceWorker] detect_status completed, processed {len(results)} links")
         self.all_finished.emit(results)
 
-    def _check_single_link(self, link: UserLink) -> LinkStatus:
+    @staticmethod
+    def _check_single_link(link: UserLink) -> LinkStatus:
+        print(f"[DEBUG ServiceWorker] _check_single_link called for {link.id}")
         src = link.source_path
+        print(f"[DEBUG ServiceWorker] Checking source path: {src}")
         def get_real_path(path):
             if not os.path.exists(path): return None
             try:
@@ -142,19 +170,15 @@ class ServiceWorker(QObject):
         src_attrs = get_attrs(src)
         FILE_ATTRIBUTE_REPARSE_POINT = 0x400
         if not os.path.exists(src):
-            link.resolve_path = None
             return LinkStatus.INVALID
         if src_attrs != -1 and (src_attrs & FILE_ATTRIBUTE_REPARSE_POINT):
             real_target = get_real_path(src)
-            link.resolve_path = real_target
             if real_target and os.path.exists(real_target):
                 return LinkStatus.CONNECTED
             return LinkStatus.INVALID
         dst = link.target_path
         if not os.path.exists(dst):
-            link.resolve_path = None
             return LinkStatus.READY
-        link.resolve_path = None
         return LinkStatus.ERROR
 
 class LinkService:

@@ -93,22 +93,33 @@ class FlatLinkView(QListWidget):
             item = self.item(i)
             widget = self.itemWidget(item)
             if isinstance(widget, LinkItemWidget) and widget.link.id == link_id:
+                widget.set_status_loading(False)  # 【关键】先停止加载动画
                 widget.update_status(status)
                 break
 
     def update_row_size(self, link_id: str, size_text: str):
         """更新单行大小"""
+        print(f"[DEBUG FlatLinkView] update_row_size called: link_id={link_id}, size_text={size_text}")
+        print(f"[DEBUG FlatLinkView] Total items in list: {self.count()}")
+        
         if link_id in self.loading_ids:
             self.loading_ids.remove(link_id)
         
+        found = False
         for i in range(self.count()):
             item = self.item(i)
             widget = self.itemWidget(item)
-            if isinstance(widget, LinkItemWidget) and widget.link.id == link_id:
-                widget.set_size_loading(False)
-                # 刷新路径标签处的占用提示
-                widget.update_size_info(size_text)
-                break
+            if isinstance(widget, LinkItemWidget):
+                print(f"[DEBUG FlatLinkView] Item {i}: widget.link.id={widget.link.id}, match={widget.link.id == link_id}")
+                if widget.link.id == link_id:
+                    found = True
+                    print(f"[DEBUG FlatLinkView] Found match at index {i}, calling update_size_info")
+                    widget.set_size_loading(False)
+                    widget.update_size_info(size_text)
+                    break
+        
+        if not found:
+            print(f"[DEBUG FlatLinkView] WARNING: No widget found for link_id={link_id}")
 
     def clear_selection(self):
         """清除选择"""
@@ -208,6 +219,7 @@ class LinkItemWidget(QWidget):
         self.size_loading_ring = IndeterminateProgressRing(self.size_container)
         self.size_loading_ring.setFixedSize(14, 14)
         self.size_loading_ring.setStrokeWidth(2)
+        self.size_loading_ring.stop()  # 【关键】初始化时停止动画
         
         size_layout.addWidget(self.size_label)
         size_layout.addWidget(self.size_loading_ring)
@@ -225,6 +237,7 @@ class LinkItemWidget(QWidget):
         self.status_loading_ring = IndeterminateProgressRing(self)
         self.status_loading_ring.setFixedSize(16, 16)
         self.status_loading_ring.setStrokeWidth(2)
+        self.status_loading_ring.stop()  # 【关键】初始化时停止动画
         self.status_loading_ring.setVisible(False)
         layout.addWidget(self.status_loading_ring)
 
@@ -238,38 +251,63 @@ class LinkItemWidget(QWidget):
 
     def set_size_loading(self, is_loading: bool):
         """切换空间计算加载状态"""
-        self.size_container.setVisible(True)
-        self.size_loading_ring.setVisible(is_loading)
         if is_loading:
-            self.size_label.setVisible(False)
+            self.size_container.setVisible(True)
+            self.size_label.setVisible(False)  # 加载时隐藏数值
+            self.size_loading_ring.start()  # 【关键】启动动画
+            self.size_loading_ring.setVisible(True)
         else:
-            # 只有在非加载状态下且没有数值时才隐藏容器
-            if not self.size_label.text():
-                self.size_container.setVisible(False)
+            # 停止加载时只停止圆圈，不要隐藏 label（由 update_size_info 控制）
+            self.size_loading_ring.stop()  # 【关键】停止动画
+            self.size_loading_ring.setVisible(False)
 
     def set_status_loading(self, is_loading: bool):
         """切换状态探测加载状态"""
-        self.status_loading_ring.setVisible(is_loading)
         if is_loading:
-            self.status_badge.setVisible(False)
+            self.status_loading_ring.start()  # 【关键】启动动画
+            self.status_loading_ring.setVisible(True)
+            self.status_badge.setVisible(False)  # 加载时隐藏徽章
         else:
-            self.status_badge.setVisible(True)
+            # 停止加载时只停止圆圈，不要显示 badge（由 update_status 控制）
+            self.status_loading_ring.stop()  # 【关键】停止动画
+            self.status_loading_ring.setVisible(False)
 
     def update_status(self, status: LinkStatus):
         """更新并显示状态"""
+        print(f"[DEBUG] update_status called for {self.link.name}, status={status}")
+        print(f"[DEBUG] Before stop: status_ring visible={self.status_loading_ring.isVisible()}")
+        
+        # 【强制修复】彻底停止并隐藏加载圆圈
+        self.status_loading_ring.stop()
         self.status_loading_ring.setVisible(False)
+        self.status_loading_ring.hide()  # 额外调用 hide()
+        
+        # 更新并显示状态徽章
         self.status_badge.update_status(status)
         self.status_badge.setVisible(True)
+        self.status_badge.show()  # 额外调用 show()
+        
+        print(f"[DEBUG] After stop: status_ring visible={self.status_loading_ring.isVisible()}, badge visible={self.status_badge.isVisible()}")
 
     def update_size_info(self, size_text: str):
-        """[核心修复] 原子化更新空间信息：先清理圆圈，再显现文字"""
-        # 1. 强制隐匿加载圆圈
+        """[终极修复] 彻底停止动画并显示数值"""
+        print(f"[DEBUG] update_size_info called for {self.link.name}, size_text={size_text}")
+        print(f"[DEBUG] Before stop: ring visible={self.size_loading_ring.isVisible()}")
+        
+        # 1. 【关键】停止动画
+        self.size_loading_ring.stop()
         self.size_loading_ring.setVisible(False)
-        # 2. 设置新文案
+        
+        print(f"[DEBUG] After stop: ring visible={self.size_loading_ring.isVisible()}")
+        
+        # 2. 设置并显示数值
         self.size_label.setText(size_text)
-        # 3. 驱动容器与标签显现
         self.size_label.setVisible(True)
+        
+        # 4. 最后重新显示容器（此时只有数值可见）
         self.size_container.setVisible(True)
+        
+        print(f"[DEBUG] Final: label visible={self.size_label.isVisible()}, label text={self.size_label.text()}")
 
     def setup_actions(self, layout):
         """根据状态设置操作按钮"""
