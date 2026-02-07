@@ -11,42 +11,42 @@ from qfluentwidgets import (
 )
 
 from src.gui.views.wizard.widgets.scan_result_card import ScanResultCard
-# TODO: SmartScanner 尚未实现，暂时注释掉
-# from src.core.services.scan_service import SmartScanner
+from src.services.scan_service import SmartScanner
 from src.common.service_bus import service_bus
 
 from src.gui.i18n import t, get_category_text
-# TODO: 通过 app 实例访问 Service
 from src.gui.styles import apply_font_style
 
 
-# TODO: SmartScanner 尚未实现，暂时注释掉相关类
-# class ScanWorker(QThread):
-#     """扫描工作线程"""
-#     finished = Signal(list)  # discovered templates
-#
-#     def __init__(self, scanner: SmartScanner):
-#         super().__init__()
-#         self.scanner = scanner
-#
-#     def run(self):
-#         """执行扫描"""
-#         discovered = self.scanner.scan()
-#         self.finished.emit(discovered)
+class ScanWorker(QThread):
+    """扫描工作线程"""
+    finished = Signal(list)  # discovered templates
+    progress = Signal(str)    # current scanning path
+
+    def __init__(self, scanner: SmartScanner):
+        super().__init__()
+        self.scanner = scanner
+        # 绑定扫描器的进度回调到我们的信号
+        self.scanner.set_progress_callback(self.progress.emit)
+
+    def run(self):
+        """执行扫描"""
+        discovered = self.scanner.scan()
+        self.finished.emit(discovered)
 
 
-# class ImportWorker(QThread):
-#     """导入工作线程"""
-#     finished = Signal(int)
-#
-#     def __init__(self, scanner: SmartScanner, templates: List):
-#         super().__init__()
-#         self.scanner = scanner
-#         self.templates = templates
-#
-#     def run(self):
-#         count = self.scanner.import_templates(self.templates)
-#         self.finished.emit(count)
+class ImportWorker(QThread):
+    """导入工作线程"""
+    finished = Signal(int)
+
+    def __init__(self, scanner: SmartScanner, templates: List):
+        super().__init__()
+        self.scanner = scanner
+        self.templates = templates
+
+    def run(self):
+        count = self.scanner.import_templates(self.templates)
+        self.finished.emit(count)
 
 
 class ScanFlowDialog(MessageBoxBase):
@@ -70,9 +70,7 @@ class ScanFlowDialog(MessageBoxBase):
 
         self.setWindowTitle("智能扫描")
         self._init_ui()
-
-        # TODO: SmartScanner 尚未实现，暂时不启动扫描
-        # self._start_scan()
+        self._start_scan()
 
     def _init_ui(self):
         """初始化 UI 结构"""
@@ -87,14 +85,18 @@ class ScanFlowDialog(MessageBoxBase):
         loading_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.loading_title = SubtitleLabel("正在扫描本机应用...")
-        self.progress_bar = IndeterminateProgressBar()
-        self.progress_bar.setFixedWidth(400)
-        self.loading_status = BodyLabel("正在深度检查磁盘，请稍候...")
-        apply_font_style(self.loading_status, color="secondary")
+        self.scanProgressBar = IndeterminateProgressBar(self)
+        self.scanProgressBar.setFixedWidth(260)
+        
+        self.statusLabel = BodyLabel('正在深度检查磁盘，请稍候...', self)
+        self.statusLabel.setAlignment(Qt.AlignCenter)
+        apply_font_style(self.statusLabel, size=11, color='secondary')
+        self.statusLabel.setWordWrap(True)
+        self.statusLabel.setFixedWidth(400)
 
         loading_layout.addWidget(self.loading_title)
-        loading_layout.addWidget(self.progress_bar)
-        loading_layout.addWidget(self.loading_status)
+        loading_layout.addWidget(self.scanProgressBar)
+        loading_layout.addWidget(self.statusLabel)
 
         # --- 阶段 2：结果展示 UI ---
         self.result_overlay = QWidget()
@@ -169,9 +171,14 @@ class ScanFlowDialog(MessageBoxBase):
             return
 
         self.stack.setCurrentIndex(0)
-        # self.worker = ScanWorker(self.scanner)
-        # self.worker.finished.connect(self._on_scan_finished)
-        # self.worker.start()
+        # 创建执行器
+        all_templates = service_bus.template_service.get_all_templates()
+        self.scanner = SmartScanner(all_templates)
+        
+        self.scanWorker = ScanWorker(self.scanner)
+        self.scanWorker.finished.connect(self._on_scan_finished)
+        self.scanWorker.progress.connect(self.statusLabel.setText)
+        self.scanWorker.start()
 
     def _on_scan_finished(self, discovered):
         """扫描完成，转换 UI 阶段"""

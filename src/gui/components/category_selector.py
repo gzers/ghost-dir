@@ -156,8 +156,7 @@ class CategoryTreeDropdown(QFrame):
         self.category_items[category.id] = item
 
         # 检查是否可选择
-        all_categories = list(self.category_manager.categories.values())
-        is_leaf = category.is_leaf(all_categories)
+        is_leaf = self.category_manager.is_leaf(category.id)
 
         # 提取或补全全路径信息用于 Tooltip
         full_path_name = getattr(category, 'full_path_name', "") or display_name
