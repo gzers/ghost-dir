@@ -164,51 +164,49 @@ def run_app():
         app.processEvents()
 
     # --- PHASE 2: 核心配置载入 (启动页背景下执行) ---
+    # PHASE 2: 核心配置载入
+    splash.set_message("正在连接服务总线...")
     from src.common.service_bus import service_bus
     from src.gui.i18n import t
-    
     config_service = service_bus.config_service
     app.processEvents()
 
-    # 应用视觉主题
-    splash.set_message(t("app.splash_check_data"))
-    for _ in range(5):
-        app.processEvents()
-    
+    splash.set_message("正在校验用户偏好设置...")
     app._apply_theme(config_service.get_theme())
     app._apply_theme_color(config_service.get_config("theme_color", "system"))
     
-    # 配置载入后立即同步启动页背景色
+    splash.set_message("正在同步视觉主题...")
     splash.update_theme()
     for _ in range(5):
         app.processEvents()
 
-    # --- PHASE 3: 业务层初始化与主窗口载入 ---
+    # PHASE 3: 业务层初始化与主窗口载入
+    splash.set_message("正在进行环境安全检查...")
     app._startup_checks(splash)
     for _ in range(5):
         app.processEvents()
 
-    # [核心增强] 在导入重型模块前，注入 Pulse Drive（脉冲驱动）
-    # 给予 CPU 时间切片来处理动画定时器，确保圆环进入高频旋转状态
-    splash.set_message(t("app.splash_loading_main"))
+    splash.set_message("正在加载图形渲染引擎...")
     import time
-    for _ in range(30):
+    for _ in range(15):
         app.processEvents()
-        time.sleep(0.01) # 10ms 物理延迟，强制让动画步进完成初次同步
-    
+        time.sleep(0.005)
+
+    splash.set_message("正在构建主程序视图...")
     from src.gui.windows.main_window import MainWindow
     window = MainWindow(app)
     
+    splash.set_message("正在唤醒核心组件...")
     # [核心修复] 先确保窗口标志位正确，允许焦点抢占
     window.setWindowFlags(window.windowFlags() | Qt.WindowStaysOnTopHint)
     window.show()
     
-    # 暴力提升层级并唤醒焦点 (解决主界面由于卡顿掉入后台的问题)
+    # 暴力提升层级并唤醒焦点
     window.raise_()
     window.activateWindow()
     app.processEvents()
     
-    # 释放启动页 (修正：部分版本 SplashScreen.finish 不接受参数)
+    splash.set_message("准备就绪")
     splash.finish()
     
     # [再次加固] 移除置顶标志（否则窗口会一直置顶挡住别人），并再次索要焦点

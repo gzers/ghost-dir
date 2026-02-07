@@ -144,12 +144,12 @@ class MainWindow(FluentWindow):
     def _replace_placeholder_with_view(self, key: str, view: QWidget):
         """将导航栏中的占位符无感替换为真实业务视图"""
         # 获取堆栈窗口中对应的 ObjectName
-        for i in range(self.stackWidget.count()):
-            widget = self.stackWidget.widget(i)
+        for i in range(self.stackedWidget.count()):
+            widget = self.stackedWidget.widget(i)
             if widget.objectName() == f"placeholder_{key}":
                 # 替换 widget
-                self.stackWidget.removeWidget(widget)
-                self.stackWidget.insertWidget(i, view)
+                self.stackedWidget.removeWidget(widget)
+                self.stackedWidget.insertWidget(i, view)
                 widget.deleteLater()
                 break
 
