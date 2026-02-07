@@ -270,16 +270,22 @@ class LinkTable(BaseTableWidget):
         for row in range(self.rowCount()):
             item = self.item(row, 1)
             if item and item.data(Qt.ItemDataRole.UserRole) == link_id:
-                # 1. 彻底移除 CellWidget (关键：防止 Widget 遮挡 Item 文字)
+                # 1. 物理移除并销毁 ProgressRing (关键修复)
+                old_widget = self.cellWidget(row, 4)
+                if old_widget:
+                    old_widget.setParent(None)
+                    old_widget.deleteLater()
                 self.removeCellWidget(row, 4)
                 
-                # 2. 获取或创建 Item
+                # 2. 补置数据项并同步
                 size_item = self.item(row, 4)
                 if not size_item:
                     size_item = QTableWidgetItem()
                     self.setItem(row, 4, size_item)
                 
-                # 3. 强制刷入文字并设置对齐
                 size_item.setText(size_text)
                 size_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter)
+                
+                # 3. 立即重绘该单元格
+                self.viewport().update()
                 break

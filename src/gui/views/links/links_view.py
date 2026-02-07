@@ -49,6 +49,7 @@ class LinksView(BasePageView):
         self._setup_toolbar()
         self._setup_content()
         self._connect_signals()
+        self._init_throttling()
 
         # 初始化视图状态
         default_view = self.config_service.get_config("default_link_view", "list")
@@ -188,25 +189,58 @@ class LinksView(BasePageView):
             if hasattr(self.list_view, 'set_all_sizes_loading'):
                 self.list_view.set_all_sizes_loading()
 
+    # --- 专题优化：UI 节流更新逻辑 ---
+    def _init_throttling(self):
+        """初始化 UI 刷新节流器"""
+        self._update_queue = [] # [(type, id, data)]
+        self._throttle_timer = QtCore.QTimer(self)
+        self._throttle_timer.setInterval(50) # 缩短至 50ms，提升感知度
+        self._throttle_timer.timeout.connect(self._process_update_batch)
+        self._throttle_timer.start()
+
+    def _process_update_batch(self):
+        """原子化批量处理 UI 信号"""
+        if not self._update_queue: return
+        
+        # 原子交换队列，防止处理期间 append 冲突
+        batch = self._update_queue
+        self._update_queue = []
+        
+        status_updates = {}
+        size_updates = {}
+        
+        for u_type, lid, data in batch:
+            if u_type == 'status': status_updates[lid] = data
+            elif u_type == 'size': size_updates[lid] = data
+
+        # 执行批量 UI 刷新
+        from src.common.config import format_size
+        for lid, status in status_updates.items():
+            self.category_link_table.update_row_status(lid, status)
+            if hasattr(self.list_view, 'update_row_status'):
+                self.list_view.update_row_status(lid, status)
+        
+        for lid, size in size_updates.items():
+            try:
+                size_val = int(size) if size is not None else 0
+                # 即使是 0 字节也应该格式化显示（如 0 B），而不是显示“未计算”
+                size_text = format_size(size_val)
+                
+                self.category_link_table.update_row_size(lid, size_text)
+                if hasattr(self.list_view, 'update_row_size'):
+                    self.list_view.update_row_size(lid, size_text)
+            except Exception as e:
+                print(f"渲染组件更新失败 [{lid}]: {e}")
+
     @QtCore.Slot(str, object)
     def _on_single_status_refreshed(self, link_id: str, status: object):
-        """单条状态刷新完成 - 即时回填 UI"""
-        # 更新表格中的状态显示（包含自动停止加载动画）
-        self.category_link_table.update_row_status(link_id, status)
-        if hasattr(self.list_view, 'update_row_status'):
-            self.list_view.update_row_status(link_id, status)
+        """单条状态刷新完成 - 入队节流"""
+        self._update_queue.append(('status', link_id, status))
 
     @QtCore.Slot(str, object)
     def _on_single_size_calculated(self, link_id: str, size: object):
-        """单行统计完成：即时显示到表格"""
-        from src.common.config import format_size
-        size_val = int(size) if size is not None else 0
-        size_text = format_size(size_val) if size_val > 0 else "未计算"
-        
-        # 更新表格 UI
-        self.category_link_table.update_row_size(link_id, size_text)
-        if hasattr(self.list_view, 'update_row_size'):
-            self.list_view.update_row_size(link_id, size_text)
+        """单行统计完成 - 入队节流"""
+        self._update_queue.append(('size', link_id, size))
 
     @QtCore.Slot(dict)
     def _on_all_sizes_finished(self, results: dict):

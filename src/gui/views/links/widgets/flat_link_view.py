@@ -196,21 +196,30 @@ class LinkItemWidget(QWidget):
 
         layout.addStretch(1)
 
+        # 🆕 空间占用显示区 (调整至状态左侧)
+        self.size_container = QWidget(self)
+        size_layout = QHBoxLayout(self.size_container)
+        size_layout.setContentsMargins(0, 0, 0, 0)
+        size_layout.setSpacing(4)
+
+        self.size_label = CaptionLabel("", self.size_container)
+        self.size_label.setStyleSheet("color: palette(highlight); font-weight: bold;")
+        
+        self.size_loading_ring = IndeterminateProgressRing(self.size_container)
+        self.size_loading_ring.setFixedSize(14, 14)
+        self.size_loading_ring.setStrokeWidth(2)
+        
+        size_layout.addWidget(self.size_label)
+        size_layout.addWidget(self.size_loading_ring)
+        layout.addWidget(self.size_container)
+
+        self.size_label.setVisible(False)
+        self.size_loading_ring.setVisible(False)
+        self.size_container.setVisible(False)
+
         # 状态徽章 (标准可视化组件)
         self.status_badge = StatusBadge(self.link.status, self)
         layout.addWidget(self.status_badge)
-
-        # 🆕 空间占用显示 (初始隐藏)
-        self.size_label = CaptionLabel("", self)
-        self.size_label.setVisible(False)
-        layout.addWidget(self.size_label)
-
-        # 🆕 空间占用加载环
-        self.size_loading_ring = IndeterminateProgressRing(self)
-        self.size_loading_ring.setFixedSize(16, 16)
-        self.size_loading_ring.setStrokeWidth(2)
-        self.size_loading_ring.setVisible(False)
-        layout.addWidget(self.size_loading_ring)
 
         # 🆕 状态加载环 (放在徽章位置)
         self.status_loading_ring = IndeterminateProgressRing(self)
@@ -222,28 +231,45 @@ class LinkItemWidget(QWidget):
         # 操作按钮组
         self.setup_actions(layout)
 
+        # 🆕 [核心修复] 初始化时自动回填已有的空间数据
+        if self.link.last_known_size > 0:
+            from src.common.config import format_size
+            self.update_size_info(format_size(self.link.last_known_size))
+
     def set_size_loading(self, is_loading: bool):
         """切换空间计算加载状态"""
+        self.size_container.setVisible(True)
         self.size_loading_ring.setVisible(is_loading)
         if is_loading:
             self.size_label.setVisible(False)
+        else:
+            # 只有在非加载状态下且没有数值时才隐藏容器
+            if not self.size_label.text():
+                self.size_container.setVisible(False)
 
     def set_status_loading(self, is_loading: bool):
         """切换状态探测加载状态"""
         self.status_loading_ring.setVisible(is_loading)
         if is_loading:
             self.status_badge.setVisible(False)
+        else:
+            self.status_badge.setVisible(True)
 
     def update_status(self, status: LinkStatus):
         """更新并显示状态"""
         self.status_loading_ring.setVisible(False)
         self.status_badge.update_status(status)
+        self.status_badge.setVisible(True)
 
     def update_size_info(self, size_text: str):
-        """更新并显示空间占用文案"""
-        self.size_label.setText(size_text)
-        self.size_label.setVisible(True)
+        """[核心修复] 原子化更新空间信息：先清理圆圈，再显现文字"""
+        # 1. 强制隐匿加载圆圈
         self.size_loading_ring.setVisible(False)
+        # 2. 设置新文案
+        self.size_label.setText(size_text)
+        # 3. 驱动容器与标签显现
+        self.size_label.setVisible(True)
+        self.size_container.setVisible(True)
 
     def setup_actions(self, layout):
         """根据状态设置操作按钮"""
