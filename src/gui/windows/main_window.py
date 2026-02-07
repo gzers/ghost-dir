@@ -90,21 +90,24 @@ class MainWindow(FluentWindow):
             pass
 
         self._init_window_effect()
+        self._center_on_screen()
+
+    def _center_on_screen(self):
+        """将窗口移动到屏幕中央 (解决启动显示偏移)"""
+        from PySide6.QtWidgets import QApplication
+        screen = QApplication.primaryScreen().geometry()
+        size = self.geometry()
+        x = (screen.x() + (screen.width() - size.width()) // 2)
+        y = (screen.y() + (screen.height() - size.height()) // 2)
+        self.move(x, y)
 
     def _init_navigation(self):
-        """初始化导航栏 (实现首页抢先展示，其余延迟)"""
+        """初始化导航栏 (实现首页抢先展示，其余业务页面后台异步挂载)"""
         # 1. 确定首页
         startup_page_key = service_bus.config_service.get_startup_page() or "wizard"
         
-        # 2. 抢先加载首页视图
-        home_view = self._get_view(startup_page_key)
-        
-        # 3. 配置导航项 (除了首页，其余的先存占位符或推迟加载)
-        # 这里为了保证 FluentWindow 的导航索引正确，我们依然需要一次性 addSubInterface，
-        # 但我们可以通过一种模式：如果 View 还没创建，先传一个 Dummy Widget，或者直接在这里触发首屏加载。
-        
-        # 这种做法最稳妥：在这里先只加载首页
-        icon_map = {
+        # 定义所有导航项配置 (Icon, Title, Position)
+        self._nav_configs = {
             "wizard": (FluentIcon.ROBOT, "智能向导", NavigationItemPosition.TOP),
             "links": (FluentIcon.IOT, "我的链接", NavigationItemPosition.TOP),
             "library": (FluentIcon.BOOK_SHELF, "模版库", NavigationItemPosition.TOP),
@@ -112,46 +115,36 @@ class MainWindow(FluentWindow):
             "settings": (FluentIcon.SETTING, "设置", NavigationItemPosition.BOTTOM)
         }
         
-        # 首先添加所有导航项。如果不是首页，则先不创建真正的 View 实例
-        
-        for key, (icon, title, pos) in icon_map.items():
-            if key == startup_page_key:
-                self.addSubInterface(home_view, icon, title, position=pos)
-            else:
-                # 暂时放一个空壳，点击时再加载并替换
-                placeholder = QWidget()
-                placeholder.setObjectName(f"placeholder_{key}")
-                self.addSubInterface(placeholder, icon, title, position=pos)
+        # 2. 抢先加载首页视图并挂载
+        home_view = self._get_view(startup_page_key)
+        icon, title, pos = self._nav_configs[startup_page_key]
+        self.addSubInterface(home_view, icon, title, position=pos)
 
-        # 初始定位
+        # 初始切换
         self.switchTo(home_view)
         
-        # 4. 关键：在主窗口显示后的第一秒执行“静默后台创建”
-        QTimer.singleShot(500, self._lazy_load_remaining_views)
+        # 3. 关键：在主窗口显示后的第一秒开始静默挂载剩余页面
+        QTimer.singleShot(800, self._lazy_load_remaining_views)
 
     def _lazy_load_remaining_views(self):
-        """静默加载剩余视图，避免阻塞启动"""
-        # 按优先级排序，常用的先加载
-        priority = ["links", "library", "settings", "help"]
+        """利用官方接口顺序加载剩余视图，避开索引操作坑"""
+        # 按照用户习惯的视觉顺序加载剩余项
+        priority = ["wizard", "links", "library", "help", "settings"]
+        startup_page_key = service_bus.config_service.get_startup_page() or "wizard"
+        
         for key in priority:
+            # 跳过已经加载的首页
+            if key == startup_page_key:
+                continue
+                
             if key not in self._views:
                 view = self._get_view(key)
-                # 将对应的占位符替换为真 View (这一步可能需要操作堆栈窗口)
-                self._replace_placeholder_with_view(key, view)
+                icon, title, pos = self._nav_configs[key]
+                # 走官方 addSubInterface 接口，它是线程安全且会自动同步内部动画状态的
+                self.addSubInterface(view, icon, title, position=pos)
+                
                 if self.app:
                     self.app.processEvents()
-
-    def _replace_placeholder_with_view(self, key: str, view: QWidget):
-        """将导航栏中的占位符无感替换为真实业务视图"""
-        # 获取堆栈窗口中对应的 ObjectName
-        for i in range(self.stackedWidget.count()):
-            widget = self.stackedWidget.widget(i)
-            if widget.objectName() == f"placeholder_{key}":
-                # 替换 widget
-                self.stackedWidget.removeWidget(widget)
-                self.stackedWidget.insertWidget(i, view)
-                widget.deleteLater()
-                break
 
     def _init_window_effect(self):
         """初始化窗口特效（云母/亚克力/优雅降级）"""

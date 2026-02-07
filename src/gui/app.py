@@ -214,6 +214,7 @@ def run_app():
     window.setWindowFlags(window.windowFlags() & ~Qt.WindowStaysOnTopHint)
     window.show() # 刷新 Flags
     window.resize(1200, 800) # [关键修正] 标志位切换后必须重设尺寸
+    window._center_on_screen() # [终极修正] 标志位切换后必须重新执行居中逻辑
     window.raise_()
     window.activateWindow()
 

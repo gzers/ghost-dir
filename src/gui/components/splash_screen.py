@@ -29,6 +29,8 @@ class AppSplashScreen(SplashScreen):
             self.iconLabel.hide()
 
         # 设置无边框
+        self.setWindowTitle("Ghost-Dir Loading")
+        self._center_on_screen()
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
 
         # 3. 构建布局
@@ -37,6 +39,15 @@ class AppSplashScreen(SplashScreen):
         
         # 4. 样式应用
         self.update_theme()
+    
+    def _center_on_screen(self):
+        """将窗口移动到屏幕中央 (解决启动显示偏移)"""
+        from PySide6.QtWidgets import QApplication
+        screen = QApplication.primaryScreen().geometry()
+        size = self.geometry()
+        x = (screen.x() + (screen.width() - size.width()) // 2)
+        y = (screen.y() + (screen.height() - size.height()) // 2)
+        self.move(x, y)
         
     def update_theme(self):
         """同步用户配置的主题，刷新背景和文字颜色"""
