@@ -99,27 +99,17 @@ class FlatLinkView(QListWidget):
 
     def update_row_size(self, link_id: str, size_text: str):
         """更新单行大小"""
-        print(f"[DEBUG FlatLinkView] update_row_size called: link_id={link_id}, size_text={size_text}")
-        print(f"[DEBUG FlatLinkView] Total items in list: {self.count()}")
-        
         if link_id in self.loading_ids:
             self.loading_ids.remove(link_id)
         
-        found = False
         for i in range(self.count()):
             item = self.item(i)
             widget = self.itemWidget(item)
             if isinstance(widget, LinkItemWidget):
-                print(f"[DEBUG FlatLinkView] Item {i}: widget.link.id={widget.link.id}, match={widget.link.id == link_id}")
                 if widget.link.id == link_id:
-                    found = True
-                    print(f"[DEBUG FlatLinkView] Found match at index {i}, calling update_size_info")
                     widget.set_size_loading(False)
                     widget.update_size_info(size_text)
                     break
-        
-        if not found:
-            print(f"[DEBUG FlatLinkView] WARNING: No widget found for link_id={link_id}")
 
     def clear_selection(self):
         """清除选择"""
@@ -286,19 +276,13 @@ class LinkItemWidget(QWidget):
         self.status_badge.update_status(status)
         self.status_badge.setVisible(True)
         self.status_badge.show()  # 额外调用 show()
-        
-        print(f"[DEBUG] After stop: status_ring visible={self.status_loading_ring.isVisible()}, badge visible={self.status_badge.isVisible()}")
 
     def update_size_info(self, size_text: str):
-        """[终极修复] 彻底停止动画并显示数值"""
-        print(f"[DEBUG] update_size_info called for {self.link.name}, size_text={size_text}")
-        print(f"[DEBUG] Before stop: ring visible={self.size_loading_ring.isVisible()}")
+        """彽底停止动画并显示数值"""
         
         # 1. 【关键】停止动画
         self.size_loading_ring.stop()
         self.size_loading_ring.setVisible(False)
-        
-        print(f"[DEBUG] After stop: ring visible={self.size_loading_ring.isVisible()}")
         
         # 2. 设置并显示数值
         self.size_label.setText(size_text)
@@ -307,7 +291,6 @@ class LinkItemWidget(QWidget):
         # 4. 最后重新显示容器（此时只有数值可见）
         self.size_container.setVisible(True)
         
-        print(f"[DEBUG] Final: label visible={self.size_label.isVisible()}, label text={self.size_label.text()}")
 
     def setup_actions(self, layout):
         """根据状态设置操作按钮"""

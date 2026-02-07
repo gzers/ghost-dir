@@ -181,16 +181,20 @@ def run_app():
     splash = AppSplashScreen()
     splash.show()
 
-    # 这里多循环几次，确保动画组件完成初次绘制并启动计时器
-    for _ in range(10):
+    # 多次刷新事件循环，确保动画启动
+    for _ in range(20):
         app.processEvents()
-        time.sleep(0.01)
 
     # 执行启动检查（在启动页背景下执行）
+    splash.set_message(t("app.splash_check_data"))
+    app.processEvents()
     app._startup_checks(splash)
     app.processEvents()
 
     # 导入并创建主窗口（耗时操作）
+    splash.set_message(t("app.splash_loading_main"))
+    app.processEvents()
+    
     from .windows.main_window import MainWindow
     window = MainWindow(app)
     
@@ -211,3 +215,6 @@ def run_app():
         app.processEvents()
 
     sys.exit(app.exec())
+
+
+

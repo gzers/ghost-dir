@@ -17,4 +17,5 @@ APP_TEXTS = {
     "splash_initializing": "正在初始化...",
     "splash_check_admin": "正在校验管理员权限...",
     "splash_check_data": "正在检查数据完整性...",
+    "splash_loading_main": "正在加载主界面...",
 }

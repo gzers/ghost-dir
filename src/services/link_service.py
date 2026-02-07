@@ -97,7 +97,6 @@ class ServiceWorker(QObject):
         self.all_finished.emit(results)
 
     def detect_status(self, link_ids: List[str], dao: LinkDAO):
-        print(f"[DEBUG ServiceWorker] detect_status called with {len(link_ids)} link_ids")
         self.is_aborted = False  # 重置中止标志
         results = {}
         all_links = dao.get_all()
@@ -105,54 +104,32 @@ class ServiceWorker(QObject):
         aborted = self.is_aborted  # 缓存到本地变量，避免线程中访问 self
 
         def _get_status(lid):
-            print(f"[DEBUG ServiceWorker] _get_status called for {lid}")
-            print(f"[DEBUG ServiceWorker] Checking is_aborted")
             if aborted: return lid, LinkStatus.DISCONNECTED
-            print(f"[DEBUG ServiceWorker] Getting link from link_map")
             link = link_map.get(lid)
-            print(f"[DEBUG ServiceWorker] Got link: {link is not None}")
             if not link: return lid, LinkStatus.INVALID
-            print(f"[DEBUG ServiceWorker] Calling _check_single_link")
-            result = lid, ServiceWorker._check_single_link(link)
-            print(f"[DEBUG ServiceWorker] _get_status returning {result}")
-            return result
+            return lid, ServiceWorker._check_single_link(link)
 
-        print(f"[DEBUG ServiceWorker] Creating ThreadPoolExecutor with {min(len(link_ids), 16)} workers")
         with concurrent.futures.ThreadPoolExecutor(max_workers=min(len(link_ids), 16)) as executor:
             future_to_id = {executor.submit(_get_status, lid): lid for lid in link_ids}
-            print(f"[DEBUG ServiceWorker] Submitted {len(future_to_id)} tasks")
-            print(f"[DEBUG ServiceWorker] Waiting for tasks to complete...")
             for future in concurrent.futures.as_completed(future_to_id):
-                print(f"[DEBUG ServiceWorker] Got completed future")
-                if aborted: 
-                    print(f"[DEBUG ServiceWorker] Aborted, breaking loop")
+                if aborted:
                     break
                 try:
-                    print(f"[DEBUG ServiceWorker] Calling future.result()")
-                    result = future.result()
-                    print(f"[DEBUG ServiceWorker] future.result() returned: {result}")
-                    lid, status = result
+                    lid, status = future.result()
                     results[lid] = status
                     
                     link = link_map.get(lid)
                     if link and status != link.status:
                         link.status = status
                         dao.update(link)
-                    print(f"[DEBUG ServiceWorker] Emitting item_finished for {lid}: {status}")
                     self.item_finished.emit(lid, status)
-                except Exception as e:
-                    print(f"[DEBUG ServiceWorker] ERROR processing {future_to_id.get(future, 'UNKNOWN')}: {e}")
-                    import traceback
-                    traceback.print_exc()
-
-        print(f"[DEBUG ServiceWorker] detect_status completed, processed {len(results)} links")
+                except Exception:
+                    pass  # 静默处理异常
         self.all_finished.emit(results)
 
     @staticmethod
     def _check_single_link(link: UserLink) -> LinkStatus:
-        print(f"[DEBUG ServiceWorker] _check_single_link called for {link.id}")
         src = link.source_path
-        print(f"[DEBUG ServiceWorker] Checking source path: {src}")
         def get_real_path(path):
             if not os.path.exists(path): return None
             try:

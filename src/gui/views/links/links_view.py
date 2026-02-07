@@ -216,9 +216,7 @@ class LinksView(BasePageView):
 
         # 执行批量 UI 刷新
         from src.common.config import format_size
-        print(f"[DEBUG LinksView] Processing {len(status_updates)} status updates")
         for lid, status in status_updates.items():
-            print(f"[DEBUG LinksView] Updating status for {lid}: {status}")
             self.category_link_table.update_row_status(lid, status)
             if hasattr(self.list_view, 'update_row_status'):
                 self.list_view.update_row_status(lid, status)
@@ -238,7 +236,6 @@ class LinksView(BasePageView):
     @QtCore.Slot(str, object)
     def _on_single_status_refreshed(self, link_id: str, status: object):
         """单条状态刷新完成 - 入队节流"""
-        print(f"[DEBUG LinksView] _on_single_status_refreshed: link_id={link_id}, status={status}")
         self._update_queue.append(('status', link_id, status))
 
     @QtCore.Slot(str, object)
