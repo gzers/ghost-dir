@@ -102,7 +102,7 @@ class MainWindow(FluentWindow):
         self.move(x, y)
 
     def _init_navigation(self):
-        """初始化导航栏 (实现首页抢先展示，其余业务页面后台异步挂载)"""
+        """初始化导航栏 (实现菜单全量占位，首页抢先渲染，其余异步补全)"""
         # 1. 确定首页
         startup_page_key = service_bus.config_service.get_startup_page() or "wizard"
         
@@ -115,36 +115,60 @@ class MainWindow(FluentWindow):
             "settings": (FluentIcon.SETTING, "设置", NavigationItemPosition.BOTTOM)
         }
         
-        # 2. 抢先加载首页视图并挂载
-        home_view = self._get_view(startup_page_key)
-        icon, title, pos = self._nav_configs[startup_page_key]
-        self.addSubInterface(home_view, icon, title, position=pos)
+        # 按照用户习惯的视觉顺序
+        priority = ["wizard", "links", "library", "help", "settings"]
+        
+        # 2. 同步注册所有导航项 (非首页使用占位视图以保证 UI 完整性且不卡顿)
+        for key in priority:
+            icon, title, pos = self._nav_configs[key]
+            
+            if key == startup_page_key:
+                # 仅首页视图进行同步创建
+                view = self._get_view(key)
+                self.addSubInterface(view, icon, title, position=pos)
+            else:
+                # 其他页面先用极轻量的 QWidget 占位，确保菜单栏是全的
+                placeholder = QWidget()
+                placeholder.setObjectName(f"placeholder_{key}")
+                self.addSubInterface(placeholder, icon, title, position=pos)
 
-        # 初始切换
+        # 3. 初始切换到首页
+        home_view = self._get_view(startup_page_key)
         self.switchTo(home_view)
         
-        # 3. 关键：在主窗口显示后的第一秒开始静默挂载剩余页面
-        QTimer.singleShot(800, self._lazy_load_remaining_views)
+        # 4. 在界面弹出后 500ms，开始静默补全后台视图
+        QTimer.singleShot(500, self._lazy_load_remaining_views)
 
     def _lazy_load_remaining_views(self):
-        """利用官方接口顺序加载剩余视图，避开索引操作坑"""
-        # 按照用户习惯的视觉顺序加载剩余项
+        """静默加载剩余视图，每次操作后精确释放 CPU"""
         priority = ["wizard", "links", "library", "help", "settings"]
         startup_page_key = service_bus.config_service.get_startup_page() or "wizard"
         
         for key in priority:
-            # 跳过已经加载的首页
             if key == startup_page_key:
                 continue
                 
             if key not in self._views:
+                # 真正的重型初始化在这里
                 view = self._get_view(key)
-                icon, title, pos = self._nav_configs[key]
-                # 走官方 addSubInterface 接口，它是线程安全且会自动同步内部动画状态的
-                self.addSubInterface(view, icon, title, position=pos)
+                # 使用我们之前通过的、且避开 IndexError 的安全替换逻辑 (如果有)
+                # 或者：既然我们已经有了 placeholder，我们需要一套安全替换逻辑
+                # [注意] 为了绝对稳定，我们将改为在用户第一次点击对应菜单时加载，或者在后台排队加载
+                self._replace_placeholder_with_view(key, view)
                 
                 if self.app:
-                    self.app.processEvents()
+                    app.processEvents()
+
+    def _replace_placeholder_with_view(self, key: str, view: QWidget):
+        """将占位符替换为真实视图 (V4 稳定版)"""
+        stack = self.stackedWidget.view
+        for i in range(stack.count()):
+            widget = stack.widget(i)
+            if widget.objectName() == f"placeholder_{key}":
+                stack.removeWidget(widget)
+                stack.insertWidget(i, view)
+                widget.deleteLater()
+                break
 
     def _init_window_effect(self):
         """初始化窗口特效（云母/亚克力/优雅降级）"""
