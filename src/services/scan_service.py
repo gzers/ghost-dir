@@ -30,7 +30,10 @@ class SmartScanner:
         # 0. 预加载已导入的链接，用于扫描去重
         existing_srcs = set()
         if self.link_service:
-            existing_srcs = {l.source_path.lower() for l in self.link_service.get_all_links()}
+            for l in self.link_service.get_all_links():
+                # 统一标准化路径，处理大小写、反斜杠方向以及环境变量
+                norm_src = os.path.normpath(os.path.expandvars(l.source_path)).lower()
+                existing_srcs.add(norm_src)
         
         import winreg # 仅在 Windows 下执行
         
@@ -53,7 +56,8 @@ class SmartScanner:
                 self.progress_callback(f"正在分析: {tpl.name}")
 
             # A. 检查默认路径
-            if os.path.exists(path) and path.lower() not in existing_srcs:
+            norm_path = os.path.normpath(path).lower()
+            if os.path.exists(path) and norm_path not in existing_srcs:
                 discovered.append(tpl)
                 task['found'] = True
                 continue
@@ -66,7 +70,8 @@ class SmartScanner:
                     if tpl.id == "steam":
                         target_path = os.path.join(reg_loc, "steamapps")
                     
-                    if os.path.exists(target_path) and target_path.lower() not in existing_srcs:
+                    norm_reg_path = os.path.normpath(target_path).lower()
+                    if os.path.exists(target_path) and norm_reg_path not in existing_srcs:
                         tpl.default_src = target_path
                         discovered.append(tpl)
                         task['found'] = True
@@ -74,7 +79,7 @@ class SmartScanner:
 
             if task['found']: continue
 
-            # C. 深度探测逻辑：基于用户盘符探测最后两级特征路径
+            # C. 深度探测逻辑
             path_parts = path.replace("\\", "/").rstrip("/").split("/")
             if len(path_parts) >= 2:
                 feature = os.path.join(path_parts[-2], path_parts[-1])
@@ -87,7 +92,8 @@ class SmartScanner:
                 for drive in drives:
                     for sub in common_roots:
                         test_path = os.path.join(drive, sub, feature)
-                        if os.path.exists(test_path) and test_path.lower() not in existing_srcs:
+                        norm_test_path = os.path.normpath(test_path).lower()
+                        if os.path.exists(test_path) and norm_test_path not in existing_srcs:
                             tpl.default_src = test_path
                             discovered.append(tpl)
                             task['found'] = True

@@ -166,14 +166,21 @@ class LinksView(BasePageView):
         if refresh_size and view_models:
             ids = [vm.id for vm in view_models]
             
-            # 1. 启动异步状态探测
+            # 1. 启动异步状态探测 (立即开始，完成后仅更新状态列)
             self.connection_service.refresh_status_async(
                 ids,
                 self._on_single_status_refreshed,
-                self._on_all_status_finished
+                None # 状态探测完成不需要触发后续动作，因为它已并行启动
             )
             
-            # 2. 同步启动视觉加载反馈
+            # 2. 启动异步空间统计 (立即开始，不再等待状态探测)
+            self.connection_service.calculate_sizes_async(
+                ids, 
+                self._on_single_size_calculated,
+                self._on_all_sizes_finished
+            )
+            
+            # 3. 同步启动视觉加载反馈
             self.category_link_table.set_all_status_loading()
             self.category_link_table.set_all_sizes_loading()
             if hasattr(self.list_view, 'set_all_status_loading'):
@@ -188,19 +195,6 @@ class LinksView(BasePageView):
         self.category_link_table.update_row_status(link_id, status)
         if hasattr(self.list_view, 'update_row_status'):
             self.list_view.update_row_status(link_id, status)
-
-    @QtCore.Slot(dict)
-    def _on_all_status_finished(self, results: dict):
-        """状态探测全部完成 -> 接续进行空间统计"""
-        # 再次执行空间统计
-        view_models = self.connection_service.get_all_links(self.current_category_id)
-        ids = [vm.id for vm in view_models]
-        
-        self.connection_service.calculate_sizes_async(
-            ids, 
-            self._on_single_size_calculated,
-            self._on_all_sizes_finished
-        )
 
     @QtCore.Slot(str, object)
     def _on_single_size_calculated(self, link_id: str, size: object):

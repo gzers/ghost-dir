@@ -68,7 +68,7 @@ class FlatLinkView(QListWidget):
             
             # 恢复加载状态
             if link.id in self.loading_ids:
-                widget.set_loading(True)
+                widget.set_size_loading(True)
 
     def set_all_sizes_loading(self):
         """全量设置空间大小加载状态"""
@@ -236,12 +236,8 @@ class LinkItemWidget(QWidget):
 
     def update_status(self, status: LinkStatus):
         """更新并显示状态"""
-        # 由于 StatusBadge 暂不支持直接 setStatus，我们简单的替换它或者触发重绘
-        # 为简便起见，这里采用最稳的方式：停止动画并刷新 Badge
         self.status_loading_ring.setVisible(False)
-        self.status_badge.status = status
-        self.status_badge._init_ui() # 触发图标和颜色的重新加载
-        self.status_badge.setVisible(True)
+        self.status_badge.update_status(status)
 
     def update_size_info(self, size_text: str):
         """更新并显示空间占用文案"""

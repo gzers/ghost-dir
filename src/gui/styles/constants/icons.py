@@ -47,11 +47,11 @@ ICON_STATES = {
     }
 }
 
-# ========== 状态图标映射 (从旧代码迁移) ==========
+# ========== 状态图标映射 (标准色球方案) ==========
 STATUS_ICONS = {
     "disconnected": "🔴",
     "connected": "🟢",
     "ready": "🟡",
-    "invalid": FluentIcon.INFO,
-    "error": FluentIcon.CLOSE,
+    "invalid": "⚪",  # 使用灰色/白色实心圆代表失效
+    "error": "🟠",    # 使用橙色代表路径冲突
 }

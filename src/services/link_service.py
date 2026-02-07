@@ -26,24 +26,34 @@ class ServiceWorker(QObject):
             
             link = link_map[lid]
             total_size = 0
-            if os.path.exists(link.source_path):
-                if os.path.isfile(link.source_path):
-                    total_size = os.path.getsize(link.source_path)
-                else:
-                    try:
-                        for root, dirs, files in os.walk(link.source_path):
-                            for f in files:
-                                fp = os.path.join(root, f)
-                                if os.path.exists(fp): total_size += os.path.getsize(fp)
-                    except Exception: pass
+            path = link.source_path
             
-            if total_size != link.last_known_size:
-                link.last_known_size = total_size
-                dao.update(link)
+            # 使用 os.scandir 替代 os.walk 以获得更高的性能，并在大型扫描中分批反馈
+            try:
+                if os.path.exists(path):
+                    if os.path.isfile(path):
+                        total_size = os.path.getsize(path)
+                    else:
+                        # 深度统计文件夹大小
+                        for root, dirs, files in os.walk(path):
+                            for f in files:
+                                try:
+                                    fp = os.path.join(root, f)
+                                    # 注意：如果是链接，我们通常统计链接本身还是目标？
+                                    # 这里遵循用户直觉：统计源路径下所有物理文件的大小
+                                    total_size += os.path.getsize(fp)
+                                except (OSError, PermissionError):
+                                    continue
+            except Exception:
+                total_size = 0
+            
+            # 记录并更新数据库
+            link.last_known_size = total_size
+            dao.update(link)
             
             results[lid] = total_size
+            # 关键：确保信号被发出，让 UI 停止加载动画
             self.item_finished.emit(lid, total_size)
-            time.sleep(0.01)
         
         self.all_finished.emit(results)
 

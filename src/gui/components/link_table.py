@@ -263,6 +263,7 @@ class LinkTable(BaseTableWidget):
 
     def update_row_size(self, link_id: str, size_text: str):
         """更新指定行的空间显示，并停止加载动画"""
+        # 不再通过 loading_ids 集合拦截，只要收到信号就更新 UI
         if link_id in self.loading_ids:
             self.loading_ids.remove(link_id)
 

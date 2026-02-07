@@ -2,6 +2,8 @@
 主应用程序类
 """
 import sys
+import os
+import time
 import ctypes
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import Qt
@@ -179,20 +181,33 @@ def run_app():
     splash = AppSplashScreen()
     splash.show()
 
-    # 虽然显示了，但需要处理事件让它渲染出来
-    app.processEvents()
-    # ===================================
+    # 这里多循环几次，确保动画组件完成初次绘制并启动计时器
+    for _ in range(10):
+        app.processEvents()
+        time.sleep(0.01)
 
     # 执行启动检查（在启动页背景下执行）
     app._startup_checks(splash)
+    app.processEvents()
 
     # 导入并创建主窗口（耗时操作）
     from .windows.main_window import MainWindow
-    window = MainWindow(app)  # 传递 app 实例
-
-    # 主窗口创建完成，关闭启动界面
-    splash.finish()
-
+    window = MainWindow(app)
+    
+    # [关键修复] 窗口平滑交接逻辑
+    # 1. 先确保主窗口已经完全加载并初步渲染
+    app.processEvents()
+    
+    # 2. 先隐藏启动页，防止其 FramelessWindowHint 干扰主窗口的几何形状
+    splash.close() 
+    app.processEvents()
+    
+    # 3. 显式设置主窗口尺寸并强制触发布局更新
+    window.resize(1200, 800)
     window.show()
+    
+    # 4. 强制刷新一次事件循环，解决渲染卡死/残留问题
+    for _ in range(5):
+        app.processEvents()
 
     sys.exit(app.exec())

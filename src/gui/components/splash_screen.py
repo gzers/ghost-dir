@@ -28,24 +28,17 @@ class AppSplashScreen(SplashScreen):
         if hasattr(self, 'iconLabel'):
             self.iconLabel.hide()
 
-        # 设置无边框
+        # 设置无边框并根据主题设置背景
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
+        bg_color = "#202020" if isDarkTheme() else "#F3F3F3"
+        self.setStyleSheet(f"background-color: {bg_color}; border: none;")
 
         # 3. 构建布局
         icon_path = get_resource_path("assets/icon.png")
         self.__init_layout(str(icon_path))
 
-    def paintEvent(self, event):
-        """自定义绘制事件，支持主题跟随的背景色"""
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
-
-        # 根据主题绘制背景色
-        bg_color = QColor("#202020") if isDarkTheme() else QColor("#F3F3F3")
-        painter.fillRect(self.rect(), bg_color)
-
     def drawContents(self, painter):
-        """禁止渲染文字内容"""
+        """禁止基类在该窗口绘制任何内容，由子布局接管"""
         pass
 
     def __init_layout(self, icon_path):
