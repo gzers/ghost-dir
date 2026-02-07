@@ -61,9 +61,10 @@ class ScanFlowDialog(MessageBoxBase):
         self.category_manager = service_bus.category_manager
         self.template_manager = service_bus.template_manager
         self.user_manager = service_bus.user_manager
-        # TODO: SmartScanner 尚未实现
-        # self.scanner = SmartScanner(self.template_manager, self.user_manager)
-        self.scanner = None
+        
+        # 实例化扫描器
+        all_templates = service_bus.template_service.get_all_templates()
+        self.scanner = SmartScanner(all_templates)
 
         self.discovered = []
         self.result_cards = {}
@@ -164,16 +165,10 @@ class ScanFlowDialog(MessageBoxBase):
 
     def _start_scan(self):
         """开始执行异步扫描"""
-        # TODO: SmartScanner 尚未实现
         if self.scanner is None:
-            # 直接显示空结果
-            self._on_scan_finished([])
             return
 
         self.stack.setCurrentIndex(0)
-        # 创建执行器
-        all_templates = service_bus.template_service.get_all_templates()
-        self.scanner = SmartScanner(all_templates)
         
         self.scanWorker = ScanWorker(self.scanner)
         self.scanWorker.finished.connect(self._on_scan_finished)
@@ -192,10 +187,10 @@ class ScanFlowDialog(MessageBoxBase):
         if discovered:
             # 加载卡片
             for template in discovered:
-                cat_id = getattr(template, 'category_id', getattr(template, 'category', ''))
-                cat_name = get_category_text(cat_id)
+                # 直接读取模板中的分类全路径名称
+                display_cat_name = template.category_path_name or "未分类"
 
-                card = ScanResultCard(template, category_name=cat_name)
+                card = ScanResultCard(template, category_name=display_cat_name)
                 card.selected_changed.connect(self._update_selection_count)
 
                 self.list_layout.insertWidget(self.list_layout.count() - 1, card)
@@ -224,7 +219,6 @@ class ScanFlowDialog(MessageBoxBase):
 
     def validate(self):
         """异步触发导入操作"""
-        # TODO: SmartScanner 尚未实现
         if self.scanner is None:
             return False
 
@@ -237,10 +231,10 @@ class ScanFlowDialog(MessageBoxBase):
         self.yesButton.setEnabled(False)
         self.cancelButton.setEnabled(False)
 
-        # TODO: SmartScanner 尚未实现，暂时注释掉
-        # self.import_worker = ImportWorker(self.scanner, selected)
-        # self.import_worker.finished.connect(self._on_import_finished)
-        # self.import_worker.start()
+        # 开启导入工作线程
+        self.import_worker = ImportWorker(self.scanner, selected)
+        self.import_worker.finished.connect(self._on_import_finished)
+        self.import_worker.start()
 
         # 返回 False 阻止 MessageBox 立即自动关闭
         return False

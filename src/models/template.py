@@ -14,6 +14,7 @@ class Template:
     description: Optional[str] = None
     order: int = 0
     is_custom: bool = False
+    category_path_name: Optional[str] = None # 模板所属分类的全路径名称
 
     @classmethod
     def from_dict(cls, data: dict):
@@ -25,7 +26,8 @@ class Template:
             category_id=data.get('category_id'),
             description=data.get('description'),
             order=data.get('order', 0),
-            is_custom=data.get('is_custom', False)
+            is_custom=data.get('is_custom', False),
+            category_path_name=data.get('category_path_name')
         )
 
     def to_dict(self) -> dict:
@@ -37,5 +39,6 @@ class Template:
             'category_id': self.category_id,
             'description': self.description,
             'order': self.order,
-            'is_custom': self.is_custom
+            'is_custom': self.is_custom,
+            'category_path_name': self.category_path_name
         }
