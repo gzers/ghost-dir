@@ -10,6 +10,7 @@ class CategoryNode:
     name: str
     parent_id: Optional[str] = None
     order: int = 0
+    is_builtin: bool = False
     children: List['CategoryNode'] = field(default_factory=list)
 
     @classmethod
@@ -18,7 +19,8 @@ class CategoryNode:
             id=data.get('id', ''),
             name=data.get('name', ''),
             parent_id=data.get('parent_id'),
-            order=data.get('order', 0)
+            order=data.get('order', 0),
+            is_builtin=data.get('is_builtin', False)
         )
         children_data = data.get('children', [])
         node.children = [cls.from_dict(child) for child in children_data]
@@ -30,5 +32,6 @@ class CategoryNode:
             'name': self.name,
             'parent_id': self.parent_id,
             'order': self.order,
+            'is_builtin': self.is_builtin,
             'children': [child.to_dict() for child in self.children]
         }

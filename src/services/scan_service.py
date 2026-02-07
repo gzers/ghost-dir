@@ -19,34 +19,54 @@ class SmartScanner:
     def scan(self) -> List[Template]:
         """
         全量扫描本机应用
-        1. 遍历常见的安装/数据目录
-        2. 匹配模板中的默认路径
+        1. 检查模板中的默认路径
+        2. 如果默认路径不存在，尝试在常用安装目录下进行关键词匹配
         """
         discovered = []
+        print(f"DEBUG: SmartScanner started with {len(self.templates)} templates.")
         
         # 定义搜索根目录
         search_roots = [
-            os.environ.get('APPDATA'),
-            os.environ.get('LOCALAPPDATA'),
             os.environ.get('ProgramFiles'),
             os.environ.get('ProgramFiles(x86)'),
-            "D:\\", "E:\\" # 常用数据盘
+            os.environ.get('LOCALAPPDATA'),
+            os.environ.get('APPDATA'),
+            "D:\\", "E:\\", "F:\\" # 常用数据盘
         ]
         search_roots = [r for r in search_roots if r and os.path.exists(r)]
+        print(f"DEBUG: Search roots for fallback: {search_roots}")
 
-        # 扫描逻辑简化版：仅检查模板路径是否存在
         for template in self.templates:
-            # 解析路径中的环境变量
+            # 1. 尝试原始路径
             raw_path = template.default_src
             expanded_path = os.path.expandvars(raw_path)
             
             if self.progress_callback:
-                self.progress_callback(f"正在检查: {expanded_path}")
+                self.progress_callback(f"正在扫描: {template.name}")
                 
             if os.path.exists(expanded_path):
-                # 标记该模板已被发现
+                print(f"DEBUG: Found {template.name} via default path: {expanded_path}")
                 discovered.append(template)
-                
+                continue
+
+            # 2. 备选方案：由于用户可能安装在非 C 盘，提取模板路径中的特征名进行搜索
+            # 例如 "C:\Program Files (x86)\Steam\steamapps" -> 搜索 "Steam\steamapps"
+            path_parts = expanded_path.replace("\\", "/").split("/")
+            # 取最后两级作为特征
+            if len(path_parts) >= 2:
+                feature_path = os.path.join(path_parts[-2], path_parts[-1])
+                for root in search_roots:
+                    # 避免对 C 盘根目录做深层次 walk (性能考虑)
+                    # 只在常用软件目录下查找
+                    test_path = os.path.join(root, feature_path)
+                    if os.path.exists(test_path):
+                        print(f"DEBUG: Found {template.name} via fallback search at {test_path}")
+                        # 更新模板的临时检测路径
+                        template.default_src = test_path
+                        discovered.append(template)
+                        break
+
+        print(f"DEBUG: Scan finished. Discovered: {len(discovered)}")
         return discovered
 
     def import_templates(self, templates: List[Template]) -> int:

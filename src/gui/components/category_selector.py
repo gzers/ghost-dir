@@ -149,8 +149,8 @@ class CategoryTreeDropdown(QFrame):
 
         item.setData(0, Qt.ItemDataRole.UserRole, category.id)
 
-        # 核心修复：使用公共获取函数，兼顾配置名称与多语言
-        display_name = get_category_text(category.id)
+        # 直接使用节点的名称（已包含国际化后的文案）
+        display_name = category.name
         item.setText(0, display_name)
 
         self.category_items[category.id] = item
