@@ -74,47 +74,59 @@ class ServiceWorker(QObject):
         src = link.source_path
         dst = link.target_path
         
-        # 1. 源路径检查（物理文件是否存在）
+        # 0. 辅助函数：获取 Windows 下的真实标准化物理路径
+        def get_real_path(path):
+            if not os.path.exists(path): return None
+            # 使用 Python 原生的 realpath (3.8+ 在 Windows 上支持解析链接)
+            # 配合 normpath 消除所有样式差异，统一转小写进行不区分大小写比对
+            try:
+                resolved = os.path.realpath(path)
+                return os.path.normpath(resolved).lower()
+            except:
+                return os.path.normcase(os.path.abspath(path)).lower()
+
+        # 1. 获取物理标准化路径
+        # 注意：在这里 real_src 获取的是“实测最终指向”
+        # 我们需要先知道 src (入口) 本身的属性
+        def get_attrs(p):
+            if os.name != 'nt': return 0
+            try:
+                import ctypes
+                return ctypes.windll.kernel32.GetFileAttributesW(p)
+            except: return -1
+
+        src_attrs = get_attrs(src)
+        FILE_ATTRIBUTE_REPARSE_POINT = 0x400
+        
+        # 2. 判断逻辑
+        # 情况 A: 源路径根本不存在 (Invalid)
         if not os.path.exists(src):
+            link.resolve_path = None
             return LinkStatus.INVALID
             
-        # 2. 目标路径状态检查
-        if not os.path.exists(dst):
-            return LinkStatus.READY
+        # 情况 B: 源路径是一个已建立的链接 (Symlink/Junction) - 这是最核心的“已连接”判定
+        if src_attrs != -1 and (src_attrs & FILE_ATTRIBUTE_REPARSE_POINT):
+            real_target = get_real_path(src) # 获取链接指向的终点
+            link.resolve_path = real_target
             
-        # 3. 链接有效性检查 (Windows 符号链接/目录联接)
-        try:
-            # os.path.islink 在 Windows 下有限（不识别 Junction）
-            # 使用 fsutil 或底层属性检查
-            if os.name == 'nt':
-                import ctypes
-                FILE_ATTRIBUTE_REPARSE_POINT = 0x400
-                attrs = ctypes.windll.kernel32.GetFileAttributesW(dst)
-                
-                # 如果是重解析点（符号链接、联接点等）
-                if attrs != -1 and (attrs & FILE_ATTRIBUTE_REPARSE_POINT):
-                    return LinkStatus.CONNECTED
-                
-                # 备用方案：通过 dir 命令确认
-                parent_dir = os.path.dirname(dst)
-                base_name = os.path.basename(dst)
-                # 使用 L 参数显示重解析点目标，D 参数仅目录
-                output = subprocess.check_output(f'dir /L "{parent_dir}"', shell=True).decode('gbk', errors='ignore')
-                
-                # Windows 下 JUNCTION 会显示为 <JUNCTION> 或 [Name]
-                # SYMLINKD 会显示为 <SYMLINKD>
-                if f"<{base_name}>" in output or f"[{base_name}]" in output or f" {base_name} [" in output:
-                    return LinkStatus.CONNECTED
+            # [核心改变] 遵循用户直觉：只要链接存在且指向的位置在物理上是存在的，就视为正常已连接
+            if real_target and os.path.exists(real_target):
+                # 如果实测指向与预期备份路径确实不一致，我们只在后台记录 resolve_path，UI 依然给绿灯
+                return LinkStatus.CONNECTED
             else:
-                # Unix/MacOS
-                if os.path.islink(dst):
-                    return LinkStatus.CONNECTED
-        except:
-            pass
-            
-        # 4. 冲突检查：如果目标存在但不是链接，说明被真实文件占用了
-        # 这通常发生在迁移不彻底或手动移动文件后
-        return LinkStatus.ERROR
+                # 链接通了，但指向的是一个空地址（源头被删或移动）
+                return LinkStatus.INVALID
+                
+        # 情况 C: 源路径存在但不是链接 (普通文件/目录)
+        # 这时看目标路径
+        if not os.path.exists(dst):
+            # 目标不存在，说明可以迁移 (Ready)
+            link.resolve_path = None
+            return LinkStatus.READY
+        else:
+            # 源和目标都作为普通物理路径存在，这是真正的“路径冲突”
+            link.resolve_path = None
+            return LinkStatus.ERROR
 
 class LinkService:
     def __init__(self, dao: LinkDAO):
@@ -143,6 +155,19 @@ class LinkService:
     def refresh_status_async(self, link_ids: List[str], item_cb: Callable, finished_cb: Callable):
         """异步批量刷新链接状态"""
         self._start_worker(lambda w: w.detect_status(link_ids, self.dao), item_cb, finished_cb)
+
+    def refresh_link_status(self, link_id: str) -> LinkStatus:
+        """同步刷新单个链接状态"""
+        link = self.get_link_by_id(link_id)
+        if not link: return LinkStatus.INVALID
+        
+        worker = ServiceWorker()
+        new_status = worker._check_single_link(link)
+        
+        # 即使状态没变，resolve_path 可能变了，所以也需要更新
+        link.status = new_status
+        self.dao.update(link)
+        return new_status
 
     def _start_worker(self, task_fn: Callable, item_cb: Callable, finished_cb: Callable):
         if self._worker_thread and self._worker_thread.isRunning(): return

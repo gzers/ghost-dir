@@ -2,6 +2,7 @@
 图标系统
 包含图标尺寸、颜色、间距、状态规范
 """
+from qfluentwidgets import FluentIcon
 
 # ========== 图标尺寸 (Icon Sizes) ==========
 ICON_SIZES = {
@@ -51,5 +52,6 @@ STATUS_ICONS = {
     "disconnected": "🔴",
     "connected": "🟢",
     "ready": "🟡",
-    "invalid": "⚪",
+    "invalid": FluentIcon.INFO,
+    "error": FluentIcon.CLOSE,
 }

@@ -173,19 +173,21 @@ class LinksView(BasePageView):
                 self._on_all_status_finished
             )
             
-            # 2. 只有在状态刷新完成后，流程才会自动衔接到空间统计（或者并发进行）
-            # 为了更好的用户反馈，我们这里先让表格转圈
+            # 2. 同步启动视觉加载反馈
+            self.category_link_table.set_all_status_loading()
             self.category_link_table.set_all_sizes_loading()
+            if hasattr(self.list_view, 'set_all_status_loading'):
+                self.list_view.set_all_status_loading()
             if hasattr(self.list_view, 'set_all_sizes_loading'):
                 self.list_view.set_all_sizes_loading()
 
     @QtCore.Slot(str, object)
     def _on_single_status_refreshed(self, link_id: str, status: object):
-        """单条状态刷新完成"""
-        # 刷新 UI 上的状态显示
-        # 这里可以直接触发一轮数据重载，或者更精细地更新行状态
-        # 为了稳定性，我们等全部状态刷新完后再统一 reload 一次数据或者由具体 Table 处理
-        pass
+        """单条状态刷新完成 - 即时回填 UI"""
+        # 更新表格中的状态显示（包含自动停止加载动画）
+        self.category_link_table.update_row_status(link_id, status)
+        if hasattr(self.list_view, 'update_row_status'):
+            self.list_view.update_row_status(link_id, status)
 
     @QtCore.Slot(dict)
     def _on_all_status_finished(self, results: dict):

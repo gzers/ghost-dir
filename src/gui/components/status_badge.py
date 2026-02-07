@@ -40,21 +40,30 @@ class StatusBadge(QWidget):
         layout.setSpacing(get_spacing("xs"))
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter)
 
-        # 状态图标
-        icon_char = get_status_icon(status_val)
-        icon_label = QLabel(icon_char)
-        icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter)
-        apply_icon_style(icon_label, size="md")
+        # 状态图标 - 处理多类型（Emoji 字符串 或 FluentIcon 枚举）
+        icon_data = get_status_icon(status_val)
+        from qfluentwidgets import IconWidget, FluentIcon
+        
+        if isinstance(icon_data, (str, bytes)):
+             # 传统的字符串/Emoji 图标
+             icon_label = QLabel(str(icon_data))
+             icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter)
+             apply_icon_style(icon_label, size="md")
+             layout.addWidget(icon_label)
+        else:
+             # QFluentWidgets 枚举图标 (FluentIcon)
+             icon_widget = IconWidget(icon_data)
+             icon_widget.setFixedSize(16, 16)
+             layout.addWidget(icon_widget)
 
         # 状态文本 - 使用 i18n
         status_colors = get_status_colors()
         text_label = BodyLabel(get_status_text(status_val))
         text_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         # 使用状态色作为文本颜色
-        apply_font_style(text_label, color=status_colors[status_val])
+        apply_font_style(text_label, color=status_colors.get(status_val, "#808080"))
         apply_transparent_background_only(text_label)
 
-        layout.addWidget(icon_label)
         layout.addWidget(text_label)
 
     def update_status(self, status: LinkStatus):

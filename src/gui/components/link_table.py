@@ -81,6 +81,13 @@ class LinkTable(BaseTableWidget):
         name_item = QTableWidgetItem(link.name)
         name_item.setData(Qt.ItemDataRole.UserRole, link.id)
         name_item.setTextAlignment(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)
+        
+        # 记录实测指向 (如果有)
+        if link.resolve_path:
+            name_item.setToolTip(f"期望指向: {link.source_path}\n物理实测: {link.resolve_path}")
+        else:
+            name_item.setToolTip(f"期望指向: {link.source_path}")
+            
         self.setItem(row, 1, name_item)
 
         # 2. 分类 (标准化文案)
@@ -93,6 +100,11 @@ class LinkTable(BaseTableWidget):
         from .status_badge import StatusBadge
         container = self.create_alignment_container()
         badge = StatusBadge(link.status)
+        
+        # 为 ERROR 状态增加详细提示
+        if link.status == LinkStatus.ERROR:
+            badge.setToolTip("路径存在冲突：目标位置已被普通文件占用，无法建立链接。")
+            
         container.layout().addWidget(badge)
         self.setCellWidget(row, 3, container)
 
@@ -115,22 +127,21 @@ class LinkTable(BaseTableWidget):
         layout = container.layout()
         layout.setSpacing(8)
 
-        # 获取状态字符串值进行比较
-        status_val = link.status.value if hasattr(link.status, 'value') else link.status
+        # 获取状态枚举（由于是 UserLink 对象，直接用 link.status）
+        status = link.status
 
-        # 使用更轻量的按钮样式以匹配视觉
-        # 交互逻辑统一化：失效、就绪、断开均视为“待建立”
-        to_connect_statues = [
-            LinkStatus.DISCONNECTED.value if hasattr(LinkStatus.DISCONNECTED, 'value') else LinkStatus.DISCONNECTED,
-            LinkStatus.ERROR.value if hasattr(LinkStatus.ERROR, 'value') else LinkStatus.ERROR
-        ]
+        # 4. 操作按钮设置
+        # 只要是“未连接”、“就绪”或“错误”状态，均视为可修复项
+        can_establish = [LinkStatus.DISCONNECTED, LinkStatus.READY, LinkStatus.ERROR]
 
-        if status_val in to_connect_statues:
+        if status in can_establish:
             btn = TransparentToolButton(FluentIcon.PLAY_SOLID, container)
-            btn.setToolTip("建立连接")
+            # 根据具体情况调整 ToolTip
+            tip = "建立连接" if status == LinkStatus.READY else "修复连接"
+            btn.setToolTip(tip)
             btn.clicked.connect(lambda: self.action_clicked.emit(link.id, "establish"))
             layout.addWidget(btn)
-        elif status_val == (LinkStatus.CONNECTED.value if hasattr(LinkStatus.CONNECTED, 'value') else LinkStatus.CONNECTED):
+        elif status == LinkStatus.CONNECTED:
             btn = TransparentToolButton(FluentIcon.CLOSE, container)
             btn.setToolTip("断开连接")
             btn.clicked.connect(lambda: self.action_clicked.emit(link.id, "disconnect"))
@@ -192,6 +203,44 @@ class LinkTable(BaseTableWidget):
                 if lid:
                     self.loading_ids.add(lid)
             self.set_row_size_loading(row, True)
+
+    def set_all_status_loading(self):
+        """将所有状态列设置为加载状态"""
+        for row in range(self.rowCount()):
+            self.set_row_status_loading(row, True)
+
+    def set_row_status_loading(self, row: int, is_loading: bool):
+        """设置某一行状态列的加载状态"""
+        if is_loading:
+            # 1. 插进度环
+            container = self.create_alignment_container(Qt.AlignmentFlag.AlignCenter)
+            ring = IndeterminateProgressRing(container)
+            ring.setFixedSize(16, 16)
+            ring.setStrokeWidth(2)
+            container.layout().addWidget(ring)
+            self.setCellWidget(row, 3, container)
+        else:
+            # 由 update_row_status 接管恢复工作，此处不用显式 remove，除非是中途停止
+            pass
+
+    def update_row_status(self, link_id: str, status: LinkStatus):
+        """更新指定行的状态显示"""
+        for row in range(self.rowCount()):
+            item = self.item(row, 1)
+            if item and item.data(Qt.ItemDataRole.UserRole) == link_id:
+                # 1. 移除加载动画容器
+                self.removeCellWidget(row, 3)
+                
+                # 2. 重新创建并设置 StatusBadge
+                from .status_badge import StatusBadge
+                container = self.create_alignment_container()
+                badge = StatusBadge(status)
+                
+                # 保持之前的 Tooltip 逻辑映射（简单复现之前的核心逻辑）
+                # 这里暂时省略复杂的 tooltip，为了快速恢复样式，后续可通过 reload 完成精细填色
+                container.layout().addWidget(badge)
+                self.setCellWidget(row, 3, container)
+                break
 
     def set_row_size_loading(self, row: int, is_loading: bool):
         """设置某一行空间占用列的加载状态"""

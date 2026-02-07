@@ -52,6 +52,7 @@ STATUS_COLORS = {
     "connected": "#27AE60",     # 绿色 - 已连接
     "ready": "#F39C12",         # 黄色 - 就绪
     "invalid": "#95A5A6",       # 灰色 - 失效
+    "error": "#992D22",         # 深红 - 路径冲突（非链接占用）
 }
 
 SUCCESS_COLOR = "#22C55E"

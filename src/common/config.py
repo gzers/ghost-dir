@@ -180,6 +180,7 @@ STATUS_COLORS = {
     "connected": "#27AE60",     # 绿色
     "ready": "#F39C12",         # 黄色
     "invalid": "#95A5A6",       # 灰色
+    "error": "#992D22",         # 深红
 }
 
 # 状态图标
@@ -188,6 +189,7 @@ STATUS_ICONS = {
     "connected": "🟢",
     "ready": "🟡",
     "invalid": "⚪",
+    "error": "❌",
 }
 
 # 文件大小单位

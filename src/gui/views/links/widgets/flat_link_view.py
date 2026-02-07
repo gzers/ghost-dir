@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt, QSize, Signal
 from PySide6.QtGui import QPainter, QIcon
-from qfluentwidgets import BodyLabel, CaptionLabel, TransparentToolButton, FluentIcon
+from qfluentwidgets import BodyLabel, CaptionLabel, TransparentToolButton, FluentIcon, IndeterminateProgressRing
 from src.models import UserLink, LinkStatus  # 新架构
 from src.common.managers import UserManager
 from src.gui.i18n import t, get_category_text
@@ -71,14 +71,30 @@ class FlatLinkView(QListWidget):
                 widget.set_loading(True)
 
     def set_all_sizes_loading(self):
-        """全量设置加载状态"""
-        self.loading_ids.clear()
+        """全量设置空间大小加载状态"""
         for i in range(self.count()):
             item = self.item(i)
             widget = self.itemWidget(item)
             if isinstance(widget, LinkItemWidget):
-                self.loading_ids.add(widget.link.id)
-                widget.set_loading(True)
+                self.loading_ids.add(widget.link.id) # 这里 loading_ids 语义保持计算大小
+                widget.set_size_loading(True)
+
+    def set_all_status_loading(self):
+        """全量设置状态探测加载状态"""
+        for i in range(self.count()):
+            item = self.item(i)
+            widget = self.itemWidget(item)
+            if isinstance(widget, LinkItemWidget):
+                widget.set_status_loading(True)
+
+    def update_row_status(self, link_id: str, status: LinkStatus):
+        """同步更新探测状态"""
+        for i in range(self.count()):
+            item = self.item(i)
+            widget = self.itemWidget(item)
+            if isinstance(widget, LinkItemWidget) and widget.link.id == link_id:
+                widget.update_status(status)
+                break
 
     def update_row_size(self, link_id: str, size_text: str):
         """更新单行大小"""
@@ -89,8 +105,8 @@ class FlatLinkView(QListWidget):
             item = self.item(i)
             widget = self.itemWidget(item)
             if isinstance(widget, LinkItemWidget) and widget.link.id == link_id:
-                widget.set_loading(False)
-                # 刷新路径标签处的占用提示（可选，或者在 ItemWidget 中增加专门的 Label）
+                widget.set_size_loading(False)
+                # 刷新路径标签处的占用提示
                 widget.update_size_info(size_text)
                 break
 
@@ -189,28 +205,49 @@ class LinkItemWidget(QWidget):
         self.size_label.setVisible(False)
         layout.addWidget(self.size_label)
 
-        # 🆕 加载环 (初始隐藏)
-        from qfluentwidgets import IndeterminateProgressRing
-        self.loading_ring = IndeterminateProgressRing(self)
-        self.loading_ring.setFixedSize(16, 16)
-        self.loading_ring.setStrokeWidth(2)
-        self.loading_ring.setVisible(False)
-        layout.addWidget(self.loading_ring)
+        # 🆕 空间占用加载环
+        self.size_loading_ring = IndeterminateProgressRing(self)
+        self.size_loading_ring.setFixedSize(16, 16)
+        self.size_loading_ring.setStrokeWidth(2)
+        self.size_loading_ring.setVisible(False)
+        layout.addWidget(self.size_loading_ring)
+
+        # 🆕 状态加载环 (放在徽章位置)
+        self.status_loading_ring = IndeterminateProgressRing(self)
+        self.status_loading_ring.setFixedSize(16, 16)
+        self.status_loading_ring.setStrokeWidth(2)
+        self.status_loading_ring.setVisible(False)
+        layout.addWidget(self.status_loading_ring)
 
         # 操作按钮组
         self.setup_actions(layout)
 
-    def set_loading(self, is_loading: bool):
-        """切换加载动画状态"""
-        self.loading_ring.setVisible(is_loading)
+    def set_size_loading(self, is_loading: bool):
+        """切换空间计算加载状态"""
+        self.size_loading_ring.setVisible(is_loading)
         if is_loading:
             self.size_label.setVisible(False)
+
+    def set_status_loading(self, is_loading: bool):
+        """切换状态探测加载状态"""
+        self.status_loading_ring.setVisible(is_loading)
+        if is_loading:
+            self.status_badge.setVisible(False)
+
+    def update_status(self, status: LinkStatus):
+        """更新并显示状态"""
+        # 由于 StatusBadge 暂不支持直接 setStatus，我们简单的替换它或者触发重绘
+        # 为简便起见，这里采用最稳的方式：停止动画并刷新 Badge
+        self.status_loading_ring.setVisible(False)
+        self.status_badge.status = status
+        self.status_badge._init_ui() # 触发图标和颜色的重新加载
+        self.status_badge.setVisible(True)
 
     def update_size_info(self, size_text: str):
         """更新并显示空间占用文案"""
         self.size_label.setText(size_text)
         self.size_label.setVisible(True)
-        self.loading_ring.setVisible(False)
+        self.size_loading_ring.setVisible(False)
 
     def setup_actions(self, layout):
         """根据状态设置操作按钮"""

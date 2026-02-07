@@ -26,6 +26,12 @@ class SmartScanner:
         3. 磁盘关键词深度匹配
         """
         discovered = []
+        
+        # 0. 预加载已导入的链接，用于扫描去重
+        existing_srcs = set()
+        if self.link_service:
+            existing_srcs = {l.source_path.lower() for l in self.link_service.get_all_links()}
+        
         import winreg # 仅在 Windows 下执行
         
         # 1. 预解析环境变量后的模板
@@ -47,7 +53,7 @@ class SmartScanner:
                 self.progress_callback(f"正在分析: {tpl.name}")
 
             # A. 检查默认路径
-            if os.path.exists(path):
+            if os.path.exists(path) and path.lower() not in existing_srcs:
                 discovered.append(tpl)
                 task['found'] = True
                 continue
@@ -55,19 +61,13 @@ class SmartScanner:
             # B. 注册表匹配 (模糊匹配名称)
             for reg_name, reg_loc in registry_paths.items():
                 if tpl.name.lower() in reg_name.lower() and reg_loc and os.path.exists(reg_loc):
-                    # 尝试拼接。有些注册表位置是根目录，需要补全子路径
-                    # 比如 Steam 注册表是 D:\Steam，模板路径末尾是 steamapps
+                    # 尝试拼接
+                    target_path = reg_loc
                     if tpl.id == "steam":
-                        test_path = os.path.join(reg_loc, "steamapps")
-                        if os.path.exists(test_path):
-                            tpl.default_src = test_path
-                            discovered.append(tpl)
-                            task['found'] = True
-                            break
+                        target_path = os.path.join(reg_loc, "steamapps")
                     
-                    # 通用逻辑：如果是目录且存在，直接采纳
-                    if os.path.exists(reg_loc):
-                        tpl.default_src = reg_loc
+                    if os.path.exists(target_path) and target_path.lower() not in existing_srcs:
+                        tpl.default_src = target_path
                         discovered.append(tpl)
                         task['found'] = True
                         break
@@ -87,7 +87,7 @@ class SmartScanner:
                 for drive in drives:
                     for sub in common_roots:
                         test_path = os.path.join(drive, sub, feature)
-                        if os.path.exists(test_path):
+                        if os.path.exists(test_path) and test_path.lower() not in existing_srcs:
                             tpl.default_src = test_path
                             discovered.append(tpl)
                             task['found'] = True
@@ -121,10 +121,30 @@ class SmartScanner:
             except: continue
         return results
 
+    def _get_real_link_target(self, path: str) -> Optional[str]:
+        """[底层核心] 探测路径是否为链接，并返回其实际物理指向"""
+        if not os.path.exists(path): return None
+        if os.name != 'nt':
+            return os.path.realpath(path) if os.path.islink(path) else None
+            
+        try:
+            import ctypes
+            FILE_ATTRIBUTE_REPARSE_POINT = 0x400
+            attrs = ctypes.windll.kernel32.GetFileAttributesW(path)
+            if attrs != -1 and (attrs & FILE_ATTRIBUTE_REPARSE_POINT):
+                # 如果是链接，提取其实际物理指向 (标准化长路径)
+                buffer = ctypes.create_unicode_buffer(1024)
+                ctypes.windll.kernel32.GetLongPathNameW(path, buffer, 1024)
+                return buffer.value.lower()
+        except:
+            pass
+        return None
+
     def import_templates(self, templates: List[Template]) -> int:
         """
-        导入选中的模板
-        将模板转换为 UserLink 对象并持久化到数据库中
+        [深度重构] 导入模板
+        1. 动态自适应：识别本地已存在链接的真实指向
+        2. 即时状态同步：导入成功后立即触发物理校验
         """
         if not self.link_service:
             print("ERROR: LinkService not configured for SmartScanner")
@@ -135,22 +155,35 @@ class SmartScanner:
 
         count = 0
         for tpl in templates:
-            # 这里的 default_src 在扫描完成后可能是更新后的真实探测路径
-            # default_target 默认为硬盘备份路径，如果为空，则使用一个合理的默认位置
-            target = tpl.default_target or f"D:\\Ghost_Library\\{tpl.id}"
+            src = tpl.default_src
             
+            # 核心改进：实测优先原则
+            # 检查当前扫描到的源路径是否已经是一个链接
+            real_target = self._get_real_link_target(src)
+            
+            if real_target:
+                # [关键逻辑] 如果已建立链接，则以其实测指向作为导入的 target_path
+                target = real_target
+                initial_status = LinkStatus.CONNECTED # 初步标记为连接，后续会由 service 进行物理确认
+            else:
+                # 否则使用模板默认或库路径
+                target = tpl.default_target or f"D:\\Ghost_Library\\{tpl.id}"
+                initial_status = LinkStatus.DISCONNECTED
+
             # 创建 UserLink 对象
             link = UserLink(
-                id=str(uuid.uuid4()).split('-')[0], # 生成短 ID
+                id=str(uuid.uuid4()).split('-')[0],
                 name=tpl.name,
-                source_path=tpl.default_src,
+                source_path=src,
                 target_path=target,
                 category=tpl.category_id,
-                status=LinkStatus.DISCONNECTED
+                status=initial_status
             )
             
             # 写入数据库
             if self.link_service.add_link(link):
+                # [体验加固] 导入后立即触发一次物理状态确认，确保 UI 状态即刻更新
+                self.link_service.refresh_link_status(link.id)
                 count += 1
                 
         return count

@@ -40,6 +40,7 @@ STATUS_TEXTS = {
     "connected": "已链接",
     "ready": "就绪",
     "invalid": "失效",
+    "error": "路径冲突",
     "running": "运行中",
     "stopped": "已停止",
 }
