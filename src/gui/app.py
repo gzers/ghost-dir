@@ -186,17 +186,17 @@ def run_app():
     for _ in range(5):
         app.processEvents()
 
-    splash.set_message("正在加载图形渲染引擎...")
+    splash.set_message("正在预热图形渲染引擎...")
     import time
-    for _ in range(15):
+    for _ in range(10):
         app.processEvents()
         time.sleep(0.005)
 
-    splash.set_message("正在构建主程序视图...")
+    splash.set_message("正在同步全量业务视图...")
     from src.gui.windows.main_window import MainWindow
     window = MainWindow(app)
     
-    splash.set_message("正在唤醒核心组件...")
+    splash.set_message("正在唤醒系统核心组件...")
     # [核心修复] 先确保窗口标志位正确，允许焦点抢占
     window.setWindowFlags(window.windowFlags() | Qt.WindowStaysOnTopHint)
     window.show()
@@ -206,7 +206,10 @@ def run_app():
     window.activateWindow()
     app.processEvents()
     
-    splash.set_message("准备就绪")
+    splash.set_message("系统已就绪")
+    for _ in range(10):
+        app.processEvents()
+        time.sleep(0.01)
     splash.finish()
     
     # [再次加固] 移除置顶标志（否则窗口会一直置顶挡住别人），并再次索要焦点
