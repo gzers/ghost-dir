@@ -76,9 +76,11 @@ python run.py
 # 安装 PyInstaller
 pip install pyinstaller
 
-# 打包
-pyinstaller --name="Ghost-Dir" --windowed --icon=assets/icon.ico --add-data="assets;assets" src/main.py
+# 使用 .spec 文件打包
+pyinstaller Ghost-Dir.spec
 ```
+
+打包完成后，可执行文件位于 `dist/Ghost-Dir/Ghost-Dir.exe`。
 
 ## 📖 使用指南
 
