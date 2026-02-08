@@ -193,6 +193,131 @@ class LinkService:
         self.dao.update(link)
         return new_status
 
+    def validate_and_add_link(self, data: dict, template=None) -> tuple[bool, str]:
+        """验证并添加链接"""
+        from src.common.validators import PathValidator, NameValidator
+        import uuid
+        
+        # 1. 验证名称
+        name_validator = NameValidator()
+        is_valid, msg = name_validator.validate(data.get("name", ""))
+        if not is_valid:
+            return False, msg
+        
+        # 2. 验证源路径
+        path_validator = PathValidator()
+        source_path = data.get("source", "")
+        is_valid, msg = path_validator.validate(source_path)
+        if not is_valid:
+            return False, f"源路径无效: {msg}"
+        
+        # 3. 验证目标路径
+        target_path = data.get("target", "")
+        is_valid, msg = path_validator.validate(target_path)
+        if not is_valid:
+            return False, f"目标路径无效: {msg}"
+        
+        # 4. 标准化路径
+        source_path = path_validator.normalize(source_path)
+        target_path = path_validator.normalize(target_path)
+        
+        # 5. 业务逻辑验证：检查源路径是否存在
+        if not os.path.exists(source_path):
+            return False, "源路径不存在"
+        
+        # 6. 业务逻辑验证：检查是否已存在相同的链接
+        existing_links = self.dao.get_all()
+        for link in existing_links:
+            if link.source_path.lower() == source_path.lower():
+                return False, f"源路径已存在于链接 '{link.name}' 中"
+        
+        # 7. 创建链接对象
+        link = UserLink(
+            id=str(uuid.uuid4()),
+            name=name_validator.normalize(data.get("name", "")),
+            source_path=source_path,
+            target_path=target_path,
+            category=data.get("category_id"),
+            status=LinkStatus.READY
+        )
+        
+        # 8. 保存到数据库
+        success = self.dao.add(link)
+        if not success:
+            return False, "保存链接失败"
+        
+        return True, ""
+
+    def validate_and_update_link(self, link_id: str, data: dict) -> tuple[bool, str]:
+        """验证并更新链接"""
+        from src.common.validators import PathValidator, NameValidator
+        
+        # 1. 获取现有链接
+        link = self.get_link_by_id(link_id)
+        if not link:
+            return False, "链接不存在"
+        
+        # 2. 验证名称
+        name_validator = NameValidator()
+        is_valid, msg = name_validator.validate(data.get("name", ""))
+        if not is_valid:
+            return False, msg
+        
+        # 3. 验证源路径
+        path_validator = PathValidator()
+        source_path = data.get("source", "")
+        is_valid, msg = path_validator.validate(source_path)
+        if not is_valid:
+            return False, f"源路径无效: {msg}"
+        
+        # 4. 验证目标路径
+        target_path = data.get("target", "")
+        is_valid, msg = path_validator.validate(target_path)
+        if not is_valid:
+            return False, f"目标路径无效: {msg}"
+        
+        # 5. 标准化路径
+        source_path = path_validator.normalize(source_path)
+        target_path = path_validator.normalize(target_path)
+        
+        # 6. 保存原始路径用于后续比较
+        original_source_path = link.source_path
+        original_target_path = link.target_path
+        
+        # 7. 如果链接已连接，不允许修改路径
+        if link.status == LinkStatus.CONNECTED:
+            if original_source_path != source_path or original_target_path != target_path:
+                return False, "已连接的链接不允许修改路径"
+        
+        # 8. 业务逻辑验证：如果修改了源路径，检查新路径是否存在
+        if original_source_path != source_path and not os.path.exists(source_path):
+            return False, "源路径不存在"
+        
+        # 9. 业务逻辑验证：如果修改了源路径，检查是否与其他链接冲突
+        if original_source_path != source_path:
+            existing_links = self.dao.get_all()
+            for existing_link in existing_links:
+                if existing_link.id != link_id and existing_link.source_path.lower() == source_path.lower():
+                    return False, f"源路径已存在于链接 '{existing_link.name}' 中"
+        
+        # 10. 更新链接对象
+        link.name = name_validator.normalize(data.get("name", ""))
+        link.source_path = source_path
+        link.target_path = target_path
+        link.category = data.get("category_id")
+        
+        # 11. 如果路径发生变化，重新检测状态
+        if original_source_path != source_path or original_target_path != target_path:
+            worker = ServiceWorker()
+            link.status = worker._check_single_link(link)
+        
+        # 12. 保存到数据库
+        success = self.dao.update(link)
+        if not success:
+            return False, "更新链接失败"
+        
+        return True, ""
+
     def _start_worker(self, task_fn: Callable, item_cb: Callable, finished_cb: Callable):
         # 抢占式中止旧任务
         if self._current_worker:

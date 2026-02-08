@@ -30,17 +30,21 @@ class PathValidator(BaseValidator):
     def normalize(self, value: str) -> str:
         r"""
         标准化路径:
-        1. 移除 \\?\ 前缀 (长路径支持)
-        2. 移除 \\?\UNC\ 前缀并保留 \\
-        3. 统一分隔符为 \
-        4. 去除首尾空格
+        1. 展开环境变量 (如 %USERPROFILE%, %APPDATA% 等)
+        2. 移除 \\?\ 前缀 (长路径支持)
+        3. 移除 \\?\UNC\ 前缀并保留 \\
+        4. 统一分隔符为 \
+        5. 去除首尾空格
         """
         if not value:
             return ""
 
         path = value.strip()
 
-        # 1. 处理 UNC 前缀
+        # 1. 展开环境变量
+        path = os.path.expandvars(path)
+
+        # 2. 处理 UNC 前缀
         # 使用组合方式避免 r"" 结尾转义和 \U 转义问题
         unc_long_prefix = r"\\?\UNC" + "\\"
 
@@ -53,17 +57,18 @@ class PathValidator(BaseValidator):
             # \\?\D:\folder -> D:\folder
             path = path[4:]
 
-        # 2. 统一分隔符
+        # 3. 统一分隔符
         path = path.replace("/", "\\")
 
-        # 3. 移除多余的连续反斜杠 (除了 UNC 的开头两个)
+        # 4. 移除多余的连续反斜杠 (除了 UNC 的开头两个)
         if path.startswith(r"\\"):
             path = r"\\" + re.sub(r"\\+", r"\\", path[2:])
         else:
             path = re.sub(r"\\+", r"\\", path)
 
-        # 4. 移除末尾的反斜杠 (除非是 C:\ 这种根目录)
+        # 5. 移除末尾的反斜杠 (除非是 C:\ 这种根目录)
         if len(path) > 3 and path.endswith("\\"):
             path = path.rstrip("\\")
 
         return path
+
