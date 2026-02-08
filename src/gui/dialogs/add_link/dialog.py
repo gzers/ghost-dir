@@ -178,10 +178,10 @@ class AddLinkDialog(MessageBoxBase):
                         self._finalize_addition(data)
                         self.accept() # 关闭添加对话框
 
-            # 启动异步迁移 (目标 -> 源)
+            # 启动异步迁移：将软件路径（source）的数据迁移到库路径（target）
             migration_service.migrate_async(
-                source=data["target"],
-                target=data["source"],
+                source=data["source"],  # 软件路径（现有数据位置）
+                target=data["target"],  # 库路径（迁移目的地）
                 mode="copy", # 默认使用安全复制
                 on_progress=progress_dialog.update_progress,
                 on_finished=on_finished

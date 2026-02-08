@@ -109,9 +109,6 @@ class MigrationWorker(QObject):
             os.makedirs(os.path.dirname(dst), exist_ok=True)
             
             # 使用 shutil.copy2 保留元数据
-            # 为了实现进度，如果文件很大，我们本可以分块读写，
-            # 但为了简单稳定，暂时直接调用 copy2，对单文件不显示分块进度
-            # 之后如果需要超大文件进度，可以重写此部分
             filename = os.path.basename(src)
             self.progress_updated.emit(self.processed_size, self.total_size, filename)
             
@@ -121,6 +118,13 @@ class MigrationWorker(QObject):
             
             self.progress_updated.emit(self.processed_size, self.total_size, filename)
             return True
+        except PermissionError as e:
+            # 文件被占用的情况
+            logger.error(f"文件被占用，无法复制 {src} -> {dst}: {e}")
+            # 检查是否是 WinError 32
+            if "WinError 32" in str(e) or "另一个程序正在使用此文件" in str(e):
+                raise Exception(f"文件被占用：{filename}\n\n请关闭正在使用该文件的程序后重试。")
+            raise
         except Exception as e:
             logger.error(f"复制文件失败 {src} -> {dst}: {e}")
             return False
@@ -157,17 +161,27 @@ class MigrationWorker(QObject):
                 if os.path.isfile(path):
                     os.remove(path)
                 elif os.path.isdir(path):
-                    if not os.listdir(path): # 只删除空目录，或者根据需要 rmtree
-                        os.rmdir(path)
+                    # 检查是否是符号链接/联接点
+                    from src.drivers.fs import is_junction, remove_junction
+                    if is_junction(path):
+                        # 如果是符号链接，使用专门的删除函数
+                        remove_junction(path)
                     else:
-                        shutil.rmtree(path)
+                        # 普通目录，检查是否为空
+                        if not os.listdir(path):
+                            os.rmdir(path)
+                        else:
+                            shutil.rmtree(path)
             except Exception as e:
                 logger.warning(f"回滚清理失败: {path}, {e}")
 
-class MigrationService:
-    """数据迁移服务"""
+class MigrationService(QObject):
+    """数据迁移服务 - 管理迁移生命周期"""
+    # 统一的完成信号，用于跨线程安全通知 UI
+    task_finished = Signal(bool, str)
     
     def __init__(self):
+        super().__init__()
         self._thread: Optional[QThread] = None
         self._worker: Optional[MigrationWorker] = None
 
@@ -213,6 +227,9 @@ class MigrationService:
 
     def _on_worker_finished(self, success: bool, msg: str):
         """Worker 完成时的清理工作"""
+        # 发射信号 (Qt 会自动处理跨线程调度)
+        self.task_finished.emit(success, msg)
+        
         if self._on_finished_cb:
             self._on_finished_cb(success, msg)
         self._worker = None

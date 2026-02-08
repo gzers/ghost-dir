@@ -142,8 +142,12 @@ class ServiceWorker(QObject):
 
     @staticmethod
     def _check_single_link(link: UserLink) -> LinkStatus:
-        src = ServiceWorker._full_path(link.source_path)
-        dst = ServiceWorker._full_path(link.target_path)
+        """检测单个链接的状态"""
+        # 正确的语义：
+        # source_path = 软件路径（链接位置）
+        # target_path = 库路径（数据位置）
+        link_path = ServiceWorker._full_path(link.source_path)  # 链接位置
+        data_path = ServiceWorker._full_path(link.target_path)  # 数据位置
         
         from src.drivers.fs import get_real_path
         
@@ -156,42 +160,41 @@ class ServiceWorker(QObject):
 
         FILE_ATTRIBUTE_REPARSE_POINT = 0x400
         
-        # 1. 检查目标路径 (Target) 的状态
-        dst_attrs = get_attrs(dst)
+        # 1. 检查链接位置的状态
+        link_attrs = get_attrs(link_path)
         
-        if os.path.exists(dst):
-            # 如果目标路径是一个联接点/符号链接
-            if dst_attrs != -1 and (dst_attrs & FILE_ATTRIBUTE_REPARSE_POINT):
-                real_target = get_real_path(dst)
+        if os.path.exists(link_path):
+            # 如果链接位置是一个联接点/符号链接
+            if link_attrs != -1 and (link_attrs & FILE_ATTRIBUTE_REPARSE_POINT):
+                real_target = get_real_path(link_path)
                 if not real_target:
                     return LinkStatus.INVALID
                 
-                # 🍏 杀手锏：物理指纹对比 (处理大小写、短路径、长路径前缀驱动器号差异的终极方案)
+                # 物理指纹对比
                 try:
-                    # 如果 real_target 指向的路径确实存在且物理上等于 src
-                    if os.path.exists(real_target) and os.path.exists(src):
-                        if os.path.samefile(real_target, src):
+                    if os.path.exists(real_target) and os.path.exists(data_path):
+                        if os.path.samefile(real_target, data_path):
                             return LinkStatus.CONNECTED
                 except Exception as e:
                     print(f"[DEBUG] samefile 对比失败: {e}")
 
-                # 降级：字符串匹配 (已剥离前缀且全小写)
-                if real_target.lower() == src.lower():
+                # 降级：字符串匹配
+                if real_target.lower() == data_path.lower():
                     return LinkStatus.CONNECTED
                 
-                print(f"[DEBUG] 链接解析差异: \n  Real: {real_target.lower()}\n  Src : {src.lower()}")
+                print(f"[DEBUG] 链接解析差异: \n  Real: {real_target.lower()}\n  Data: {data_path.lower()}")
                 # 虽然是链接，但指向不对，视为失效
                 return LinkStatus.INVALID
             
-            # 如果目标路径存在但不是链接，说明是真实数据冲突
+            # 如果链接位置存在但不是链接，说明是真实数据冲突
             return LinkStatus.ERROR
             
-        # 2. 如果目标路径不存在，检查源路径是否存在
-        if not os.path.exists(src):
-            # 数据源都没了，链接必然失效
+        # 2. 如果链接位置不存在，检查数据路径是否存在
+        if not os.path.exists(data_path):
+            # 数据都没了，链接必然失效
             return LinkStatus.INVALID
             
-        # 3. 目标不存在且源存在，属于“就绪”状态，可以建立链接
+        # 3. 链接位置不存在且数据存在，属于"就绪"状态，可以建立链接
         return LinkStatus.READY
 
 class LinkService:
@@ -238,36 +241,44 @@ class LinkService:
         link = self.get_link_by_id(link_id)
         if not link: return False, "链接不存在"
         
-        # 1. 核心判定逻辑：第一步必须看 Target 物理状态
-        dest = ServiceWorker._full_path(link.target_path)
-        source = ServiceWorker._full_path(link.source_path)
+        # 正确的语义：
+        # source_path = 软件路径（将来变成链接的位置）
+        # target_path = 库路径（数据真实存储的位置）
+        link_path = ServiceWorker._full_path(link.source_path)  # 链接位置（软件路径）
+        data_path = ServiceWorker._full_path(link.target_path)  # 数据位置（库路径）
         
         from src.drivers.fs import is_junction, remove_junction, create_junction, get_real_path
         
-        # ⚠️ 只要物理路径存在，我们必须先确认它是不是我们想要的 Junction
-        if os.path.exists(dest):
-            if is_junction(dest):
+        # 1. 检查链接位置的状态
+        if os.path.exists(link_path):
+            if is_junction(link_path):
                 # 如果已经是联接点，检查它指向哪儿
-                real_target = get_real_path(dest)
-                if real_target and real_target.lower() == source.lower():
+                real_target = get_real_path(link_path)
+                if real_target and real_target.lower() == data_path.lower():
                     return True, "已经处于连接状态"
                 else:
-                    print(f"[DEBUG] 物理链接存在但指向不对 ({real_target} != {source})，移除并重新建立")
-                    remove_junction(dest)
+                    print(f"[DEBUG] 物理链接存在但指向不对 ({real_target} != {data_path})，移除并重新建立")
+                    remove_junction(link_path)
             else:
-                # ‼️ 这是一个真实存在的文件夹或文件，必须拦截并返回 TARGET_EXISTS
-                print(f"[DEBUG] 侦测到物理冲突: {dest} 是真实数据，触发迁移确认")
+                # 这是一个真实存在的文件夹或文件，必须拦截并返回 TARGET_EXISTS
+                print(f"[DEBUG] 侦测到物理冲突: {link_path} 是真实数据，触发迁移确认")
                 return False, "TARGET_EXISTS"
 
-        # 2. 第二步：仓库源校验
-        if not os.path.exists(source):
-            return False, f"仓库源路径不存在: {source}"
+        # 2. 检查数据路径是否存在，不存在则创建
+        if not os.path.exists(data_path):
+            try:
+                print(f"[DEBUG] 库路径不存在，正在创建: {data_path}")
+                os.makedirs(data_path, exist_ok=True)
+            except Exception as e:
+                return False, f"无法创建库路径: {data_path}, 错误: {str(e)}"
             
-        # 3. 第三步：物理建立
-        print(f"[DEBUG] 正在建立物理联接点: {link.name} -> {dest}")
-        if create_junction(source, dest):
+        # 3. 建立链接：在 link_path 创建指向 data_path 的链接
+        print(f"[DEBUG] 正在建立物理联接点: {link.name}")
+        print(f"[DEBUG]   链接位置: {link_path}")
+        print(f"[DEBUG]   指向: {data_path}")
+        if create_junction(data_path, link_path):
             # 必须进行二次确认，防止 mklink 假成功
-            if is_junction(dest):
+            if is_junction(link_path):
                 link.status = LinkStatus.CONNECTED
                 self.dao.update(link)
                 return True, "链接建立成功"
@@ -280,7 +291,8 @@ class LinkService:
         if not link: return False, "链接不存在"
         
         from src.drivers.fs import remove_junction
-        if remove_junction(link.target_path):
+        # 正确的语义：删除软件路径（source_path）的链接
+        if remove_junction(link.source_path):
             link.status = LinkStatus.READY
             self.dao.update(link)
             return True, "链接断开成功"

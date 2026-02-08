@@ -21,6 +21,7 @@ from src.common.signals import signal_bus
 from src.gui.components import BasePageView, CategoryTreeWidget, BatchToolbar, LinkTable
 from src.gui.styles import apply_transparent_style
 from src.gui.views.links.widgets import FlatLinkView
+from src.models.link import LinkStatus
 
 
 class LinksView(BasePageView):
@@ -359,21 +360,69 @@ class LinksView(BasePageView):
                 on_finished=_on_establish_finished
             )
         elif action == "disconnect":
-            operation_runner.run_task_async(
-                self.connection_service.disconnect_connection,
-                link_id,
-                title=t("links.disconnect"),
-                parent=self,
-                on_start=lambda: (
-                    self.category_link_table.show_loading(link_id, True),
-                    self.list_view.show_loading(link_id, True)
-                ),
-                on_finished=lambda s, m, d: (
-                    self.category_link_table.show_loading(link_id, False),
-                    self.list_view.show_loading(link_id, False),
-                    self._load_data() if s else None
-                )
+            # 询问用户是否需要逆向迁移
+            link = self.user_manager.get_link_by_id(link_id)
+            if not link:
+                return
+                
+            from qfluentwidgets import MessageBox
+            
+            # 创建自定义对话框
+            w = MessageBox(
+                "断开连接",
+                f"您要断开链接：{link.name}\n\n请选择断开方式：",
+                self
             )
+            w.contentLabel.setMinimumWidth(600)  # 设置内容区域宽度
+            
+            # 修改按钮文字和样式
+            from qfluentwidgets import PushButton, PrimaryPushButton
+            
+            # 迁移回软件路径（推荐）- 第一个按钮，强调色
+            w.yesButton.setText("迁移回软件路径（推荐）")
+            w.yesButton.setObjectName("primaryButton")
+            w.yesButton.setMinimumWidth(200)
+            
+            # 仅断开链接 - 第二个按钮，普通样式
+            disconnect_btn = PushButton("仅断开链接", w)
+            disconnect_btn.setMinimumWidth(140)
+            w.buttonLayout.insertWidget(1, disconnect_btn)
+            
+            w.cancelButton.setText("取消")
+            w.cancelButton.setMinimumWidth(100)
+            
+            result = None
+            w.yesButton.clicked.connect(lambda: setattr(w, '_result', 'migrate') or w.accept())
+            disconnect_btn.clicked.connect(lambda: setattr(w, '_result', 'disconnect') or w.accept())
+            w.cancelButton.clicked.connect(lambda: setattr(w, '_result', 'cancel') or w.reject())
+            
+            if w.exec():
+                result = getattr(w, '_result', 'cancel')
+            else:
+                result = 'cancel'
+            
+            if result == 'cancel':
+                return
+            elif result == 'migrate':
+                # 逆向迁移：库路径 -> 软件路径
+                self._handle_reverse_migration(link_id)
+            else:
+                # 仅断开链接
+                operation_runner.run_task_async(
+                    self.connection_service.disconnect_connection,
+                    link_id,
+                    title=t("links.disconnect"),
+                    parent=self,
+                    on_start=lambda: (
+                        self.category_link_table.show_loading(link_id, True),
+                        self.list_view.show_loading(link_id, True)
+                    ),
+                    on_finished=lambda s, m, d: (
+                        self.category_link_table.show_loading(link_id, False),
+                        self.list_view.show_loading(link_id, False),
+                        self._load_data() if s else None
+                    )
+                )
         elif action == "edit":
             link = service_bus.user_manager.get_link_by_id(link_id)
             if link:
@@ -401,47 +450,236 @@ class LinksView(BasePageView):
             return
 
     def _handle_action_migration(self, link_id: str, action: str):
-        """处理操作过程中的迁移流动"""
+        """处理操作过程中的冲突：软件路径有真实数据"""
         link = self.user_manager.get_link_by_id(link_id)
         if not link: return
 
-        from src.gui.dialogs.migration import MigrationConfirmDialog, MigrationProgressDialog, MigrationResultDialog
+        from qfluentwidgets import MessageBox
+        
+        # 展开环境变量
+        source_real = os.path.expandvars(link.source_path)  # 软件路径
+        target_real = os.path.expandvars(link.target_path)  # 库路径
+
+        # 创建冲突处理对话框
+        w = MessageBox(
+            "路径冲突",
+            f"软件路径已存在数据：{source_real}\n\n请选择处理方式：",
+            self
+        )
+        w.contentLabel.setMinimumWidth(550)
+        
+        from qfluentwidgets import PushButton, PrimaryPushButton
+        
+        # 保留软件路径数据（推荐）- 第一个按钮，强调色
+        w.yesButton.setText("保留软件路径数据（推荐）")
+        w.yesButton.setObjectName("primaryButton")
+        w.yesButton.setMinimumWidth(200)
+        
+        # 用库数据覆盖 - 第二个按钮
+        overwrite_btn = PushButton("用库数据覆盖", w)
+        overwrite_btn.setMinimumWidth(140)
+        w.buttonLayout.insertWidget(1, overwrite_btn)
+        
+        w.cancelButton.setText("取消")
+        w.cancelButton.setMinimumWidth(100)
+        
+        result = None
+        w.yesButton.clicked.connect(lambda: setattr(w, '_result', 'keep') or w.accept())
+        overwrite_btn.clicked.connect(lambda: setattr(w, '_result', 'overwrite') or w.accept())
+        w.cancelButton.clicked.connect(lambda: setattr(w, '_result', 'cancel') or w.reject())
+        
+        if w.exec():
+            result = getattr(w, '_result', 'cancel')
+        else:
+            result = 'cancel'
+        
+        if result == 'cancel':
+            return
+        elif result == 'overwrite':
+            # 覆盖：删除软件路径数据，用库数据建立链接
+            self._handle_overwrite_and_connect(link_id, source_real)
+        else:
+            # 保留：将软件路径数据迁移到库，覆盖库中的旧数据
+            self._handle_migrate_and_connect(link_id, source_real, target_real, action)
+
+    def _handle_overwrite_and_connect(self, link_id: str, source_real: str):
+        """覆盖现有数据并建立链接"""
+        from qfluentwidgets import InfoBar
+        
+        # 获取库路径
+        link = self.user_manager.get_link_by_id(link_id)
+        if not link:
+            return
+        
+        target_real = os.path.expandvars(link.target_path)  # 库路径
+        
+        # 关键检查：确保库路径有数据
+        if not os.path.exists(target_real) or not os.listdir(target_real):
+            InfoBar.error(
+                "覆盖失败",
+                f"库路径为空或不存在，无法覆盖。\n请先确保库路径有数据：{target_real}",
+                duration=5000,
+                position='TopCenter',
+                parent=self
+            )
+            return
+        
+        try:
+            import shutil
+            if os.path.exists(source_real):
+                if os.path.isfile(source_real):
+                    os.remove(source_real)
+                else:
+                    shutil.rmtree(source_real)
+            
+            # 删除成功后，重新尝试建立连接
+            self._on_action_clicked(link_id, "establish")
+        except Exception as e:
+            InfoBar.error(
+                "删除失败",
+                f"无法删除现有数据：{str(e)}",
+                duration=3000,
+                position='TopCenter',
+                parent=self
+            )
+
+    def _handle_migrate_and_connect(self, link_id: str, source_real: str, target_real: str, action: str):
+        """迁移数据到库路径并建立链接"""
+        from src.gui.dialogs.migration import MigrationProgressDialog, MigrationResultDialog
         from src.services.migration_service import MigrationService
 
-        # 核心加固：UI 传入给对话框前展开环境变量，确保显示与检测一致
-        source_real = os.path.expandvars(link.source_path)
-        target_real = os.path.expandvars(link.target_path)
+        # 显示进度对话框
+        progress_dialog = MigrationProgressDialog(self)
+        migration_service = MigrationService()
 
-        # 1. 弹出确认 (目标 -> 源)
-        confirm_dialog = MigrationConfirmDialog(source_real, target_real, self)
-        if confirm_dialog.exec():
-            # 2. 进度
-            progress_dialog = MigrationProgressDialog(self)
-            migration_service = MigrationService()
-
-            def on_finished(success: bool, error_msg: str):
-                progress_dialog.close()
-                # 3. 结果
-                result_dialog = MigrationResultDialog(success, error_msg, self)
-                result_dialog.exec()
-                
-                if success:
-                    # 4. 成功后自动重试当初的操作
-                    self._on_action_clicked(link_id, action)
-
-            migration_service.migrate_async(
-                source=target_real,
-                target=source_real,
-                mode="copy", # 安全复制
-                on_progress=progress_dialog.update_progress,
-                on_finished=on_finished
-            )
-            # 开启迁移后的物理清理
-            if migration_service._worker:
-                migration_service._worker.cleanup_source = True
+        def _on_migration_done(success: bool, error_msg: str):
+            progress_dialog.close()
+            # 弹出结果对话框
+            result_dialog = MigrationResultDialog(success, error_msg, self)
+            result_dialog.exec()
             
-            progress_dialog.cancel_requested.connect(migration_service.cancel_migration)
-            progress_dialog.exec()
+            if success:
+                # 成功后自动重试建立连接
+                self._on_action_clicked(link_id, action)
+
+        migration_service.task_finished.connect(_on_migration_done)
+
+        # 迁移方向：将软件路径（source）的数据迁移到库路径（target）
+        migration_service.migrate_async(
+            source=source_real,  # 软件路径（现有数据位置）
+            target=target_real,  # 库路径（迁移目的地）
+            mode="copy",
+            on_progress=progress_dialog.update_progress
+        )
+        # 开启迁移后的物理清理
+        if migration_service._worker:
+            migration_service._worker.cleanup_source = True
+        
+        progress_dialog.cancel_requested.connect(migration_service.cancel_migration)
+        progress_dialog.exec()
+
+    def _handle_reverse_migration(self, link_id: str):
+        """处理逆向迁移：库路径 -> 软件路径"""
+        link = self.user_manager.get_link_by_id(link_id)
+        if not link: return
+
+        from src.gui.dialogs.migration import MigrationProgressDialog, MigrationResultDialog
+        from src.services.migration_service import MigrationService
+        from src.drivers.fs import is_junction, remove_junction
+
+        # 展开环境变量
+        source_real = os.path.expandvars(link.source_path)  # 软件路径
+        target_real = os.path.expandvars(link.target_path)  # 库路径
+
+        # 关键修正：先检查并断开链接
+        if is_junction(source_real):
+            # 如果软件路径是符号链接，先删除它
+            if not remove_junction(source_real):
+                from qfluentwidgets import InfoBar
+                InfoBar.error(
+                    "断开链接失败",
+                    f"无法删除符号链接：{source_real}",
+                    duration=3000,
+                    position='TopCenter',
+                    parent=self
+                )
+                return
+        
+        # 显示进度对话框
+        progress_dialog = MigrationProgressDialog(self)
+        migration_service = MigrationService()
+
+        def _on_reverse_migration_done(success: bool, error_msg: str):
+            from qfluentwidgets import InfoBar
+            
+            progress_dialog.close()
+            # 弹出结果对话框
+            result_dialog = MigrationResultDialog(success, error_msg, self)
+            result_dialog.exec()
+            
+            if success:
+                # 迁移成功，更新链接状态
+                link.status = LinkStatus.READY
+                self.user_manager.update_link(link)
+                
+                # 关键验证：检查软件路径是否真的有数据
+                if not os.path.exists(source_real) or not os.listdir(source_real):
+                    InfoBar.error(
+                        "逆向迁移异常",
+                        f"迁移报告成功，但软件路径为空！\n已保留库路径数据以防丢失。",
+                        duration=5000,
+                        position='TopCenter',
+                        parent=self
+                    )
+                    self._load_data()
+                    return
+                
+                # 清理库路径的数据
+                try:
+                    import shutil
+                    if os.path.exists(target_real):
+                        if os.path.isfile(target_real):
+                            os.remove(target_real)
+                        else:
+                            shutil.rmtree(target_real)
+                        InfoBar.success(
+                            "逆向迁移完成",
+                            f"数据已迁回软件路径，库路径已清理",
+                            duration=3000,
+                            position='TopCenter',
+                            parent=self
+                        )
+                except Exception as e:
+                    InfoBar.warning(
+                        "清理库路径失败",
+                        f"数据已迁回，但库路径清理失败：{str(e)}",
+                        duration=3000,
+                        position='TopCenter',
+                        parent=self
+                    )
+                
+                self._load_data()
+
+        migration_service.task_finished.connect(_on_reverse_migration_done)
+
+        # 添加调试日志
+        print(f"[DEBUG] 开始逆向迁移:")
+        print(f"[DEBUG]   源路径（库）: {target_real}, 存在: {os.path.exists(target_real)}")
+        if os.path.exists(target_real):
+            print(f"[DEBUG]   源路径文件数: {len(os.listdir(target_real)) if os.path.isdir(target_real) else '单文件'}")
+        print(f"[DEBUG]   目标路径（软件）: {source_real}, 存在: {os.path.exists(source_real)}")
+
+        # 逆向迁移：库路径 -> 软件路径
+        migration_service.migrate_async(
+            source=target_real,  # 库路径（现有数据位置）
+            target=source_real,  # 软件路径（迁移目的地）
+            mode="copy",
+            on_progress=progress_dialog.update_progress
+        )
+        # 不需要清理源路径（库路径保留数据）
+        
+        progress_dialog.cancel_requested.connect(migration_service.cancel_migration)
+        progress_dialog.exec()
 
 
     def _on_batch_establish(self):

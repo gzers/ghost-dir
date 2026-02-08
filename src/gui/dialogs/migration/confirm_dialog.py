@@ -11,6 +11,7 @@ from qfluentwidgets import (
 from src.gui.styles import apply_card_style, get_font_style
 from src.services.occupancy_service import OccupancyService
 from PySide6.QtCore import Qt, QTimer
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout
 
 class MigrationConfirmDialog(MessageBoxBase):
     """迁移确认对话框"""
@@ -62,27 +63,27 @@ class MigrationConfirmDialog(MessageBoxBase):
         path_layout = QVBoxLayout()
         path_layout.setSpacing(12)
         
-        # 目标路径 (冲突源)
-        target_info = QHBoxLayout()
-        target_icon = IconWidget(FluentIcon.FOLDER, self.warningCard)
-        target_icon.setFixedSize(16, 16)
-        target_label = BodyLabel(f"目标路径 (现有数据): {self.target}", self.warningCard)
-        target_label.setStyleSheet("color: #EF4444; font-weight: bold;") # 红色警告
-        target_info.addWidget(target_icon)
-        target_info.addWidget(target_label)
-        target_info.addStretch()
-        
-        # 源路径 (迁移目的地)
+        # 软件路径 (现有数据所在位置)
         source_info = QHBoxLayout()
-        source_icon = IconWidget(FluentIcon.SEND, self.warningCard)
+        source_icon = IconWidget(FluentIcon.FOLDER, self.warningCard)
         source_icon.setFixedSize(16, 16)
-        source_label = BodyLabel(f"迁移至 (源路径): {self.source}", self.warningCard)
+        source_label = BodyLabel(f"软件路径 (现有数据): {self.source}", self.warningCard)
+        source_label.setStyleSheet("color: #EF4444; font-weight: bold;") # 红色警告
         source_info.addWidget(source_icon)
         source_info.addWidget(source_label)
         source_info.addStretch()
         
-        path_layout.addLayout(target_info)
+        # 库路径 (迁移目的地)
+        target_info = QHBoxLayout()
+        target_icon = IconWidget(FluentIcon.SEND, self.warningCard)
+        target_icon.setFixedSize(16, 16)
+        target_label = BodyLabel(f"迁移至 (库路径): {self.target}", self.warningCard)
+        target_info.addWidget(target_icon)
+        target_info.addWidget(target_label)
+        target_info.addStretch()
+        
         path_layout.addLayout(source_info)
+        path_layout.addLayout(target_info)
         warning_layout.addLayout(path_layout)
         
         # 4. 🆕 进程占用“脉冲”探测区
@@ -130,21 +131,36 @@ class MigrationConfirmDialog(MessageBoxBase):
 
     def _perform_occupancy_check(self):
         """执行实际的占用检测并更新 UI"""
-        locking_procs = self.occupancy_service.get_locking_processes(self.target)
+        occ_detail = self.occupancy_service.get_detailed_occupancy(self.target)
+        hard_locks = occ_detail["hard"]
+        soft_conflicts = occ_detail["soft"]
         
-        if not locking_procs:
-            self.occupancyStatusLabel.setText("✅ 未检测到应用占用，可以安全迁移。")
+        # 1. 处理硬锁定 (阻断性)
+        if hard_locks:
+            self.occupancyStatusLabel.setText(f"❌ 严重占用: {hard_locks[0]}。必须先解除锁定才能继续。")
+            self.occupancyStatusLabel.setStyleSheet("color: #EF4444;") # 红色
+            self.yesButton.setEnabled(False)
+            self.yesButton.setToolTip("检测到物理占用，无法迁移")
+            self.pulseRing.hide() # 停止加载动画显示
+            return
+
+        # 2. 处理软冲突 (提醒性)
+        if soft_conflicts:
+            proc_str = "、".join(soft_conflicts[:3])
+            if len(soft_conflicts) > 3: proc_str += " 等"
+            self.occupancyStatusLabel.setText(f"⚠️ 提示: {proc_str} 正在运行。建议关闭以确保迁移万无一失。")
+            self.occupancyStatusLabel.setStyleSheet("color: #F59E0B;") # 橙色
+            self.yesButton.setEnabled(True) # 软冲突不阻断
+            self.yesButton.setToolTip("相关程序运行中，点击仍可尝试迁移")
+        else:
+            # 3. 完全通过
+            self.occupancyStatusLabel.setText("✅ 探测完成: 未检测到明显占用，可以安全迁移。")
             self.occupancyStatusLabel.setStyleSheet("color: #10B981;") # 绿色
             self.yesButton.setEnabled(True)
             self.yesButton.setToolTip("")
-        else:
-            proc_str = "、".join(locking_procs[:3])
-            if len(locking_procs) > 3: proc_str += " 等"
-            self.occupancyStatusLabel.setText(f"⚠️ 警告: {proc_str} 正在访问该目录。迁移可能会失败，请先关闭相关应用。")
-            self.occupancyStatusLabel.setStyleSheet("color: #F59E0B;") # 橙色
-            # 为了严谨，如果检测到占用，暂时禁用迁移按钮（或给予强提醒）
-            self.yesButton.setEnabled(False)
-            self.yesButton.setToolTip("请先关闭占用该目录的应用以确保数据安全。")
+        
+        self.pulseRing.hide() # 无论如何，检查完毕后隐藏或淡化加载动画
+        self.occupancyTitle.setText("占用结果检查 (实时监控中)")
 
     def closeEvent(self, event):
         """窗口关闭时停止定时器"""
