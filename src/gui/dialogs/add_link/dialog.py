@@ -154,8 +154,12 @@ class AddLinkDialog(MessageBoxBase):
         from src.gui.dialogs.migration import MigrationConfirmDialog, MigrationProgressDialog, MigrationResultDialog
         from src.services.migration_service import MigrationService
 
+        # 核心修复：对话框层必须先解析路径，否则 OccupancyService 探测不到 %USERPROFILE% 里的进程
+        src_real = os.path.expandvars(data["source"])
+        dst_real = os.path.expandvars(data["target"])
+
         # 1. 弹出确认对话框
-        confirm_dialog = MigrationConfirmDialog(data["source"], data["target"], self)
+        confirm_dialog = MigrationConfirmDialog(src_real, dst_real, self)
         if confirm_dialog.exec():
             # 2. 用户确认迁移，开始显示进度
             progress_dialog = MigrationProgressDialog(self)
@@ -182,6 +186,9 @@ class AddLinkDialog(MessageBoxBase):
                 on_progress=progress_dialog.update_progress,
                 on_finished=on_finished
             )
+            # 显式开启成功后的清理逻辑
+            if migration_service._worker:
+                migration_service._worker.cleanup_source = True
             
             # 关联取消按钮
             progress_dialog.cancel_requested.connect(migration_service.cancel_migration)

@@ -25,6 +25,7 @@ class MigrationWorker(QObject):
         self.source = source
         self.target = target
         self.mode = mode  # "copy" 或 "move"
+        self.cleanup_source = False # 成功后是否清理原始 source 目录
         self.is_aborted = False
         self.total_size = 0
         self.processed_size = 0
@@ -77,15 +78,17 @@ class MigrationWorker(QObject):
                 self._rollback()
                 self.finished.emit(False, "操作已取消")
             elif success:
-                # 如果是移动模式，迁移成功后删除源
-                if self.mode == "move":
+                # 核心修正：如果模式是 move，或者显式要求清理
+                if self.mode == "move" or self.cleanup_source:
                     try:
+                        logger.info(f"迁移成功，正在清理原始路径: {self.source}")
                         if os.path.isfile(self.source):
                             os.remove(self.source)
                         else:
                             shutil.rmtree(self.source)
                     except Exception as e:
-                        logger.warning(f"删除源路径失败: {e}")
+                        # 清理失败不代表迁移失败，记录警告
+                        logger.warning(f"迁移成功但清理原始路径失败（可能被锁定）: {e}")
                 
                 self.finished.emit(True, "")
             else:

@@ -52,3 +52,18 @@ def is_junction(path: str) -> bool:
         return bool(attrs & FILE_ATTRIBUTE_REPARSE_POINT)
     except Exception:
         return False
+
+def get_real_path(path: str) -> str:
+    """获取链接指向的真实物理路径 (规范化后)"""
+    try:
+        if not os.path.exists(path):
+            return ""
+        # 使用 os.path.realpath 解析联接点/符号链接
+        resolved = os.path.realpath(path)
+        # ⚠️ 关键修正：Windows 下 realpath 可能会带上 \\?\ 前缀，导致比较失败
+        path_str = os.path.normpath(resolved)
+        if path_str.startswith("\\\\?\\"):
+            path_str = path_str[4:]
+        return path_str
+    except Exception:
+        return ""

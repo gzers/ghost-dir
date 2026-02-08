@@ -128,15 +128,25 @@ class ServiceWorker(QObject):
         self.all_finished.emit(results)
 
     @staticmethod
+    def _full_path(path: str) -> str:
+        """解析环境变量并标准化路径"""
+        if not path: return ""
+        # 1. 展开环境变量
+        expanded = os.path.expandvars(path)
+        # 2. 转化为绝对规范路径
+        path_str = os.path.normpath(os.path.abspath(expanded))
+        # 3. ⚠️ 核心修复：剥离 Windows 长路径驱动器前缀，确保比较一致性
+        if path_str.startswith("\\\\?\\"):
+            path_str = path_str[4:]
+        return path_str
+
+    @staticmethod
     def _check_single_link(link: UserLink) -> LinkStatus:
-        src = link.source_path
-        def get_real_path(path):
-            if not os.path.exists(path): return None
-            try:
-                resolved = os.path.realpath(path)
-                return os.path.normpath(resolved).lower()
-            except:
-                return os.path.normcase(os.path.abspath(path)).lower()
+        src = ServiceWorker._full_path(link.source_path)
+        dst = ServiceWorker._full_path(link.target_path)
+        
+        from src.drivers.fs import get_real_path
+        
         def get_attrs(p):
             if os.name != 'nt': return 0
             try:
@@ -144,19 +154,45 @@ class ServiceWorker(QObject):
                 return ctypes.windll.kernel32.GetFileAttributesW(p)
             except: return -1
 
-        src_attrs = get_attrs(src)
         FILE_ATTRIBUTE_REPARSE_POINT = 0x400
+        
+        # 1. 检查目标路径 (Target) 的状态
+        dst_attrs = get_attrs(dst)
+        
+        if os.path.exists(dst):
+            # 如果目标路径是一个联接点/符号链接
+            if dst_attrs != -1 and (dst_attrs & FILE_ATTRIBUTE_REPARSE_POINT):
+                real_target = get_real_path(dst)
+                if not real_target:
+                    return LinkStatus.INVALID
+                
+                # 🍏 杀手锏：物理指纹对比 (处理大小写、短路径、长路径前缀驱动器号差异的终极方案)
+                try:
+                    # 如果 real_target 指向的路径确实存在且物理上等于 src
+                    if os.path.exists(real_target) and os.path.exists(src):
+                        if os.path.samefile(real_target, src):
+                            return LinkStatus.CONNECTED
+                except Exception as e:
+                    print(f"[DEBUG] samefile 对比失败: {e}")
+
+                # 降级：字符串匹配 (已剥离前缀且全小写)
+                if real_target.lower() == src.lower():
+                    return LinkStatus.CONNECTED
+                
+                print(f"[DEBUG] 链接解析差异: \n  Real: {real_target.lower()}\n  Src : {src.lower()}")
+                # 虽然是链接，但指向不对，视为失效
+                return LinkStatus.INVALID
+            
+            # 如果目标路径存在但不是链接，说明是真实数据冲突
+            return LinkStatus.ERROR
+            
+        # 2. 如果目标路径不存在，检查源路径是否存在
         if not os.path.exists(src):
+            # 数据源都没了，链接必然失效
             return LinkStatus.INVALID
-        if src_attrs != -1 and (src_attrs & FILE_ATTRIBUTE_REPARSE_POINT):
-            real_target = get_real_path(src)
-            if real_target and os.path.exists(real_target):
-                return LinkStatus.CONNECTED
-            return LinkStatus.INVALID
-        dst = link.target_path
-        if not os.path.exists(dst):
-            return LinkStatus.READY
-        return LinkStatus.ERROR
+            
+        # 3. 目标不存在且源存在，属于“就绪”状态，可以建立链接
+        return LinkStatus.READY
 
 class LinkService:
     def __init__(self, dao: LinkDAO):
@@ -202,33 +238,41 @@ class LinkService:
         link = self.get_link_by_id(link_id)
         if not link: return False, "链接不存在"
         
-        # 1. 检查状态
-        worker = ServiceWorker()
-        status = worker._check_single_link(link)
-        if status == LinkStatus.CONNECTED:
-            return True, "已经处于连接状态"
-            
-        # 2. 核心冲突检查：如果目标路径已存在 (READY -> ERROR)
-        # 增加防御性标准化检查
-        target_path = os.path.normpath(link.target_path)
-        print(f"[DEBUG] 尝试建立连接: {link.name}, 目标路径: {target_path}")
+        # 1. 核心判定逻辑：第一步必须看 Target 物理状态
+        dest = ServiceWorker._full_path(link.target_path)
+        source = ServiceWorker._full_path(link.source_path)
         
-        if os.path.exists(target_path):
-            # 必须是非 Junction/Symlink 的普通文件或文件夹才触发迁移
-            worker = ServiceWorker()
-            if worker._check_single_link(link) != LinkStatus.CONNECTED:
-                print(f"[DEBUG] 检测到路径冲突: {target_path} 已存在且非连接点")
-                return False, "TARGET_EXISTS"
+        from src.drivers.fs import is_junction, remove_junction, create_junction, get_real_path
+        
+        # ⚠️ 只要物理路径存在，我们必须先确认它是不是我们想要的 Junction
+        if os.path.exists(dest):
+            if is_junction(dest):
+                # 如果已经是联接点，检查它指向哪儿
+                real_target = get_real_path(dest)
+                if real_target and real_target.lower() == source.lower():
+                    return True, "已经处于连接状态"
+                else:
+                    print(f"[DEBUG] 物理链接存在但指向不对 ({real_target} != {source})，移除并重新建立")
+                    remove_junction(dest)
             else:
-                print(f"[DEBUG] 路径已存在但为有效连接点，无需迁移")
-        
-        # 3. 执行建立过程 (Junction)
-        from src.drivers.fs import create_junction
-        if create_junction(link.source_path, link.target_path):
-            link.status = LinkStatus.CONNECTED
-            self.dao.update(link)
-            return True, "链接建立成功"
-        return False, "建立链接失败，请检查权限或路径"
+                # ‼️ 这是一个真实存在的文件夹或文件，必须拦截并返回 TARGET_EXISTS
+                print(f"[DEBUG] 侦测到物理冲突: {dest} 是真实数据，触发迁移确认")
+                return False, "TARGET_EXISTS"
+
+        # 2. 第二步：仓库源校验
+        if not os.path.exists(source):
+            return False, f"仓库源路径不存在: {source}"
+            
+        # 3. 第三步：物理建立
+        print(f"[DEBUG] 正在建立物理联接点: {link.name} -> {dest}")
+        if create_junction(source, dest):
+            # 必须进行二次确认，防止 mklink 假成功
+            if is_junction(dest):
+                link.status = LinkStatus.CONNECTED
+                self.dao.update(link)
+                return True, "链接建立成功"
+            
+        return False, "建立链接失败。请尝试以管理员身份运行软件。"
 
     def disconnect_connection(self, link_id: str) -> tuple[bool, str]:
         """断开链接"""
@@ -272,15 +316,30 @@ class LinkService:
             return False, f"目标路径无效: {msg}"
         
         # 4. 标准化路径
-        source_path = path_validator.normalize(source_path)
-        target_path = path_validator.normalize(target_path)
+        # ⚠️ 关键修正：在执行物理检测前必须解析环境变量
+        source_path = ServiceWorker._full_path(source_path)
+        target_path = ServiceWorker._full_path(target_path)
         
-        # 5. 业务逻辑验证：检查源路径是否存在
-        if not os.path.exists(source_path):
-            return False, "源路径不存在"
-        
-        # 6. 业务逻辑验证：检查目标路径是否已存在数据 (用于触发迁移)
-        if os.path.exists(target_path):
+        # 5. 业务逻辑验证：检查源路径与目标路径的配合情况
+        target_exists = os.path.exists(target_path)
+        source_exists = os.path.exists(source_path)
+
+        if target_exists:
+            # 这种情况触发由前端处理的 TARGET_EXISTS 迁移流
+            pass
+        else:
+            # 如果目标路径不存在，那么源路径必须存在，否则没东西可以链接
+            if not source_exists:
+                return False, f"源路径不存在（请确认文件夹已创建）"
+
+        # 6. 如果目标路径存在数据且源路径也存在数据，这将是致命冲突
+        if target_exists and source_exists:
+            from src.drivers.fs import is_junction
+            # 如果目标是真实文件夹且源非空，禁止自动合并
+            if not is_junction(target_path) and any(os.scandir(source_path)):
+                 return False, "源路径与目标路径均存在非空数据，无法执行自动合并，请手动清理一处后再试"
+
+        if target_exists:
             return False, "TARGET_EXISTS"
 
         # 7. 业务逻辑验证：检查是否已存在相同的链接

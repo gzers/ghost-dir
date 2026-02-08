@@ -332,18 +332,23 @@ class LinksView(BasePageView):
             runner_fn = self.connection_service.establish_connection_by_id if action == "establish" else self.connection_service.reconnect_connection
             
             def _on_establish_finished(success: bool, msg: str, data: dict):
+                # 统一清理两方视图的加载状态
                 self.category_link_table.show_loading(link_id, False)
+                self.list_view.show_loading(link_id, False)
+                
+                print(f"[DEBUG] 操作结束: success={success}, msg={msg}")
                 if success:
                     self._load_data()
                 elif msg == "TARGET_EXISTS":
-                    # 触发迁移流程
+                    # ⚠️ 终于捕获到冲突，强制触发迁移流程
+                    print(f"[DEBUG] 确认冲突，正在唤起迁移面板")
                     self._handle_action_migration(link_id, action)
                 else:
-                    # 传统的报错交给 runner 或手动显示
+                    # 其他错误已有 OperationRunner 弹 InfoBar
                     pass
 
             operation_runner.run_task_async(
-                runner_fn,  # 补回缺失的方法引用
+                runner_fn, 
                 link_id,
                 title=title_text,
                 parent=self,
@@ -403,8 +408,12 @@ class LinksView(BasePageView):
         from src.gui.dialogs.migration import MigrationConfirmDialog, MigrationProgressDialog, MigrationResultDialog
         from src.services.migration_service import MigrationService
 
+        # 核心加固：UI 传入给对话框前展开环境变量，确保显示与检测一致
+        source_real = os.path.expandvars(link.source_path)
+        target_real = os.path.expandvars(link.target_path)
+
         # 1. 弹出确认 (目标 -> 源)
-        confirm_dialog = MigrationConfirmDialog(link.source_path, link.target_path, self)
+        confirm_dialog = MigrationConfirmDialog(source_real, target_real, self)
         if confirm_dialog.exec():
             # 2. 进度
             progress_dialog = MigrationProgressDialog(self)
@@ -421,12 +430,16 @@ class LinksView(BasePageView):
                     self._on_action_clicked(link_id, action)
 
             migration_service.migrate_async(
-                source=link.target_path,
-                target=link.source_path,
+                source=target_real,
+                target=source_real,
                 mode="copy", # 安全复制
                 on_progress=progress_dialog.update_progress,
                 on_finished=on_finished
             )
+            # 开启迁移后的物理清理
+            if migration_service._worker:
+                migration_service._worker.cleanup_source = True
+            
             progress_dialog.cancel_requested.connect(migration_service.cancel_migration)
             progress_dialog.exec()
 
