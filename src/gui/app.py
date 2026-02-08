@@ -197,11 +197,12 @@ def run_app():
     window = MainWindow(app)
     
     splash.set_message("正在唤醒系统核心组件...")
-    # [核心修复] 先确保窗口标志位正确，允许焦点抢占
-    window.setWindowFlags(window.windowFlags() | Qt.WindowStaysOnTopHint)
-    window.show()
+    # 在显示前确保窗口尺寸和位置正确
+    window.resize(1200, 800)
+    window._center_on_screen()
     
-    # 暴力提升层级并唤醒焦点
+    # 直接显示主窗口，不使用置顶标志避免窗口重建
+    window.show()
     window.raise_()
     window.activateWindow()
     app.processEvents()
@@ -210,14 +211,11 @@ def run_app():
     for _ in range(10):
         app.processEvents()
         time.sleep(0.01)
+    
+    # 先关闭启动页
     splash.finish()
     
-    # [再次加固] 移除置顶标志（否则窗口会一直置顶挡住别人），并再次索要焦点
-    # 这是一个经典的 Qt/Windows 焦点夺回 Trick
-    window.setWindowFlags(window.windowFlags() & ~Qt.WindowStaysOnTopHint)
-    window.show() # 刷新 Flags
-    window.resize(1200, 800) # [关键修正] 标志位切换后必须重设尺寸
-    window._center_on_screen() # [终极修正] 标志位切换后必须重新执行居中逻辑
+    # 确保主窗口获得焦点
     window.raise_()
     window.activateWindow()
 
