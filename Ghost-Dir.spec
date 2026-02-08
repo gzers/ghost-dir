@@ -5,7 +5,10 @@ a = Analysis(
     ['src\\main.py'],
     pathex=[],
     binaries=[],
-    datas=[('assets', 'assets')],
+    datas=[
+        ('assets', 'assets'),
+        ('config', 'config'),
+    ],
     hiddenimports=[
         'src.gui.views.links',
         'src.gui.views.wizard',
