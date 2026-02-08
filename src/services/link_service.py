@@ -197,6 +197,56 @@ class LinkService:
         self.dao.update(link)
         return new_status
 
+    def establish_connection_by_id(self, link_id: str) -> tuple[bool, str]:
+        """同步建立链接"""
+        link = self.get_link_by_id(link_id)
+        if not link: return False, "链接不存在"
+        
+        # 1. 检查状态
+        worker = ServiceWorker()
+        status = worker._check_single_link(link)
+        if status == LinkStatus.CONNECTED:
+            return True, "已经处于连接状态"
+            
+        # 2. 核心冲突检查：如果目标路径已存在 (READY -> ERROR)
+        # 增加防御性标准化检查
+        target_path = os.path.normpath(link.target_path)
+        print(f"[DEBUG] 尝试建立连接: {link.name}, 目标路径: {target_path}")
+        
+        if os.path.exists(target_path):
+            # 必须是非 Junction/Symlink 的普通文件或文件夹才触发迁移
+            worker = ServiceWorker()
+            if worker._check_single_link(link) != LinkStatus.CONNECTED:
+                print(f"[DEBUG] 检测到路径冲突: {target_path} 已存在且非连接点")
+                return False, "TARGET_EXISTS"
+            else:
+                print(f"[DEBUG] 路径已存在但为有效连接点，无需迁移")
+        
+        # 3. 执行建立过程 (Junction)
+        from src.drivers.fs import create_junction
+        if create_junction(link.source_path, link.target_path):
+            link.status = LinkStatus.CONNECTED
+            self.dao.update(link)
+            return True, "链接建立成功"
+        return False, "建立链接失败，请检查权限或路径"
+
+    def disconnect_connection(self, link_id: str) -> tuple[bool, str]:
+        """断开链接"""
+        link = self.get_link_by_id(link_id)
+        if not link: return False, "链接不存在"
+        
+        from src.drivers.fs import remove_junction
+        if remove_junction(link.target_path):
+            link.status = LinkStatus.READY
+            self.dao.update(link)
+            return True, "链接断开成功"
+        return False, "断开操作失败"
+
+    def reconnect_connection(self, link_id: str) -> tuple[bool, str]:
+        """重连链接"""
+        self.disconnect_connection(link_id)
+        return self.establish_connection_by_id(link_id)
+
     def validate_and_add_link(self, data: dict, template=None) -> tuple[bool, str]:
         """验证并添加链接"""
         from src.common.validators import PathValidator, NameValidator
@@ -229,7 +279,11 @@ class LinkService:
         if not os.path.exists(source_path):
             return False, "源路径不存在"
         
-        # 6. 业务逻辑验证：检查是否已存在相同的链接
+        # 6. 业务逻辑验证：检查目标路径是否已存在数据 (用于触发迁移)
+        if os.path.exists(target_path):
+            return False, "TARGET_EXISTS"
+
+        # 7. 业务逻辑验证：检查是否已存在相同的链接
         existing_links = self.dao.get_all()
         for link in existing_links:
             if link.source_path.lower() == source_path.lower():

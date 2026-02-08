@@ -119,16 +119,12 @@ class AddLinkDialog(MessageBoxBase):
         success, msg = self.connection_service.validate_and_add_link(data, self.selected_template)
 
         if success:
-            # 3. 处理后续业务：保存为模版
-            if self.stackedWidget.currentIndex() == 1 and self.customTab.saveAsTemplateBtn.isChecked():
-                self.template_service.add_template_from_data({
-                    "name": data["name"],
-                    "default_src": data["source"],
-                    "category_id": data["category_id"]
-                })
-
-            self.link_added.emit()
+            self._finalize_addition(data)
             return True
+        elif msg == "TARGET_EXISTS":
+            # 触发迁移流程
+            self._handle_migration(data)
+            return False
         else:
             # 弹出业务错误提示
             InfoBar.warning(
@@ -141,3 +137,52 @@ class AddLinkDialog(MessageBoxBase):
             )
 
         return False
+
+    def _finalize_addition(self, data: dict):
+        """最终完成添加操作后的业务处理"""
+        if self.stackedWidget.currentIndex() == 1 and self.customTab.saveAsTemplateBtn.isChecked():
+            self.template_service.add_template_from_data({
+                "name": data["name"],
+                "default_src": data["source"],
+                "category_id": data["category_id"]
+            })
+
+        self.link_added.emit()
+
+    def _handle_migration(self, data: dict):
+        """处理数据迁移流程"""
+        from src.gui.dialogs.migration import MigrationConfirmDialog, MigrationProgressDialog, MigrationResultDialog
+        from src.services.migration_service import MigrationService
+
+        # 1. 弹出确认对话框
+        confirm_dialog = MigrationConfirmDialog(data["source"], data["target"], self)
+        if confirm_dialog.exec():
+            # 2. 用户确认迁移，开始显示进度
+            progress_dialog = MigrationProgressDialog(self)
+            migration_service = MigrationService()
+
+            def on_finished(success: bool, error_msg: str):
+                progress_dialog.close()
+                # 3. 显示结果
+                result_dialog = MigrationResultDialog(success, error_msg, self)
+                result_dialog.exec()
+                
+                if success:
+                    # 4. 迁移成功后强制添加链接
+                    final_success, _ = self.connection_service.validate_and_add_link(data, self.selected_template)
+                    if final_success:
+                        self._finalize_addition(data)
+                        self.accept() # 关闭添加对话框
+
+            # 启动异步迁移 (目标 -> 源)
+            migration_service.migrate_async(
+                source=data["target"],
+                target=data["source"],
+                mode="copy", # 默认使用安全复制
+                on_progress=progress_dialog.update_progress,
+                on_finished=on_finished
+            )
+            
+            # 关联取消按钮
+            progress_dialog.cancel_requested.connect(migration_service.cancel_migration)
+            progress_dialog.exec()

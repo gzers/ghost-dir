@@ -27,6 +27,15 @@ class FlatLinkView(QListWidget):
         self.loading_ids = set() # 正在计算大小的 ID 集合
         self._init_ui()
 
+    def show_loading(self, link_id: str, is_loading: bool):
+        """[统一 API] 设置指定 ID 的加载状态"""
+        for i in range(self.count()):
+            item = self.item(i)
+            widget = self.itemWidget(item)
+            if isinstance(widget, LinkItemWidget) and widget.link.id == link_id:
+                widget.set_status_loading(is_loading)
+                break
+
     def _init_ui(self):
         """初始化 UI"""
         self.setObjectName("FlatLinkView")

@@ -91,6 +91,10 @@ class EditLinkDialog(MessageBoxBase):
         if success:
             self.link_updated.emit()
             return True
+        elif msg == "TARGET_EXISTS":
+            # 触发迁移流程
+            self._handle_migration(data)
+            return False # 验证函数返回 false 以保持对话框开启，后续逻辑由迁移流程接管
         else:
             InfoBar.warning(
                 title="验证失败",
@@ -102,4 +106,44 @@ class EditLinkDialog(MessageBoxBase):
             )
 
         return False
+
+    def _handle_migration(self, data: dict):
+        """处理数据迁移流程"""
+        from src.gui.dialogs.migration import MigrationConfirmDialog, MigrationProgressDialog, MigrationResultDialog
+        from src.services.migration_service import MigrationService
+
+        # 1. 弹出确认对话框
+        confirm_dialog = MigrationConfirmDialog(data["source"], data["target"], self)
+        if confirm_dialog.exec():
+            # 2. 用户确认迁移，开始显示进度
+            progress_dialog = MigrationProgressDialog(self)
+            migration_service = MigrationService()
+
+            def on_finished(success: bool, error_msg: str):
+                progress_dialog.close()
+                # 3. 显示结果
+                result_dialog = MigrationResultDialog(success, error_msg, self)
+                result_dialog.exec()
+                
+                if success:
+                    # 4. 迁移成功后强制保存链接
+                    # 此时目标路径已清空，再次调用验证应能通过
+                    # 我们可以手动关闭当前 Edit 对话框并发送更新信号
+                    final_success, _ = self.connection_service.validate_and_update_link(self.link.id, data)
+                    if final_success:
+                        self.link_updated.emit()
+                        self.accept() # 关闭编辑对话框
+
+            # 启动异步迁移
+            migration_service.migrate_async(
+                source=data["target"], # 注意：是从冲突的目标路径迁移回用户指定的源路径
+                target=data["source"],
+                mode="copy", # 默认使用安全复制
+                on_progress=progress_dialog.update_progress,
+                on_finished=on_finished
+            )
+            
+            # 关联取消按钮
+            progress_dialog.cancel_requested.connect(migration_service.cancel_migration)
+            progress_dialog.exec()
 

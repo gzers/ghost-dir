@@ -171,10 +171,8 @@ class LinksView(BasePageView):
             # 1. 同步启动视觉加载反馈（必须在异步任务前）
             self.category_link_table.set_all_status_loading()
             self.category_link_table.set_all_sizes_loading()
-            if hasattr(self.list_view, 'set_all_status_loading'):
-                self.list_view.set_all_status_loading()
-            if hasattr(self.list_view, 'set_all_sizes_loading'):
-                self.list_view.set_all_sizes_loading()
+            self.list_view.set_all_status_loading()
+            self.list_view.set_all_sizes_loading()
             
             # 2. 启动异步状态探测（在动画设置后）
             self.connection_service.refresh_status_async(
@@ -329,17 +327,31 @@ class LinksView(BasePageView):
     def _on_action_clicked(self, link_id: str, action: str):
         """单项操作"""
 
-        if action == "establish":
+        if action == "establish" or action == "reconnect":
+            title_text = t("links.establish") if action == "establish" else t("links.reconnect")
+            runner_fn = self.connection_service.establish_connection_by_id if action == "establish" else self.connection_service.reconnect_connection
+            
+            def _on_establish_finished(success: bool, msg: str, data: dict):
+                self.category_link_table.show_loading(link_id, False)
+                if success:
+                    self._load_data()
+                elif msg == "TARGET_EXISTS":
+                    # 触发迁移流程
+                    self._handle_action_migration(link_id, action)
+                else:
+                    # 传统的报错交给 runner 或手动显示
+                    pass
+
             operation_runner.run_task_async(
-                self.connection_service.establish_connection_by_id,
+                runner_fn,  # 补回缺失的方法引用
                 link_id,
-                title=t("links.establish"),
+                title=title_text,
                 parent=self,
-                on_start=lambda: self.category_link_table.show_loading(link_id, True),
-                on_finished=lambda s, m, d: (
-                    self.category_link_table.show_loading(link_id, False),
-                    self._load_data() if s else None
-                )
+                on_start=lambda: (
+                    self.category_link_table.show_loading(link_id, True),
+                    self.list_view.show_loading(link_id, True)
+                ),
+                on_finished=_on_establish_finished
             )
         elif action == "disconnect":
             operation_runner.run_task_async(
@@ -347,21 +359,13 @@ class LinksView(BasePageView):
                 link_id,
                 title=t("links.disconnect"),
                 parent=self,
-                on_start=lambda: self.category_link_table.show_loading(link_id, True),
+                on_start=lambda: (
+                    self.category_link_table.show_loading(link_id, True),
+                    self.list_view.show_loading(link_id, True)
+                ),
                 on_finished=lambda s, m, d: (
                     self.category_link_table.show_loading(link_id, False),
-                    self._load_data() if s else None
-                )
-            )
-        elif action == "reconnect":
-            operation_runner.run_task_async(
-                self.connection_service.reconnect_connection,
-                link_id,
-                title=t("links.reconnect"),
-                parent=self,
-                on_start=lambda: self.category_link_table.show_loading(link_id, True),
-                on_finished=lambda s, m, d: (
-                    self.category_link_table.show_loading(link_id, False),
+                    self.list_view.show_loading(link_id, False),
                     self._load_data() if s else None
                 )
             )
@@ -390,6 +394,41 @@ class LinksView(BasePageView):
                 )
                 self._load_data()
             return
+
+    def _handle_action_migration(self, link_id: str, action: str):
+        """处理操作过程中的迁移流动"""
+        link = self.user_manager.get_link_by_id(link_id)
+        if not link: return
+
+        from src.gui.dialogs.migration import MigrationConfirmDialog, MigrationProgressDialog, MigrationResultDialog
+        from src.services.migration_service import MigrationService
+
+        # 1. 弹出确认 (目标 -> 源)
+        confirm_dialog = MigrationConfirmDialog(link.source_path, link.target_path, self)
+        if confirm_dialog.exec():
+            # 2. 进度
+            progress_dialog = MigrationProgressDialog(self)
+            migration_service = MigrationService()
+
+            def on_finished(success: bool, error_msg: str):
+                progress_dialog.close()
+                # 3. 结果
+                result_dialog = MigrationResultDialog(success, error_msg, self)
+                result_dialog.exec()
+                
+                if success:
+                    # 4. 成功后自动重试当初的操作
+                    self._on_action_clicked(link_id, action)
+
+            migration_service.migrate_async(
+                source=link.target_path,
+                target=link.source_path,
+                mode="copy", # 安全复制
+                on_progress=progress_dialog.update_progress,
+                on_finished=on_finished
+            )
+            progress_dialog.cancel_requested.connect(migration_service.cancel_migration)
+            progress_dialog.exec()
 
 
     def _on_batch_establish(self):

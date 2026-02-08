@@ -19,6 +19,14 @@ class LinkTable(BaseTableWidget):
     link_selected = Signal(list)  # 选中的连接 ID 列表 (勾选的)
     action_clicked = Signal(str, str)  # (link_id, action)
 
+    def show_loading(self, link_id: str, is_loading: bool):
+        """[统一 API] 设置指定行的加载状态"""
+        for row in range(self.rowCount()):
+            item = self.item(row, 1)
+            if item and item.data(Qt.ItemDataRole.UserRole) == link_id:
+                self.set_row_status_loading(row, is_loading)
+                break
+
     def __init__(self, parent=None):
         """初始化表格"""
         super().__init__(parent, enable_checkbox=True)
@@ -220,8 +228,9 @@ class LinkTable(BaseTableWidget):
             container.layout().addWidget(ring)
             self.setCellWidget(row, 3, container)
         else:
-            # 由 update_row_status 接管恢复工作，此处不用显式 remove，除非是中途停止
-            pass
+            # 停止加载并恢复之前的徽章（由外部更新 status 时会自动处理，
+            # 但如果只是为了手动停止，由于缺乏缓存，这里留空，建议由 load_data 或 update 触发）
+            self.removeCellWidget(row, 3)
 
     def update_row_status(self, link_id: str, status: LinkStatus):
         """更新指定行的状态显示"""
