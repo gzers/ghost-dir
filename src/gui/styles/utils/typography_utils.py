@@ -12,10 +12,16 @@ def get_font_family() -> str:
 
 def get_font_size(size: typing.Union[str, int] = "md") -> int:
     """获取字体大小像素值"""
+    # 彻底防御：非预期类型或空值直接返回默认 14
+    if size is None:
+        return 14
+        
     if isinstance(size, int):
         return size if size > 0 else 14
+        
+    # 处理字符串 key，如果不存在或无效则回退到 14
     val = typography.FONT_SIZES.get(str(size), 14)
-    return val if val > 0 else 14
+    return val if isinstance(val, int) and val > 0 else 14
 
 def get_font_weight(weight: str = "normal") -> int:
     """获取字体粗细数值"""

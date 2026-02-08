@@ -177,6 +177,10 @@ class LinkService:
     def update_link(self, link: UserLink) -> bool: return self.dao.update(link)
     def delete_link(self, link_id: str) -> bool: return self.dao.delete(link_id)
 
+    def delete_links(self, link_ids: List[str]) -> bool:
+        """批量删除链接"""
+        return self.dao.delete_batch(link_ids)
+
     def calculate_sizes_async(self, link_ids: List[str], item_cb: Callable, finished_cb: Callable):
         self._start_worker(lambda w: w.calculate_sizes(link_ids, self.dao), item_cb, finished_cb)
 
