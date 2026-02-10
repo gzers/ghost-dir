@@ -1,4 +1,11 @@
-# 组件库参考
+﻿
+
+# UI 组件参考
+
+- 适用版本: `>=1.0.0`
+- 文档状态: `active`
+- 最后更新: `2026-02-10`
+
 
 UI组件库参考文档和示例代码。
 
@@ -7,6 +14,8 @@ UI组件库参考文档和示例代码。
 ### [qfluent-widgets/](./qfluent-widgets/) - QFluentWidgets组件库
 
 基于 PyQt-Fluent-Widgets 的 Fluent Design 风格组件库:
+
+> 说明：该目录属于第三方参考镜像，状态应视为 `external`，不作为项目实现规范。
 
 - **[基础输入组件](./qfluent-widgets/basic-input/)** - 按钮、输入框、选择器等
 - **[导航组件](./qfluent-widgets/navigation/)** - 导航栏、标签页、面包屑等
@@ -23,6 +32,7 @@ UI组件库参考文档和示例代码。
 - **[媒体组件](./qfluent-widgets/media/)** - 视频播放器等
 
 查看 [QFluentWidgets 组件库主页](./qfluent-widgets/README.md) 了解详情。
+更多外部资料入口见 [external/README.md](../../external/README.md)。
 
 ### [widgets/](./widgets/) - 自定义组件
 
@@ -41,10 +51,8 @@ UI组件库参考文档和示例代码。
 ### 运行示例
 
 ```bash
-# 进入示例目录
 cd docs/reference-docs/ui-design/components/qfluent-widgets/basic-input/examples/
 
-# 运行示例
 python button_demo.py
 ```
 
@@ -53,9 +61,10 @@ python button_demo.py
 ## 相关文档
 
 - [UI设计规范](../../README.md) - UI设计规范主页
-- [排版规范](../../typography/) - 文本层级和样式
-- [主题规范](../../themes/) - 主题和配色
+- [排版规范](../typography/) - 文本层级和样式
+- [主题规范](../themes/) - 主题和配色
 
 ---
 
 **最后更新**: 2026-01-28
+

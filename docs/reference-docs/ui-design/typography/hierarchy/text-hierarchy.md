@@ -1,4 +1,11 @@
-# 文字层级规范
+﻿
+
+# 文本层级规范
+
+- 适用版本: `>=1.0.0`
+- 文档状态: `active`
+- 最后更新: `2026-02-10`
+
 
 本文档定义了项目中统一的文字样式规范，遵循 Windows 11 Fluent Design 设计原则。
 
@@ -181,3 +188,4 @@ apply_font_style(
 - `src/gui/styles/styles.py` - 样式管理器和文字层级定义
 - `src/gui/views/` - 各个视图的实现
 - `src/gui/i18n/` - 国际化文本资源
+

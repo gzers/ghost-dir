@@ -1,5 +1,9 @@
 # Ghost-Dir 1.0.0 发布文案
 
+- 适用版本: `>=1.0.0`
+- 文档状态: `active`
+- 最后更新: `2026-02-10`
+
 ## GitHub Release
 
 ### 标题
@@ -22,13 +26,13 @@ Windows 跨磁盘目录迁移与连接管理工具。
 
 ## 📦 下载
 
-- [Ghost-Dir-1.0.0-win64.zip](下载链接)
+- `Ghost-Dir-1.0.0-win64.zip`（请替换为实际发布附件链接）
 - SHA256: `待填写`
 
 ## 📚 文档
 
-- [完整发布说明](docs/release/v1.0.0.md)
-- [更新日志](docs/release/CHANGELOG.md)
+- [完整发布说明](notes/v1.0.0.md)
+- [更新日志](CHANGELOG.md)
 
 ## ⚠️ 系统要求
 
@@ -38,5 +42,5 @@ Windows 跨磁盘目录迁移与连接管理工具。
 
 ---
 
-完整更新内容请查看 [CHANGELOG](docs/release/CHANGELOG.md)
+完整更新内容请查看 [CHANGELOG](CHANGELOG.md)
 ```

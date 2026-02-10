@@ -1,4 +1,11 @@
-# BasePageView 使用说明
+﻿
+
+# BasePageView 技术说明
+
+- 适用版本: `>=1.0.0`
+- 文档状态: `active`
+- 最后更新: `2026-02-10`
+
 
 ## 概述
 
@@ -125,7 +132,6 @@ BasePageView(
 获取右侧工具栏布局，用于在标题栏右侧添加控件。
 
 ```python
-# 示例：添加刷新按钮
 toolbar = self.get_right_toolbar_layout()
 refresh_btn = PushButton("刷新", icon=FluentIcon.SYNC)
 toolbar.addWidget(refresh_btn)
@@ -135,7 +141,6 @@ toolbar.addWidget(refresh_btn)
 获取工具栏区域布局，用于添加搜索、筛选等控件。
 
 ```python
-# 示例：添加搜索框
 toolbar = self.get_toolbar_layout()
 search = SearchLineEdit()
 search.setPlaceholderText("搜索...")
@@ -158,10 +163,8 @@ toolbar.addWidget(search)
 - `before_stretch=False`: 添加到布局末尾
 
 ```python
-# 推荐方式（插入到 stretch 之前）
 self.add_to_content(my_card)
 
-# 或直接添加到末尾
 self.add_to_content(my_card, before_stretch=False)
 ```
 
@@ -169,7 +172,6 @@ self.add_to_content(my_card, before_stretch=False)
 清空内容区域的所有控件。
 
 ```python
-# 示例：刷新数据
 self.clear_content()
 for item in new_data:
     card = create_card(item)
@@ -180,7 +182,6 @@ for item in new_data:
 显示空状态提示。
 
 ```python
-# 示例：无数据时显示空状态
 if not data:
     self.show_empty_state("暂无可用模板")
 ```
@@ -258,3 +259,4 @@ def _on_theme_changed(self, theme):
 
 - 基类：`src/gui/components/base_page.py`
 - 导出：`src/gui/components/__init__.py`
+

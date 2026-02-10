@@ -1,4 +1,11 @@
-# Ghost-Dir 架构文档
+﻿
+
+# 系统架构总览
+
+- 适用版本: `>=1.0.0`
+- 文档状态: `active`
+- 最后更新: `2026-02-10`
+
 
 ## 项目架构概览
 
@@ -104,10 +111,8 @@ GUI → Service → DAO → JSON File
 ```python
 from src.common.service_bus import service_bus
 
-# 访问 Service
 templates = service_bus.template_service.get_all_templates()
 
-# 访问 Manager (兼容旧代码)
 templates = service_bus.template_manager.get_all_templates()
 ```
 
@@ -168,3 +173,4 @@ config_file = get_config_path('templates.json')
 3. **事件驱动**: 使用事件总线解耦模块
 4. **单元测试**: 为每层添加单元测试
 5. **文档完善**: 添加 API 文档和使用示例
+

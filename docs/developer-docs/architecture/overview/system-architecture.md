@@ -1,5 +1,9 @@
 # Ghost-Dir 系统架构
 
+- 适用版本: `>=1.0.0`
+- 文档状态: `active`
+- 最后更新: `2026-02-10`
+
 ## 概述
 
 Ghost-Dir 采用严格的**五层金字塔架构**,确保代码清晰、可维护、易测试。所有依赖关系单向向下,Models 和 Common 作为最底层基础。
@@ -139,7 +143,7 @@ Ghost-Dir 采用严格的**五层金字塔架构**,确保代码清晰、可维�
 - `config.py` - 全局配置和常量
 - `signals.py` - 全局信号定义
 - `exceptions.py` - 自定义异常
-- `utils.py` - 纯工具函数
+- `validators/` - 路径与名称校验器
 
 ## 依赖规则
 
@@ -313,8 +317,4 @@ Ghost-Dir 采用严格的**五层金字塔架构**,确保代码清晰、可维�
 - [核心模块文档](./core-modules.md) - 各模块详细说明
 - [数据流文档](../data-flow/data-flow-diagram.md) - 数据流转说明
 - [设计模式文档](../design-patterns/patterns-used.md) - 设计模式应用
-- [架构设计文档](../../../../ARCHITECTURE.md) - 完整架构设计
-
----
-
-**最后更新**: 2026-02-07
+- [架构设计文档](../../../architecture/README.md) - 完整架构设计

@@ -1,4 +1,4 @@
-<p align="center">
+﻿- 适用版本: `>=1.0.0`r`n- 文档状态: `external`r`n- 最后更新: `2026-02-10`r`n`r`n<p align="center">
   <img width="18%" align="center" src="https://raw.githubusercontent.com/zhiyiYo/PyQt-Fluent-Widgets/master/docs/source/_static/logo.png" alt="logo">
 </p>
   <h1 align="center">
@@ -66,7 +66,7 @@ Copyright © 2021 by zhiyiYo.
 ## Work with Designer
 [Fluent Client](https://www.youtube.com/watch?v=7UCmcsOlhTk) integrates designer plugins, supporting direct drag-and-drop usage of QFluentWidgets components in Designer. You can purchase the client from [TaoBao](https://item.taobao.com/item.htm?ft=t&id=767961666600) or [Afdian](https://afdian.com/item/6726fcc4247311ef8c6852540025c377).
 
-![Fluent Designer](./docs/source/_static/Designer_plugin.jpg)
+![Fluent Designer](https://raw.githubusercontent.com/zhiyiYo/PyQt-Fluent-Widgets/master/docs/source/_static/Designer_plugin.jpg)
 
 ## Issue Reporting
 Due to the frequent receipt of unfriendly comments, which has significantly impacted the author's enthusiasm for open-source development, we have decided to permanently close the Issue page. If you encounter any problems while using the library, please first check the official documentation. If the issue is confirmed to be a bug in the library, please send the following information to [shokokawaii@outlook.com](mailto:shokokawaii@outlook.com):
@@ -86,3 +86,5 @@ Here are some projects based on PyQt-Fluent-Widgets:
 ## Reference
 * [**Windows design**: Design guidelines and toolkits for creating native app experiences](https://learn.microsoft.com/zh-cn/windows/apps/design/)
 * [**Microsoft/WinUI-Gallery**: An app demonstrates the controls available in WinUI and the Fluent Design System](https://github.com/microsoft/WinUI-Gallery)
+
+

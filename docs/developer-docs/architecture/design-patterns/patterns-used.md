@@ -1,5 +1,9 @@
 # Ghost-Dir 设计模式应用
 
+- 适用版本: `>=1.0.0`
+- 文档状态: `active`
+- 最后更新: `2026-02-10`
+
 ## 概述
 
 本文档记录 Ghost-Dir 项目中使用的设计模式及其应用场景。
@@ -109,7 +113,7 @@ class UserManager:
 ### 实现
 
 ```python
-# src/data/model.py
+# src/models/*.py
 from dataclasses import dataclass
 from typing import Optional
 
@@ -163,7 +167,7 @@ class UserLink:
 ### 实现
 
 ```python
-# src/data/category_manager.py
+# src/services/category_service.py（或兼容层 src/common/managers.py）
 def add_category_with_conflict(
     self,
     category: CategoryNode,
@@ -354,7 +358,7 @@ class WizardView(BasePage):
 ### 实现
 
 ```python
-# src/data/model.py
+# src/models/*.py
 @dataclass
 class CategoryNode:
     """分类节点(可以是叶子或容器)"""
@@ -365,7 +369,7 @@ class CategoryNode:
     order: int
     depth: int
 
-# src/data/category_manager.py
+# src/services/category_service.py（或兼容层 src/common/managers.py）
 class CategoryManager:
     def get_children(self, parent_id: Optional[str] = None) -> List[CategoryNode]:
         """获取子分类(递归结构)"""
@@ -401,7 +405,7 @@ class CategoryManager:
 ### 实现
 
 ```python
-# src/data/template_manager.py
+# src/services/template_service.py（或兼容层 src/common/managers.py）
 class TemplateManager:
     def expand_path(self, path: str) -> str:
         """

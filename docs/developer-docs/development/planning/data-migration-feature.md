@@ -1,5 +1,9 @@
 # 数据迁移功能开发文档
 
+- 适用版本: `>=1.0.0`
+- 文档状态: `active`
+- 最后更新: `2026-02-10`
+
 > **状态**: 规划中  
 > **创建日期**: 2026-02-08  
 > **负责模块**: 链接管理 (Link Management)
@@ -271,13 +275,13 @@ src/
 
 ## 8. 参考资料
 
-- [PyQt Threading Best Practices](./pyqt-threading-best-practices.md)
-- [Standardization Guide](./standardization-guide.md)
-- [LinkService 实现](../../reference-docs/services/link_service.md)
-- [QFluentWidgets 对话框文档](https://qfluentwidgets.com/zh/price/)
+- [PyQt Threading Best Practices](../pyqt-threading-best-practices.md)
+- [Standardization Guide](../standardization-guide.md)
+- [LinkService 实现](../../../../src/services/link_service.py)
+- [QFluentWidgets 文档](https://qfluentwidgets.com/)
 
 ---
 
 **相关文档**:
-- [开发规划目录](./README.md)
+- [开发规划（Active）](./active/)
 - [架构设计文档](../../architecture/README.md)

@@ -2,7 +2,11 @@
 
 本目录包含技术参考、API文档和设计规范。
 
-## 📂 目录结构
+- 适用版本: `>=1.0.0`
+- 文档状态: `active`
+- 最后更新: `2026-02-10`
+
+## 📂 目录结构（项目内参考）
 
 ### [ui-design/](./ui-design/) - UI设计规范
 
@@ -34,9 +38,20 @@ API接口文档:
 - **[core/](./technical-notes/core/)** - 核心功能笔记
   - [modules/](./technical-notes/core/modules/) - 模块笔记
 
+## 🌐 第三方外部参考
+
+- [external/](./external/) - 外部参考索引（不作为项目实现规范）
+- [qfluent-widgets/](./ui-design/components/qfluent-widgets/) - 第三方组件示例镜像
+
 ---
 
 ## 📖 使用说明
+
+### 状态说明
+
+- `active`：项目当前维护的参考文档。
+- `external`：第三方镜像文档（如 `qfluent-widgets`），用于查阅，不作为项目实现规范。
+- `obsolete`：已过期参考材料，仅用于历史追溯。
 
 ### UI设计规范
 开发UI组件时,请参考:

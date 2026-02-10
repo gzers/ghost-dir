@@ -1,205 +1,69 @@
-# 配置系统指南
+# 配置系统指南（当前实现）
 
-本文档说明 Ghost-Dir 应用的配置系统架构和使用方法。
+本文档说明 Ghost-Dir 当前版本的配置文件结构、职责和常见维护方式。
 
-## 📁 配置文件职责划分
+- 适用版本: `>=1.0.0`
+- 文档状态: `active`
+- 最后更新: `2026-02-10`
 
-### `src/common/config.py` - 应用级常量配置
-**职责：** 存放应用级的不可变常量
+## 配置职责划分
 
-包含内容：
-- 应用信息（名称、版本、作者）
-- 文件路径配置
-- UI 常量（窗口尺寸、颜色、图标）
-- **默认值常量**（所有用户配置的初始值）
-- **选项配置**（UI 组件的可选项定义）
-- 系统黑名单
+### `src/common/config.py`
 
-### `src/data/user_manager.py` - 用户数据管理
-**职责：** 管理运行时可变的用户数据
+职责：
+- 定义应用常量（名称、版本、默认值）
+- 统一配置文件路径
+- 首次运行时初始化 `.ghost-dir` 用户配置
+- 提供基础工具函数（如 `format_size`）
 
-包含内容：
-- 加载/保存用户数据到 JSON 文件
-- 管理连接、分类、模板
-- 提供 getter/setter 方法
-- **引用** `config.py` 中的默认值常量
+### `src/services/config_service.py`
 
----
+职责：
+- 提供业务侧配置读写入口
+- 对 GUI 层隐藏底层持久化细节
 
-## 🎨 主题和颜色配置
+### `src/dao/*.py`
 
-### 1. 默认值配置
+职责：
+- 负责分类、模板、链接等数据对象的 JSON 持久化读写
 
-在 `config.py` 中定义默认值：
+## 配置文件位置
 
-```python
-# 主题默认值
-DEFAULT_THEME = "system"  # 可选值: "light", "dark", "system"
-DEFAULT_THEME_COLOR = "system"  # 可选值: "system" 或 十六进制颜色值如 "#009FAA"
+开发环境：
+- 官方模板：`config/default_config.json`、`config/default_categories.json`、`config/default_templates.json`
+- 用户数据：`.ghost-dir/config.json`、`.ghost-dir/categories.json`、`.ghost-dir/templates.json`、`.ghost-dir/links.json`
 
-# 启动页默认值
-DEFAULT_STARTUP_PAGE = "wizard"  # 可选值: "wizard", "console", "library"
-```
+打包环境：
+- 官方模板在 `_internal/config/`
+- 用户数据在可执行文件同级 `.ghost-dir/`
 
-### 2. 选项配置
+## 初始化与迁移
 
-在 `config.py` 中定义可选项列表：
+当前逻辑位于 `src/common/config.py`：
+- 首次运行时，若用户配置不存在，则从 `default_*.json` 复制到 `.ghost-dir/`
+- 兼容旧命名迁移：
+  - `user_config.json` -> `config.json`
+  - `user_data.json` -> `links.json`
 
-```python
-# 主题模式选项
-THEME_OPTIONS = [
-    {"value": "system", "i18n_key": "settings.theme_system"},
-    {"value": "light", "i18n_key": "settings.theme_light"},
-    {"value": "dark", "i18n_key": "settings.theme_dark"},
-]
+## 关键默认值
 
-# 主题色选项
-THEME_COLOR_OPTIONS = [
-    {"value": "system", "i18n_key": "settings.theme_color_system"},
-    {"value": "#009FAA", "i18n_key": "settings.theme_color_teal"},
-    {"value": "#0078D4", "i18n_key": "settings.theme_color_blue"},
-    # ... 更多颜色
-]
+示例（以代码为准）：
+- `DEFAULT_THEME`
+- `DEFAULT_THEME_COLOR`
+- `DEFAULT_STARTUP_PAGE`
+- `DEFAULT_LINK_VIEW`
+- `DEFAULT_TARGET_DRIVE`
+- `DEFAULT_TARGET_ROOT`
 
-# 启动页选项
-STARTUP_PAGE_OPTIONS = [
-    {"value": "wizard", "i18n_key": "settings.startup_wizard"},
-    {"value": "console", "i18n_key": "settings.startup_console"},
-    {"value": "library", "i18n_key": "settings.startup_library"},
-]
-```
+## 新增配置项建议流程
 
-### 3. UI 组件使用
+1. 在 `src/common/config.py` 增加默认值与可选项常量。
+2. 在 `src/services/config_service.py` 增加对应读写方法。
+3. 在 GUI 设置页卡片中接入该配置项。
+4. 如需持久化结构变化，同步更新 `config/default_config.json`。
 
-在设置卡片组件中使用配置：
+## 注意事项
 
-```python
-from .....common.config import THEME_COLOR_OPTIONS, DEFAULT_THEME_COLOR
-from ....i18n import t
-
-class ThemeColorCard(ComboBoxSettingCard):
-    def __init__(self, user_manager, parent=None):
-        # 从配置构建颜色映射字典
-        self.color_map = {
-            t(option["i18n_key"]): option["value"]
-            for option in THEME_COLOR_OPTIONS
-        }
-        
-        # 使用默认值
-        config_item = OptionsConfigItem(
-            "Appearance", "ThemeColor", DEFAULT_THEME_COLOR,
-            OptionsValidator(list(self.color_map.values())),
-        )
-```
-
----
-
-## ✨ 配置系统优势
-
-### 1. **单一数据源**
-所有默认值和选项都在 `config.py` 中定义，消除了硬编码
-
-### 2. **灵活可配置**
-要添加新的主题色，只需在 `THEME_COLOR_OPTIONS` 中添加一项：
-
-```python
-THEME_COLOR_OPTIONS = [
-    # ... 现有选项
-    {"value": "#FF6B6B", "i18n_key": "settings.theme_color_pink"},  # 新增粉色
-]
-```
-
-### 3. **国际化友好**
-所有显示文本通过 `i18n_key` 引用，支持多语言
-
-### 4. **易于维护**
-- 修改默认主题色：只需修改 `DEFAULT_THEME_COLOR`
-- 添加新选项：只需在对应的 `OPTIONS` 列表中添加
-- 调整选项顺序：直接调整列表顺序即可
-
----
-
-## 🔧 如何添加新的配置选项
-
-### 步骤 1: 在 `config.py` 中定义
-
-```python
-# 默认值
-DEFAULT_MY_SETTING = "option1"
-
-# 选项列表
-MY_SETTING_OPTIONS = [
-    {"value": "option1", "i18n_key": "settings.my_setting_option1"},
-    {"value": "option2", "i18n_key": "settings.my_setting_option2"},
-]
-```
-
-### 步骤 2: 在 `user_manager.py` 中添加管理方法
-
-```python
-from ..common.config import DEFAULT_MY_SETTING
-
-class UserManager:
-    def __init__(self):
-        self.my_setting: str = DEFAULT_MY_SETTING
-        
-    def set_my_setting(self, value: str) -> bool:
-        try:
-            self.my_setting = value
-            self._save_data()
-            return True
-        except Exception as e:
-            print(f"设置失败: {e}")
-            return False
-    
-    def get_my_setting(self) -> str:
-        return self.my_setting
-```
-
-### 步骤 3: 创建 UI 组件
-
-```python
-from .....common.config import MY_SETTING_OPTIONS, DEFAULT_MY_SETTING
-
-class MySettingCard(ComboBoxSettingCard):
-    def __init__(self, user_manager, parent=None):
-        self.setting_map = {
-            t(option["i18n_key"]): option["value"]
-            for option in MY_SETTING_OPTIONS
-        }
-        # ... 其余实现
-```
-
----
-
-## 📝 注意事项
-
-1. **不要在组件中硬编码选项**  
-   ❌ 错误：`self.options = ["选项1", "选项2"]`  
-   ✅ 正确：从 `config.py` 导入 `OPTIONS` 配置
-
-2. **使用默认值常量**  
-   ❌ 错误：`data.get('theme', 'system')`  
-   ✅ 正确：`data.get('theme', DEFAULT_THEME)`
-
-3. **保持配置集中**  
-   所有应用级常量都应在 `config.py` 中定义，避免分散在各个文件中
-
-4. **国际化键命名规范**  
-   使用点分隔的命名：`"settings.theme_color_blue"`
-
----
-
-## 🎯 配置文件清单
-
-| 文件 | 职责 | 示例内容 |
-|------|------|---------|
-| `config.py` | 应用常量 | 默认值、选项列表、UI 常量 |
-| `user_manager.py` | 数据管理 | 加载/保存、getter/setter |
-| `theme_card.py` | UI 组件 | 使用配置构建界面 |
-| `config.json` | 用户数据 | 运行时保存的用户设置 |
-
----
-
-**最后更新：** 2026-01-26  
-**版本：** 7.4.0
+- 不要在 GUI 组件中硬编码默认值，统一读取 `src/common/config.py`。
+- 不要跨层直接从 View 访问 DAO 文件读写，统一经 Service 层收口。
+- 文档中的配置键名与默认值若与代码冲突，以代码为准并及时回写文档。
