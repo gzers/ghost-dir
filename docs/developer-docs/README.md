@@ -10,8 +10,10 @@
 
 ### [architecture/](./architecture/) - 架构设计
 
-系统架构和设计文档:
+系统架构和设计文档（主架构以跨角色文档为准）:
 
+- **[主架构入口（SSOT）](../architecture/README.md)** - 跨角色统一架构真相源
+- **[开发者架构索引](./architecture/README.md)** - 面向研发的工程化解读
 - **[overview/](./architecture/overview/)** - 架构概览
   - [component-architecture.md](./architecture/overview/component-architecture.md) - 组件架构和关系
 - **[design-patterns/](./architecture/design-patterns/)** - 设计模式
