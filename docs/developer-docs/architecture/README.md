@@ -8,6 +8,11 @@ Ghost-Dir 架构设计文档索引（按当前代码实现维护）。
 
 ## 文档导航
 
+## 架构来源说明
+
+- 主架构文档（SSOT）：[`docs/architecture/README.md`](../../architecture/README.md)
+- 本目录用于研发视角的工程化拆解与补充说明。
+
 ### `overview/` 架构概览
 
 - [system-architecture.md](./overview/system-architecture.md): 系统分层、依赖规则、技术栈

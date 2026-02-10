@@ -67,7 +67,9 @@ docs/
 │       ├── test-plans/                                 # 测试计划
 │       └── test-reports/                               # 测试报告
 ├── migration/                                          # 架构/模块迁移记录
-│   └── gui-migration-summary.md                        # GUI 迁移总结
+│   ├── README.md                                       # 迁移文档索引
+│   └── archived/                                       # 历史迁移文档归档
+│       └── gui-migration-summary.md                    # GUI 迁移总结（归档）
 ├── reference-docs/                                     # 参考资料（含第三方内容）
 │   ├── README.md                                       # 参考文档导航
 │   ├── api/                                            # API 参考（目录已建）
@@ -81,6 +83,7 @@ docs/
 │   ├── CHANGELOG.md                                    # 版本更新日志
 │   ├── release-guide.md                                # 发布流程指南
 │   ├── release-templates.md                            # 发布文案模板
+│   ├── archived/                                       # 历史发布文档归档
 │   └── notes/                                          # 版本发布说明
 │       └── v1.0.0.md                                   # 1.0.0 版本说明
 └── user-docs/                                          # 用户文档总目录
