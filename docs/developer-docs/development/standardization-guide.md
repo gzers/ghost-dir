@@ -2,6 +2,10 @@
 
 本指南旨在规范项目中的路径处理、输入验证及分类数据交互，以确保系统的健壮性和视觉一致性。
 
+- 适用版本: `>=1.0.0`
+- 文档状态: `active`
+- 最后更新: `2026-02-10`
+
 ---
 
 ## 1. 路径标准化 (Path Standardization)
@@ -103,36 +107,41 @@ display_name = get_category_text(link.category_id)
 
 ## 6. 命名与架构规约 (Naming & Architecture)
 
-### 5.1 模块后缀分类
+### 6.1 模块后缀分类
 为了从文件名和类名直观区分业务层与执行层, 遵循以下后缀规范:
 
-- **Engine 层 (`src/core/engine`)**: 
-    - 文件后缀: `*_engine.py` (如 `link_engine.py`, `transaction_engine.py`)
-    - 类名后缀: `*Engine` (如 `TransactionEngine`, `SafetyEngine`)
-    - **职责**: 负责底层原子操作 (File IO, Junction, Process Kill), 不包含业务判断。
+- **Service 层 (`src/services`)**:
+  - 文件后缀: `*_service.py` (如 `scan_service.py`, `config_service.py`)
+  - 类名后缀: `*Service` (如 `CategoryService`, `TemplateService`)
+  - 职责: 业务流编排、规则校验、跨模块协同
 
-- **Service 层 (`src/core/services`)**:
-    - 文件后缀: `*_service.py` (如 `scan_service.py`, `connection_service.py`)
-    - 类名后缀: `*Service` (如 `ConnectionService`)
-    - **职责**: 负责业务流编排、状态管理、模板过滤。
+- **DAO 层 (`src/dao`)**:
+  - 文件后缀: `*_dao.py` (如 `template_dao.py`, `link_dao.py`)
+  - 类名后缀: `*DAO`
+  - 职责: 数据持久化与查询，不承载 UI 与流程编排
 
-### 5.2 依赖拓扑
-- **Service** 可以调用 **Engine**。
-- **Engine层** 必须保持纯净, **严禁** 导入 `src.core.services` 或任何 GUI/数据管理层逻辑。
-- 底层原子操作应优先封装在辅助函数或 `*Engine` 静态类中。
+- **Drivers 层 (`src/drivers`)**:
+  - 文件后缀: 与能力对应 (如 `windows.py`, `transaction.py`, `fs.py`)
+  - 职责: 底层原子能力（文件系统、事务、Windows API）
+
+### 6.2 依赖拓扑
+- **GUI** 可以调用 **Services**，不直接依赖 DAO/Drivers。
+- **Services** 可以调用 **DAO** 与 **Drivers**。
+- **DAO/Drivers** 严禁反向导入 `src/services` 或 `src/gui`。
+- 底层原子操作应优先封装在 `src/drivers`，避免散落在视图代码中。
 
 ---
 
-## 6. UI/UX 交互与布局规约 (UX Standards)
+## 7. UI/UX 交互与布局规约 (UX Standards)
 
-### 6.1 表格垂直居中 (Vertical Alignment)
+### 7.1 表格垂直居中 (Vertical Alignment)
 为了解决自定义单元格组件（如 Badge, Button, ProgressRing）与普通文字在表格行中基线不一致的问题, 遵循 **对齐代理容器 (Alignment Proxy)** 模式。
 
 - **标准高度**: 容器高度固定为 **40px** (与表格默认行高一致)。
 - **对齐方式**: 容器布局强制设为 `Qt.AlignmentFlag.AlignVCenter`。
 - **工厂方法**: 优先使用基类定义的 `create_alignment_container()` 以保证一致性。
 
-### 6.2 异步操作通知 (Notification Norms)
+### 7.2 异步操作通知 (Notification Norms)
 反馈系统必须遵循全局一致的物理视觉中心。
 
 - **位置规范**: 所有的操作反馈通知 (Success/Error `InfoBar`) 必须统一定位在窗口 **顶部中心**。在调用时传递位置参数字符串 `'TopCenter'`。
@@ -140,7 +149,7 @@ display_name = get_category_text(link.category_id)
     - **去冗余化**: 异步执行中 **禁止** 使用 `StateToolTip` (紫色气泡) 进行辅助反馈，以免遮挡操作行或造成视觉噪点。
     - **原生驱动**: 必须直接使用 `InfoBar.success` 或 `InfoBar.error` 静态方法，确保自动带有官方标准的成功/错误图标。
 
-### 6.3 平滑加载动画 (Loading Feedback)
+### 7.3 平滑加载动画 (Loading Feedback)
 对于任何耗时超过 500ms 的局部操作, **必须** 提供上下文感知的反馈。
 
 - **行内反馈**: 在表格单元格操作中, 必须使用 `IndeterminateProgressRing` (16x16) 替代原始文字或按钮。
@@ -148,7 +157,7 @@ display_name = get_category_text(link.category_id)
 
 ---
 
-## 7. 常用开发命令 (Dev Cheatsheet)
+## 8. 常用开发命令 (Dev Cheatsheet)
 - **启动应用**: `python debug_start.py`
 - **语法检查**: `python -m py_compile [file_path]`
 - **安装依赖**: `pip install -r requirements.txt`

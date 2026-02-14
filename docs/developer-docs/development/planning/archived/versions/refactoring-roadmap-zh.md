@@ -1,5 +1,9 @@
 # Ghost-Dir QFluentWidgets 重构路线图 (Refactoring Roadmap)
 
+- 适用版本: `历史归档`
+- 文档状态: `archived`
+- 最后更新: `2026-02-10`
+
 本计划旨在将 Ghost-Dir 项目重构为 **100% 符合官方规范** 的代码，消除所有“手写 QSS”和非标准写法。
 
 ## 阶段 1: 地基与入口 (Infrastructure)

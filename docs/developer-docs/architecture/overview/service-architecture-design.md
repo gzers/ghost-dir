@@ -1,101 +1,66 @@
-# Service 层架构设计文档 (Service Architecture Design)
+# Service 层架构设计（当前实现）
 
-## 1. 背景与目标
-为了解决现有项目中 GUI 视图层（`LibraryView`, `LinksView`, `SettingView`）过度耦合业务逻辑的问题，本项目引入 **Service 层**。该层旨在实现业务逻辑、状态管理与 UI 表述的彻底解耦。
+- 适用版本: `>=1.0.0`
+- 文档状态: `active`
+- 最后更新: `2026-02-10`
 
-## 2. 核心架构模式
-系统遵循 **View -> Service -> Data/Core** 的分层模式：
-- **View**: 负责用户交互与数据渲染，仅持有对 Service 的引用。
-- **Service**: 负责业务逻辑编排、数据校验、异步任务管理及跨模块联动。
-- **Data (Managers)**: 负责底层持久化存储与原子操作，不直接与 View 通信。
+## 1. 目标
 
-## 3. 服务职责划分
+Service 层用于隔离 UI 与持久化/系统操作，统一承接业务规则、流程编排与状态更新。
 
-### 3.1 CategoryService
-- **职责**: 管理分类（Category）的生命周期与层级逻辑。
-- **核心逻辑**: 重名检测、层级深度校验、分类删除时的级联模板清理或静默迁移逻辑。
-- **UI 对接**: 为 `CategoryTreeWidget` 和 `CategorySelector` 提供格式化的数据流或 ViewModel。
+## 2. 分层关系
 
-### 3.2 TemplateService
-- **职责**: 管理模板（Template）的业务逻辑与聚合操作。
-- **核心逻辑**: 统一的搜索与多维过滤算法、模板 CRUD 的事务性编排、导入导出时的格式合法性校验。
-- **UI 对接**: 为 `TemplateTableWidget` 提供经过过滤和排序的逻辑数据源。
+```text
+GUI (views/dialogs/components)
+  -> Services
+  -> DAO + Drivers
+  -> Models/Common
+```
 
-### 3.3 ConnectionService
-- **职责**: 管理底层连接点（Link）的配置与运行状态。
-- **核心逻辑**: 维护连接的全生命周期状态机、批量操作的原子性、后台扫描进程（Scan）与空间计算（SizeCalc）的任务调度。
-- **UI 对接**: 为 `ConnectedView` 提供实时的链接状态 Kanban 或状态流。
+规则：
+- View 不直接持久化数据，不直接执行业务事务。
+- Service 不直接操作具体 GUI 控件。
 
-### 3.4 ConfigService
-- **职责**: 管理系统级配置与全局状态。
-- **核心逻辑**: 配置变更的副作用执行（如动态切换主题、全局存储路径更新）、对底层 `UserManager` 的业务级封装。
-- **UI 对接**: 为 `SettingView` 及其内部卡片提供配置绑定。
+## 3. 现有服务清单
 
-## 4. 服务间通信与依赖
-### 4.1 依赖关系 (Directional Dependency)
-为了防止循环引用，必须遵循自上而下的依赖规范：
-- `TemplateService` -> `CategoryService` (用于删除分类前的归属校验)
-- `ConnectionService` -> `TemplateService` (用于基于特定模板实例创建链接)
-- **所有服务** -> `ConfigService` (用于获取基础路径或全局参数)
+当前目录：`src/services/`
 
-### 4.2 通信方式 (Decoupled Communication)
-- **方法调用**: 遵循单向依赖原则，上层对下层进行直接方法调用（Dependency Injection）。
-- **SignalBus**: 跨模块的事件（如：应用根目录变更、分类被删除后的副作用）统一通过 `src/common/signals/signal_bus.py` 进行广播。
+- `CategoryService`: 分类查询与增删改编排
+- `TemplateService`: 模板查询、过滤与增删改
+- `LinkService`: 链接状态、扫描并发、体积统计等流程
+- `SmartScanner`（`scan_service.py`）: 扫描发现流程
+- `ConfigService`: 配置读写封装
+- `MigrationService`: 迁移流程服务
+- `OccupancyService`: 占用/空间相关服务
 
-## 5. 交互示例 (Data Flow)
-以“手动删除一个带有模板的分类”为例：
-1. **View**: 调用 `CategoryService.delete_category(id)` 发起删除动作。
-2. **CategoryService**: 
-   - 内部检查该分类下是否存在关联模板。
-   - 若存在依赖，返回 `REQUIRED_CONFIRM` 状态及其上下文信息。
-3. **View**: 根据返回状态展示确认弹窗。
-4. **CategoryService**: 用户确认后，执行原子删除逻辑 -> 触发 `signal_bus.categories_changed.emit()`。
-5. **TemplateService**: 监听到信号 -> 更新内部缓存索引 -> 重新触发当前 UI 的过滤逻辑。
+## 4. 依赖规范
 
-## 6. 后续维护建议
-- **逻辑下沉**: 实施新业务功能时，应优先在 Service 层定义接口并编写单元测试（Mock UI）。
-- **禁止旁路**: 严禁在 View 层直接实例化或调用 Manager 类，必须通过对应的 Service 进行收口。
-- **状态一致性**: 涉及多个 Manager 的操作必须在 Service 中封装为原子事务，确保数据一致性。
+- Service 可以依赖 `src/dao`、`src/drivers`、`src/models`、`src/common`。
+- Service 禁止依赖 `src/gui`。
+- DAO/Drivers 禁止反向依赖 Service。
 
-## 7. 高级工程化补充 (Planned Enhancements)
+## 5. 交互示例
 
-### 7.1 I18nService (运行时动态语言切换)
-- **发现**: 现有的 `t()` 函数主要在初始化时生效，且翻译逻辑零散。
-- **方案**: 引入 `I18nService` 中控。当语言变更时，通过 Service 触发全局信号，由各基类组件（`BasePageView`）执行 `retranslateUi` 逻辑，实现真正的无重启语言切换。
+删除分类流程：
+1. GUI 触发删除操作。
+2. `CategoryService` 校验规则并调用 `CategoryDAO`。
+3. 成功后通过全局信号通知视图刷新。
 
-### 7.2 全局异常捕获与业务日志 (Telemetry)
-- **方案**: 
-  - 在 Service 层实现统一的异常适配器，将底层 OS 错误转化为业务含义明确的 `ApplicationError`。
-  - 引入业务级日志，不只是记录 Traceback，而是记录“用户试图删除 [分类A]，由于其下存在连接点而受阻”这类带有上下文的操作日志。
+扫描流程：
+1. GUI 发起扫描任务。
+2. `SmartScanner` 基于模板与已管理链接做过滤。
+3. GUI 根据回调/信号更新进度与结果。
 
-### 7.3 SDK 化潜力 (Headless Support)
-- **方案**: 确保所有 `src/core/services` 都不依赖任何 `PySide6` 组件。这使得核心逻辑未来可以轻松迁移到 CLI 工具或 Web 后台，实现逻辑的极致纯净。
+## 6. 工程化约束
 
-## 8. 深度设计：原子性、并发与数据交换
+- 耗时逻辑放在 Service/Worker，不阻塞 UI 主线程。
+- 跨模块通知使用 `src/common/signals.py`。
+- 与系统相关的能力（文件、Windows API、事务）优先下沉到 Drivers。
 
-### 8.1 事务保障机制 (Transactions & Atomicity)
-- **发现**: `TransactionManager` 目前主要处理 Link 创建流程。
-- **方案**: 
-  - Service 层应引入 **Unit of Work** 逻辑。
-  - 对于涉及多个文件或配置的操作，必须先锁定配置，记录操作日志，失败后调用对应的回滚方法。
-  - 采用“写前记录”策略，确保崩溃后应用重启时能自动检测并提示恢复。
+## 7. 后续演进方向
 
-### 8.2 并发与异步模型 (Concurrency Control)
-- **执行器管理**: 
-  - 耗时 IO（文件移动、多级扫描）统一由 `ConnectionService` 管理的异步 Worker 处理，避免阻塞 UI 事件循环。
-  - 所有的进度信息通过 Service 统一向 View 层广播，不再由 Worker 直接操作 UI 组件。
-- **线程安全**: 
-  - 使用 Python 的 `threading.Lock` 保护对底层 JSON 数据的并发写入。
+- 逐步收敛兼容层（`service_bus`、`managers`）在新代码中的使用范围。
+- 增强 Service 层可测试性：通过依赖注入替换 DAO/Drivers。
+- 统一业务异常模型，减少 UI 对底层错误细节的感知。
 
-### 8.3 数据交换规范 (DTOs & ViewModels)
-- **原则**: 隔离原始 Data Model。
-- **方案**: 
-  - **Input DTO**: View 向 Service 提交精简后的结构化数据。
-  - **Output ViewModel**: Service 向 View 返回专门用于显示的 ViewModel，包含计算后的字段（如大小单位转换）和 UI 友好的提示信息。
-
-### 8.4 权限管理与提权 (Elevation)
-- **原理**: Junction 操作通常需要 Administrator 权限。
-- **方案**: 
-  - Service 捕获 `PermissionError` 后返回特定的错误状态码。
-  - View 层根据该状态码引导用户重新以管理员身份运行。
-  - 设计“提权任务队列”，允许应用在提权后的进程中恢复执行中断的任务。
+**最后更新**: 2026-02-10

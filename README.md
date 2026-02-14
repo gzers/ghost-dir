@@ -1,4 +1,4 @@
-<div align="center">
+﻿<div align="center">
 
 <img src="assets/icon.png" alt="Ghost-Dir" width="128" height="128">
 
@@ -180,7 +180,7 @@ Ghost-Dir 采用严格的五层金字塔架构,确保代码清晰、可维护、
 - ✅ **职责单一**: 每层只做自己的事,不越界
 - ❌ **严禁循环依赖**: 通过依赖规则防止架构混乱
 
-详细架构文档: [ARCHITECTURE.md](ARCHITECTURE.md)
+详细架构文档: [架构文档](docs/architecture/README.md)
 
 ## 🏗️ 项目结构
 
@@ -233,7 +233,7 @@ ghost-dir/
 │   │   └── architecture/  # 架构文档
 │   ├── user-docs/         # 用户文档
 │   └── release/           # 发布说明
-├── ARCHITECTURE.md        # 架构设计文档
+├── docs/architecture/README.md # 架构设计文档
 ├── requirements.txt       # 依赖列表
 └── run.py                 # 开发启动脚本
 
@@ -374,3 +374,4 @@ MIT License
 **Made with ❤️ by Ghost-Dir Team**
 
 </div>
+

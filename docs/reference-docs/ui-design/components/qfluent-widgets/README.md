@@ -1,4 +1,11 @@
-# QFluentWidgets 组件库参考
+﻿
+
+# QFluentWidgets 组件参考
+
+- 适用版本: `>=1.0.0`
+- 文档状态: `external`
+- 最后更新: `2026-02-10`
+
 
 基于 PyQt-Fluent-Widgets 的组件使用参考和示例代码。
 
@@ -142,3 +149,4 @@ QFluentWidgets 使用 GPLv3 许可证,详见 [LICENSE](./LICENSE)。
 ---
 
 **最后更新**: 2026-01-28
+

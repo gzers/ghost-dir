@@ -1,4 +1,11 @@
-# 文字组件快速参考
+﻿
+
+# 文本样式快速参考
+
+- 适用版本: `>=1.0.0`
+- 文档状态: `active`
+- 最后更新: `2026-02-10`
+
 
 ## 快速选择指南
 
@@ -65,4 +72,5 @@ caption = CaptionLabel("v2.4.1")
 **区块标题 = SubtitleLabel**  
 **正文 = BodyLabel**
 
-详细文档：`docs/TEXT_HIERARCHY.md`
+详细文档：[text-hierarchy.md](../hierarchy/text-hierarchy.md)
+

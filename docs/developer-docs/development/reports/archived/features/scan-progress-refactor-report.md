@@ -1,5 +1,9 @@
 # 扫描进度组件重构完成报告
 
+- 适用版本: `历史归档`
+- 文档状态: `archived`
+- 最后更新: `2026-02-10`
+
 ## 📋 概述
 
 本次重构成功将 `scan_progress.py` 从一个包含大量硬编码的单体组件，转变为采用组件化架构、统一样式系统和国际化方案的现代化组件。
@@ -157,9 +161,9 @@ scan_card.update_selected_count(5)
 - ✨ `src/gui/components/card_header.py` - 卡片头部组件
 - ✨ `src/gui/components/progress_indicator.py` - 进度指示器组件
 - ✨ `src/gui/views/wizard/widgets/scan_worker.py` - 扫描工作线程
-- 📄 `docs/SCAN_PROGRESS_REFACTOR.md` - 重构说明文档
-- 📄 `docs/SCAN_PROGRESS_COMPARISON.md` - 重构对比文档
-- 📄 `docs/SCAN_PROGRESS_SUMMARY.md` - 重构总结文档
+- 📄 `scan-progress-refactor-report.md` - 重构说明文档
+- 📄 `scan-progress-comparison.md` - 重构对比文档
+- 📄 `scan-progress-summary.md` - 重构总结文档
 
 ### 修改文件
 - 🔧 `src/gui/components/__init__.py` - 导出新组件
@@ -171,10 +175,10 @@ scan_card.update_selected_count(5)
 ## 🎨 视觉改进
 
 ### 架构对比图
-![架构对比](../../.gemini/antigravity/brain/65c70a1b-404b-4e50-8634-212bec026664/refactor_architecture_comparison_1769397913870.png)
+历史图片资源已归档清理（原路径不可用）。
 
 ### 质量改进图
-![质量改进](../../.gemini/antigravity/brain/65c70a1b-404b-4e50-8634-212bec026664/code_quality_improvements_1769397964374.png)
+历史图片资源已归档清理（原路径不可用）。
 
 ## ✅ 验证结果
 
@@ -243,9 +247,9 @@ progress.start_indeterminate()
 
 ## 📚 相关文档
 
-- [重构详细说明](./SCAN_PROGRESS_REFACTOR.md)
-- [重构前后对比](./SCAN_PROGRESS_COMPARISON.md)
-- [重构总结](./SCAN_PROGRESS_SUMMARY.md)
+- [重构详细说明](./scan-progress-refactor-report.md)
+- [重构前后对比](./scan-progress-comparison.md)
+- [重构总结](./scan-progress-summary.md)
 
 ## 🎯 后续建议
 

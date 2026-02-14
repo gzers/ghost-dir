@@ -1,5 +1,13 @@
 # Category Manager 开发任务清单
 
+- 适用版本: `>=1.0.0`
+- 文档状态: `archived`
+- 最后更新: `2026-02-10`
+
+> [!WARNING]
+> 本文档已归档，仅供追溯参考，不作为当前实施清单。
+> 当前代码结构以 `src/services`、`src/dao`、`src/models`、`src/gui` 为准。
+
 ## 阶段 1: 后端增强 (Backend Enhancements)
 
 ### 1.1 数据模型扩展
@@ -123,7 +131,7 @@
 
 ## 阶段 6: 操作日志功能 (Operation Logging) ✅ 已完成
  
-- [x] 创建 `src/data/category_log.py`
+- [x] 历史方案创建 `src/data/category_log.py`（当前实现为 `.ghost-dir/category_log.json`，路径常量见 `src/common/config.py`）
 - [x] 集成日志记录到各操作方法
 
 ---

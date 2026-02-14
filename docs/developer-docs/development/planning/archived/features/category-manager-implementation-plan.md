@@ -1,5 +1,13 @@
 # Category Manager 功能重构实施方案
 
+- 适用版本: `>=1.0.0`
+- 文档状态: `archived`
+- 最后更新: `2026-02-10`
+
+> [!WARNING]
+> 本文档已归档，仅供追溯参考，不作为当前开发实施依据。
+> 当前主线架构请以 `src/services`、`src/dao`、`src/models`、`src/gui` 的现行实现为准。
+
 ## 概述
 
 根据 PRD 要求，将现有的分类管理对话框重构为具有**双模式隔离**的现代化界面：
@@ -36,7 +44,7 @@
 
 ### 阶段 1: 后端增强
 
-#### 1.1 [MODIFY] [category_manager.py](file:///d:/Users/15119/WorkSpace/Code/tool/ghost-dir/src/data/category_manager.py)
+#### 1.1 [MODIFY] `src/services/category_service.py`（历史方案对应旧路径 `src/data/category_manager.py`）
 
 **新增方法**：
 - `reorder_categories(category_orders: List[Tuple[str, int]]) -> Tuple[bool, str]`
@@ -58,7 +66,7 @@
 
 ### 阶段 2: UI 组件重构
 
-#### 2.1 [MODIFY] [category_manager.py](file:///d:/Users/15119/WorkSpace/Code/tool/ghost-dir/src/gui/dialogs/category_manager.py)
+#### 2.1 [MODIFY] `src/gui/dialogs/category_manager/dialog.py`
 
 **完全重构 UI 布局**：
 
@@ -419,7 +427,7 @@ def _set_drag_handles_visible(self, visible: bool):
 
 #### 6.1 日志数据模型
 
-**新建日志文件**：`src/data/category_log.py`
+**新建日志文件（历史方案）**：`src/data/category_log.py`（当前实现为 `.ghost-dir/category_log.json`）
 
 ```python
 from dataclasses import dataclass

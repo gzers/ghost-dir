@@ -1,5 +1,9 @@
 # Ghost-Dir 发布指南
 
+- 适用版本: `>=1.0.0`
+- 文档状态: `active`
+- 最后更新: `2026-02-10`
+
 本文档描述 Ghost-Dir 项目的版本发布流程和规范。
 
 ---
@@ -19,7 +23,7 @@
 - [ ] 更新 `src/__init__.py` 中的 `__version__`
 - [ ] 更新 `README.md` 中的版本徽章
 - [ ] 创建或更新 `CHANGELOG.md`
-- [ ] 创建 `RELEASE_NOTES.md`（针对当前版本）
+- [ ] 创建 `notes/vX.Y.Z.md`（针对当前版本）
 
 ### 构建和测试
 
@@ -316,9 +320,9 @@ git push origin --tags
    - **描述**：使用准备好的发布文案（见下文）
 
 4. **上传文件**：
-   - `Ghost-Dir-1.0.0-win64.zip`
-   - `CHANGELOG.md`（可选）
-   - `RELEASE_NOTES.md`（可选）
+- `Ghost-Dir-1.0.0-win64.zip`
+- `CHANGELOG.md`（可选）
+- `notes/v1.0.0.md`（可选）
 
 5. **发布选项**：
    - ✅ Set as the latest release
@@ -349,13 +353,13 @@ Ghost-Dir 是一款专为 Windows 设计的跨磁盘目录迁移与连接管理�
 
 ## 📦 下载
 
-- **Windows 64-bit**：[Ghost-Dir-1.0.0-win64.zip](链接)
+- **Windows 64-bit**：`Ghost-Dir-1.0.0-win64.zip`（发布页附件）
 
 ## 📚 文档
 
-- [完整发布说明](RELEASE_NOTES.md)
+- [完整发布说明](notes/v1.0.0.md)
 - [更新日志](CHANGELOG.md)
-- [用户文档](docs/user-docs/README.md)
+- [用户文档](../user-docs/README.md)
 
 ## 🚀 快速开始
 

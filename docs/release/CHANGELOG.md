@@ -1,5 +1,9 @@
 # 更新日志 (Changelog)
 
+- 适用版本: `>=1.0.0`
+- 文档状态: `active`
+- 最后更新: `2026-02-10`
+
 本文档记录 Ghost-Dir 项目的所有重要变更。
 
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)，
@@ -48,19 +52,19 @@ Ghost-Dir 1.0.0 是第一个生产就绪版本，提供完整的 Windows 目录�
 
 ### 🔧 技术架构
 
-#### 分层设计
-- **Core 层**：事务管理、安全检查、智能扫描
-- **Data 层**：数据模型、模版管理、用户数据管理
-- **Service 层**：业务逻辑封装，输入验证和数据持久化
-- **GUI 层**：视图、对话框、组件
+#### 分层设计（当前架构）
+- **GUI 层**（`src/gui`）：视图、对话框、组件
+- **Service 层**（`src/services`）：业务逻辑封装与流程编排
+- **DAO/Drivers 层**（`src/dao`、`src/drivers`）：数据持久化与系统能力封装
+- **Models/Common 层**（`src/models`、`src/common`）：数据模型与全局基础能力
 
 #### 核心组件
 - `TransactionManager`：事务管理器，确保操作原子性
 - `ProcessGuard`：进程卫士，检测文件占用
 - `SmartScanner`：智能扫描器，发现可管理软件
-- `TemplateManager`：模版管理器，官方和自定义模版
-- `ConnectionService`：连接服务，业务逻辑封装
-- `TemplateService`：模版服务，验证和持久化
+- `TemplateService`：模版服务，官方和自定义模版业务逻辑
+- `LinkService`：连接服务，业务逻辑封装
+- `ConfigService`：配置服务，配置读写与初始化编排
 
 ### 🐛 修复问题
 
@@ -92,7 +96,7 @@ Ghost-Dir 1.0.0 是第一个生产就绪版本，提供完整的 Windows 目录�
 - **开发文档**：架构设计、开发指南、测试文档
 - **参考文档**：UI 设计规范、API 参考、技术笔记
 - **CHANGELOG.md**：版本更新日志
-- **RELEASE_NOTES.md**：发布说明
+- **notes/vX.Y.Z.md**：发布说明
 
 ### 🔄 重构优化
 
