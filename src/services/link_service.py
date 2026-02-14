@@ -186,8 +186,13 @@ class ServiceWorker(QObject):
                 # 虽然是链接，但指向不对，视为失效
                 return LinkStatus.INVALID
             
-            # 如果链接位置存在但不是链接，说明是真实数据冲突
-            return LinkStatus.ERROR
+            # 如果链接位置存在但不是链接，需要区分场景
+            if os.path.exists(data_path):
+                # 两端均有真实数据，属于路径冲突
+                return LinkStatus.ERROR
+            else:
+                # 数据仅在源头（未迁移到库路径），属于未连接
+                return LinkStatus.DISCONNECTED
             
         # 2. 如果链接位置不存在，检查数据路径是否存在
         if not os.path.exists(data_path):

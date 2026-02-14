@@ -532,8 +532,18 @@ class LinksView(BasePageView):
                 else:
                     shutil.rmtree(source_real)
             
-            # 删除成功后，重新尝试建立连接
-            self._on_action_clicked(link_id, "establish")
+            # 删除成功后，直接尝试建立连接（不走 _on_action_clicked 避免循环）
+            conn_success, conn_msg = self.connection_service.establish_connection_by_id(link_id)
+            if conn_success:
+                self._load_data()
+            else:
+                InfoBar.error(
+                    "建立连接失败",
+                    f"覆盖后仍无法建立连接：{conn_msg}",
+                    duration=5000,
+                    position='TopCenter',
+                    parent=self
+                )
         except Exception as e:
             InfoBar.error(
                 "删除失败",
@@ -559,8 +569,20 @@ class LinksView(BasePageView):
             result_dialog.exec()
             
             if success:
-                # 成功后自动重试建立连接
-                self._on_action_clicked(link_id, action)
+                # 迁移成功后直接尝试建立连接，不再走 _on_action_clicked 避免无限循环
+                conn_success, conn_msg = self.connection_service.establish_connection_by_id(link_id)
+                if conn_success:
+                    self._load_data()
+                else:
+                    # 清理失败（文件被锁定等），直接提示用户，不再弹迁移面板
+                    InfoBar.error(
+                        "建立连接失败",
+                        f"原始路径可能包含被锁定的文件，请关闭相关程序后重试。\n{conn_msg}",
+                        duration=5000,
+                        position='TopCenter',
+                        parent=self
+                    )
+                    self._load_data()
 
         migration_service.task_finished.connect(_on_migration_done)
 

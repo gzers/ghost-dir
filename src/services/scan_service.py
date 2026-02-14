@@ -4,6 +4,7 @@ import os
 import re
 from typing import List, Callable, Optional
 from src.models.template import Template
+from src.drivers.fs import get_real_path
 
 class SmartScanner:
     """智能扫描引擎"""
@@ -129,22 +130,16 @@ class SmartScanner:
 
     def _get_real_link_target(self, path: str) -> Optional[str]:
         """[底层核心] 探测路径是否为链接，并返回其实际物理指向"""
-        if not os.path.exists(path): return None
-        if os.name != 'nt':
-            return os.path.realpath(path) if os.path.islink(path) else None
-            
-        try:
-            import ctypes
-            FILE_ATTRIBUTE_REPARSE_POINT = 0x400
-            attrs = ctypes.windll.kernel32.GetFileAttributesW(path)
-            if attrs != -1 and (attrs & FILE_ATTRIBUTE_REPARSE_POINT):
-                # 如果是链接，提取其实际物理指向 (标准化长路径)
-                buffer = ctypes.create_unicode_buffer(1024)
-                ctypes.windll.kernel32.GetLongPathNameW(path, buffer, 1024)
-                return buffer.value.lower()
-        except:
-            pass
-        return None
+        if not os.path.exists(path):
+            return None
+        resolved = get_real_path(path)
+        if not resolved:
+            return None
+        # 解析结果与原始路径相同说明不是链接，返回 None
+        norm_original = os.path.normpath(path)
+        if os.path.normcase(resolved) == os.path.normcase(norm_original):
+            return None
+        return resolved
 
     def import_templates(self, templates: List[Template]) -> int:
         """
