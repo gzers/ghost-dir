@@ -104,8 +104,9 @@ AI 会自动更新：
 2. `README.md` 中的版本徽章与版本历史
 3. `docs/release/CHANGELOG.md` 新增条目
 4. `docs/release/notes/vX.Y.Z.md`（新建发布说明）
-5. `docs/release/README.md` 目录索引
-6. `docs/README.md` 最后更新日期
+5. `docs/release/release-templates.md` 新增发布文案
+6. `docs/release/README.md` 目录索引
+7. `docs/README.md` 最后更新日期
 
 ---
 
