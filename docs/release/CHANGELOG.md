@@ -2,12 +2,27 @@
 
 - 适用版本: `>=1.0.0`
 - 文档状态: `active`
-- 最后更新: `2026-02-10`
+- 最后更新: `2026-02-17`
 
 本文档记录 Ghost-Dir 项目的所有重要变更。
 
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
+
+---
+
+## [1.0.1] - 2026-02-17
+
+### 修复 (Fixed)
+
+- 修复链接迁移时源路径被进程锁定（如 `razer_elevation_service.exe`）导致的无限循环 Bug
+- 修复链接冲突处理：当目标软件路径已有数据时，提供覆盖/迁移/取消三种选项
+- 修复启动画面（Splash Screen）未跟随系统主题适配的问题，新增 Mica 效果支持
+
+### 优化 (Changed)
+
+- 修复 PyInstaller 打包后模块导入错误，完善 `.spec` 隐藏导入配置
+- 将 `config` 目录直接内嵌到打包产物中，移除运行时自动初始化逻辑，实现开箱即用
 
 ---
 
@@ -152,5 +167,6 @@ Ghost-Dir 1.0.0 是第一个生产就绪版本，提供完整的 Windows 目录�
 
 ---
 
+[1.0.1]: https://github.com/gzers/ghost-dir/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/gzers/ghost-dir/releases/tag/v1.0.0
 [0.1.0]: https://github.com/gzers/ghost-dir/releases/tag/v0.1.0
