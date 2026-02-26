@@ -1,283 +1,242 @@
-{
-  "categories": [
-    {
-      "id": "dev_tools.editors",
-      "name": "编辑器",
-      "parent_id": "dev_tools",
-      "order": 0,
-      "is_builtin": true,
-      "full_path_code": "dev_tools/editors",
-      "full_path_name": "开发工具/编辑器"
-    },
-    {
-      "id": "social.im",
-      "name": "即时通讯",
-      "parent_id": "social",
-      "order": 0,
-      "is_builtin": true,
-      "full_path_code": "social/im",
-      "full_path_name": "社交/即时通讯"
-    },
-    {
-      "id": "games.platforms",
-      "name": "游戏平台",
-      "parent_id": "games",
-      "order": 0,
-      "is_builtin": true,
-      "full_path_code": "games/platforms",
-      "full_path_name": "游戏/游戏平台"
-    },
-    {
-      "id": "media.audio",
-      "name": "音频",
-      "parent_id": "media",
-      "order": 0,
-      "is_builtin": true,
-      "full_path_code": "media/audio",
-      "full_path_name": "多媒体/音频"
-    },
-    {
-      "id": "cat_5c0c88db",
-      "name": "测试子分类2",
-      "parent_id": "cat_f6d5607a",
-      "order": 0,
-      "is_builtin": true,
-      "full_path_code": "cat_f6d5607a/cat_5c0c88db",
-      "full_path_name": "测试分类11/测试子分类2"
-    },
-    {
-      "id": "cat_f6d5607a",
-      "name": "测试分类11",
-      "parent_id": null,
-      "order": 0,
-      "is_builtin": true,
-      "full_path_code": "cat_f6d5607a",
-      "full_path_name": "测试分类11"
-    },
-    {
-      "id": "dev_tools",
-      "name": "开发工具",
-      "parent_id": null,
-      "order": 1,
-      "is_builtin": true,
-      "full_path_code": "dev_tools",
-      "full_path_name": "开发工具"
-    },
-    {
-      "id": "dev_tools.ides",
-      "name": "集成开发环境",
-      "parent_id": "dev_tools",
-      "order": 1,
-      "is_builtin": true,
-      "full_path_code": "dev_tools/ides",
-      "full_path_name": "开发工具/集成开发环境"
-    },
-    {
-      "id": "media.video",
-      "name": "视频",
-      "parent_id": "media",
-      "order": 1,
-      "is_builtin": true,
-      "full_path_code": "media/video",
-      "full_path_name": "多媒体/视频"
-    },
-    {
-      "id": "browsers",
-      "name": "浏览器",
-      "parent_id": null,
-      "order": 2,
-      "is_builtin": true,
-      "full_path_code": "browsers",
-      "full_path_name": "浏览器"
-    },
-    {
-      "id": "dev_tools.version_control",
-      "name": "版本控制",
-      "parent_id": "dev_tools",
-      "order": 2,
-      "is_builtin": true,
-      "full_path_code": "dev_tools/version_control",
-      "full_path_name": "开发工具/版本控制"
-    },
-    {
-      "id": "social",
-      "name": "社交",
-      "parent_id": null,
-      "order": 3,
-      "is_builtin": true,
-      "full_path_code": "social",
-      "full_path_name": "社交"
-    },
-    {
-      "id": "games",
-      "name": "游戏",
-      "parent_id": null,
-      "order": 4,
-      "is_builtin": true,
-      "full_path_code": "games",
-      "full_path_name": "游戏"
-    },
-    {
-      "id": "cloud_storage",
-      "name": "云存储",
-      "parent_id": null,
-      "order": 5,
-      "is_builtin": true,
-      "full_path_code": "cloud_storage",
-      "full_path_name": "云存储"
-    },
-    {
-      "id": "office",
-      "name": "办公软件",
-      "parent_id": null,
-      "order": 6,
-      "is_builtin": true,
-      "full_path_code": "office",
-      "full_path_name": "办公软件"
-    },
-    {
-      "id": "media",
-      "name": "多媒体",
-      "parent_id": null,
-      "order": 7,
-      "is_builtin": true,
-      "full_path_code": "media",
-      "full_path_name": "多媒体"
-    },
-    {
-      "id": "hardware",
-      "name": "硬件与驱动",
-      "parent_id": null,
-      "order": 7,
-      "is_builtin": true,
-      "full_path_code": "hardware",
-      "full_path_name": "硬件与驱动"
-    },
-    {
-      "id": "user_data",
-      "name": "个人数据",
-      "parent_id": null,
-      "order": 8,
-      "is_builtin": true,
-      "full_path_code": "user_data",
-      "full_path_name": "个人数据"
-    },
-    {
-      "id": "cache",
-      "name": "通用缓存",
-      "parent_id": null,
-      "order": 10,
-      "is_builtin": true,
-      "full_path_code": "cache",
-      "full_path_name": "通用缓存"
-    },
-    {
-      "id": "ide",
-      "name": "IDE",
-      "parent_id": null,
-      "order": 11,
-      "is_builtin": true,
-      "full_path_code": "ide",
-      "full_path_name": "IDE"
-    },
-    {
-      "id": "ide.eclipse",
-      "name": "Eclipse",
-      "parent_id": "ide",
-      "order": 0,
-      "is_builtin": true,
-      "full_path_code": "ide/eclipse",
-      "full_path_name": "IDE/Eclipse"
-    },
-    {
-      "id": "ide.java",
-      "name": "Java 生态",
-      "parent_id": "ide",
-      "order": 1,
-      "is_builtin": true,
-      "full_path_code": "ide/java",
-      "full_path_name": "IDE/Java 生态"
-    },
-    {
-      "id": "ide.ai",
-      "name": "AI 编辑器",
-      "parent_id": "ide",
-      "order": 2,
-      "is_builtin": true,
-      "full_path_code": "ide/ai",
-      "full_path_name": "IDE/AI 编辑器"
-    },
-    {
-      "id": "media.video_editing",
-      "name": "视频剪辑",
-      "parent_id": "media",
-      "order": 2,
-      "is_builtin": true,
-      "full_path_code": "media/video_editing",
-      "full_path_name": "多媒体/视频剪辑"
-    },
-    {
-      "id": "dev_tools.package_managers",
-      "name": "包管理器",
-      "parent_id": "dev_tools",
-      "order": 3,
-      "is_builtin": true,
-      "full_path_code": "dev_tools/package_managers",
-      "full_path_name": "开发工具/包管理器"
-    },
-    {
-      "id": "dev_tools.containers",
-      "name": "容器与虚拟机",
-      "parent_id": "dev_tools",
-      "order": 4,
-      "is_builtin": true,
-      "full_path_code": "dev_tools/containers",
-      "full_path_name": "开发工具/容器与虚拟机"
-    },
-    {
-      "id": "ai",
-      "name": "AI",
-      "parent_id": null,
-      "order": 12,
-      "is_builtin": true,
-      "full_path_code": "ai",
-      "full_path_name": "AI"
-    },
-    {
-      "id": "ai.models",
-      "name": "大模型",
-      "parent_id": "ai",
-      "order": 0,
-      "is_builtin": true,
-      "full_path_code": "ai/models",
-      "full_path_name": "AI/大模型"
-    },
-    {
-      "id": "games.engines",
-      "name": "游戏引擎",
-      "parent_id": "games",
-      "order": 1,
-      "is_builtin": true,
-      "full_path_code": "games/engines",
-      "full_path_name": "游戏/游戏引擎"
-    },
-    {
-      "id": "design",
-      "name": "设计软件",
-      "parent_id": null,
-      "order": 13,
-      "is_builtin": true,
-      "full_path_code": "design",
-      "full_path_name": "设计软件"
-    },
-    {
-      "id": "uncategorized",
-      "name": "未分类",
-      "parent_id": null,
-      "order": 99,
-      "is_builtin": true,
-      "full_path_code": "uncategorized",
-      "full_path_name": "未分类"
-    }
-  ]
-}
+[
+  {
+    "id": "dev_tools.editors",
+    "name": "编辑器",
+    "parent_id": "dev_tools",
+    "order": 0,
+    "is_builtin": true,
+    "children": []
+  },
+  {
+    "id": "social.im",
+    "name": "即时通讯",
+    "parent_id": "social",
+    "order": 0,
+    "is_builtin": true,
+    "children": []
+  },
+  {
+    "id": "games.platforms",
+    "name": "游戏平台",
+    "parent_id": "games",
+    "order": 0,
+    "is_builtin": true,
+    "children": []
+  },
+  {
+    "id": "media.audio",
+    "name": "音频",
+    "parent_id": "media",
+    "order": 0,
+    "is_builtin": true,
+    "children": []
+  },
+  {
+    "id": "cat_5c0c88db",
+    "name": "测试子分类2",
+    "parent_id": "cat_f6d5607a",
+    "order": 0,
+    "is_builtin": true,
+    "children": []
+  },
+  {
+    "id": "dev_tools",
+    "name": "开发工具",
+    "parent_id": null,
+    "order": 1,
+    "is_builtin": true,
+    "children": []
+  },
+  {
+    "id": "dev_tools.ides",
+    "name": "集成开发环境",
+    "parent_id": "dev_tools",
+    "order": 1,
+    "is_builtin": true,
+    "children": []
+  },
+  {
+    "id": "media.video",
+    "name": "视频",
+    "parent_id": "media",
+    "order": 1,
+    "is_builtin": true,
+    "children": []
+  },
+  {
+    "id": "browsers",
+    "name": "浏览器",
+    "parent_id": null,
+    "order": 2,
+    "is_builtin": true,
+    "children": []
+  },
+  {
+    "id": "dev_tools.version_control",
+    "name": "版本控制",
+    "parent_id": "dev_tools",
+    "order": 2,
+    "is_builtin": true,
+    "children": []
+  },
+  {
+    "id": "social",
+    "name": "社交",
+    "parent_id": null,
+    "order": 3,
+    "is_builtin": true,
+    "children": []
+  },
+  {
+    "id": "games",
+    "name": "游戏",
+    "parent_id": null,
+    "order": 4,
+    "is_builtin": true,
+    "children": []
+  },
+  {
+    "id": "cloud_storage",
+    "name": "云存储",
+    "parent_id": null,
+    "order": 5,
+    "is_builtin": true,
+    "children": []
+  },
+  {
+    "id": "office",
+    "name": "办公软件",
+    "parent_id": null,
+    "order": 6,
+    "is_builtin": true,
+    "children": []
+  },
+  {
+    "id": "media",
+    "name": "多媒体",
+    "parent_id": null,
+    "order": 7,
+    "is_builtin": true,
+    "children": []
+  },
+  {
+    "id": "hardware",
+    "name": "硬件与驱动",
+    "parent_id": null,
+    "order": 7,
+    "is_builtin": true,
+    "children": []
+  },
+  {
+    "id": "user_data",
+    "name": "个人数据",
+    "parent_id": null,
+    "order": 8,
+    "is_builtin": true,
+    "children": []
+  },
+  {
+    "id": "cache",
+    "name": "通用缓存",
+    "parent_id": null,
+    "order": 10,
+    "is_builtin": true,
+    "children": []
+  },
+  {
+    "id": "ide",
+    "name": "IDE",
+    "parent_id": null,
+    "order": 11,
+    "is_builtin": true,
+    "children": []
+  },
+  {
+    "id": "ide.eclipse",
+    "name": "Eclipse",
+    "parent_id": "ide",
+    "order": 0,
+    "is_builtin": true,
+    "children": []
+  },
+  {
+    "id": "ide.java",
+    "name": "Java 生态",
+    "parent_id": "ide",
+    "order": 1,
+    "is_builtin": true,
+    "children": []
+  },
+  {
+    "id": "ide.ai",
+    "name": "AI 编辑器",
+    "parent_id": "ide",
+    "order": 2,
+    "is_builtin": true,
+    "children": []
+  },
+  {
+    "id": "media.video_editing",
+    "name": "视频剪辑",
+    "parent_id": "media",
+    "order": 2,
+    "is_builtin": true,
+    "children": []
+  },
+  {
+    "id": "dev_tools.package_managers",
+    "name": "包管理器",
+    "parent_id": "dev_tools",
+    "order": 3,
+    "is_builtin": true,
+    "children": []
+  },
+  {
+    "id": "dev_tools.containers",
+    "name": "容器与虚拟机",
+    "parent_id": "dev_tools",
+    "order": 4,
+    "is_builtin": true,
+    "children": []
+  },
+  {
+    "id": "ai",
+    "name": "AI",
+    "parent_id": null,
+    "order": 12,
+    "is_builtin": true,
+    "children": []
+  },
+  {
+    "id": "ai.models",
+    "name": "大模型",
+    "parent_id": "ai",
+    "order": 0,
+    "is_builtin": true,
+    "children": []
+  },
+  {
+    "id": "games.engines",
+    "name": "游戏引擎",
+    "parent_id": "games",
+    "order": 1,
+    "is_builtin": true,
+    "children": []
+  },
+  {
+    "id": "design",
+    "name": "设计软件",
+    "parent_id": null,
+    "order": 13,
+    "is_builtin": true,
+    "children": []
+  },
+  {
+    "id": "uncategorized",
+    "name": "未分类",
+    "parent_id": null,
+    "order": 99,
+    "is_builtin": true,
+    "children": []
+  }
+]

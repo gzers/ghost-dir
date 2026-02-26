@@ -302,10 +302,8 @@ class CategorySelector(QWidget):
         # 设置全路径 Tooltip
         if self.category_manager and category_id:
             cat = self.category_manager.get_category_by_id(category_id)
-            if cat and cat.full_path_name:
-                self.lineEdit.setToolTip(cat.full_path_name)
-            else:
-                self.lineEdit.setToolTip(category_name)
+            full_path = getattr(cat, 'full_path_name', None) if cat else None
+            self.lineEdit.setToolTip(full_path if full_path else category_name)
         else:
             self.lineEdit.setToolTip(category_name)
 
@@ -346,10 +344,7 @@ class CategorySelector(QWidget):
 
             # 设置全路径 Tooltip (防御属性缺失)
             full_path = getattr(category, 'full_path_name', None)
-            if full_path:
-                self.lineEdit.setToolTip(full_path)
-            else:
-                self.lineEdit.setToolTip(display_name)
+            self.lineEdit.setToolTip(full_path if full_path else display_name)
 
             # 联动显示清除按钮
             if hasattr(self, 'clearButton'):

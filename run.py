@@ -19,3 +19,4 @@ if __name__ == "__main__":
         from src.gui.app import run_app
         run_app()
 
+t
