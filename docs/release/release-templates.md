@@ -2,7 +2,62 @@
 
 - 适用版本: `>=1.0.0`
 - 文档状态: `active`
-- 最后更新: `2026-02-26`
+- 最后更新: `2026-02-27`
+
+---
+
+## Ghost-Dir 1.0.3
+
+### 标题
+```
+Ghost-Dir 1.0.3 - USN Journal 全盘扫描
+```
+
+### 正文
+```markdown
+# ✨ Ghost-Dir 1.0.3
+
+功能增强版本，新增 USN Journal 全盘深度链接扫描和 UI 体验优化。
+
+## ✨ 新功能
+
+- USN Journal 全盘扫描：通过 NTFS MFT 枚举发现所有 Junction/Symlink，无深度限制，单盘 2-5 秒
+- 双模式探测引擎：管理员权限下极速扫描，权限不足自动降级
+- 系统链接智能过滤：自动排除 Windows 系统兼容链接
+- 非模板链接分类选择器
+
+## 🎨 优化
+
+- 长路径文本省略 + tooltip 显示完整路径
+- 仅扫描本地固定磁盘，排除网络盘和 U 盘
+
+## 🐛 修复
+
+- 修复 exe 入口缺少管理员权限请求
+- 修复 USN_RECORD_V2 结构体解析错位
+- 修复 ctypes 64 位句柄兼容性问题
+- 修复 PyInstaller 未打包 usn_journal 模块
+
+## 📦 下载
+
+- `Ghost-Dir-1.0.3-win64.zip`
+- SHA256: `待填写`
+
+## 📚 文档
+
+- [完整发布说明](notes/v1.0.3.md)
+- [更新日志](CHANGELOG.md)
+
+## ⚠️ 系统要求
+
+- Windows 10/11
+- 管理员权限
+- NTFS 文件系统
+
+---
+
+完整更新内容请查看 [CHANGELOG](CHANGELOG.md)
+```
 
 ---
 

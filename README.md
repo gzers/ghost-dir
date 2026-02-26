@@ -4,7 +4,7 @@
 
 # Ghost-Dir
 
-[![Version](https://img.shields.io/badge/version-1.0.2-blue.svg)](docs/release/CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.0.3-blue.svg)](docs/release/CHANGELOG.md)
 
 Windows 跨磁盘目录迁移与连接管理工具。
 
@@ -328,6 +328,11 @@ if is_process_running("steam.exe"):
 3. **不支持跨驱动器**: 连接点只能在同一物理驱动器内工作（符号链接可以，但本项目使用 Junction）
 
 ## 📝 版本历史
+
+### v1.0.3 (2026-02-27)
+
+查看完整更新日志：[CHANGELOG.md](docs/release/CHANGELOG.md)  
+查看发布说明：[v1.0.3.md](docs/release/notes/v1.0.3.md)
 
 ### v1.0.2 (2026-02-26)
 

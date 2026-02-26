@@ -8,7 +8,7 @@ from pathlib import Path
 
 # 应用信息
 APP_NAME = "Ghost-Dir"
-APP_VERSION = "1.0.2"
+APP_VERSION = "1.0.3"
 APP_AUTHOR = "Ghost-Dir Team"
 
 # 路径计算：区分开发环境和打包环境

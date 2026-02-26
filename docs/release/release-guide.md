@@ -26,6 +26,7 @@
 - [ ] 创建或更新 `CHANGELOG.md`
 - [ ] 创建 `docs/release/notes/vX.Y.Z.md`（针对当前版本）
 - [ ] 在 `docs/release/release-templates.md` 顶部插入新版本发布文案模板
+- [ ] 更新 `docs/release/README.md` 中的 notes 索引（新增版本链接）
 
 ### 发布资源准备
 
@@ -328,71 +329,9 @@ git push origin --tags
 
 ---
 
-## 📢 发布文案模板
+## 📢 发布文案
 
-### GitHub Release 文案
-
-```markdown
-# 🎉 Ghost-Dir 1.0.0 - Genesis
-
-**首个正式版本发布！**
-
-Ghost-Dir 是一款专为 Windows 设计的跨磁盘目录迁移与连接管理工具。
-
-## ✨ 核心亮点
-
-- **智能向导**：自动扫描本机可管理软件，一键批量导入
-- **模版库**：内置 50+ 官方模版，覆盖常见软件
-- **安全保障**：事务管理、崩溃恢复、进程卫士
-- **现代 UI**：Fluent Design，Windows 11/10 原生特效
-
-## 📦 下载
-
-- **Windows 64-bit**：`Ghost-Dir-1.0.0-win64.zip`（发布页附件）
-
-## 📚 文档
-
-- [完整发布说明](notes/v1.0.0.md)
-- [更新日志](CHANGELOG.md)
-- [用户文档](../user-docs/README.md)
-
-## 🚀 快速开始
-
-1. 下载并解压 `Ghost-Dir-1.0.0-win64.zip`
-2. 运行 `Ghost-Dir.exe`
-3. 在 UAC 提示时点击"是"授予管理员权限
-4. 开始使用！
-
-## ⚠️ 系统要求
-
-- Windows 10/11
-- 管理员权限
-- NTFS 文件系统
-
-## 🐛 问题反馈
-
-如遇到问题，请提交 [Issue](https://github.com/gzers/ghost-dir/issues)。
-
----
-
-**完整更新内容请查看 [CHANGELOG.md](CHANGELOG.md)**
-```
-
-### 社交媒体文案
-
-```
-🎉 Ghost-Dir 1.0.0 正式发布！
-
-一款专为 Windows 设计的跨磁盘目录迁移工具：
-✅ 智能扫描本机软件
-✅ 一键迁移释放 C 盘空间
-✅ 零数据丢失保障
-✅ Fluent Design 现代界面
-
-立即下载：https://github.com/gzers/ghost-dir/releases
-
-#GhostDir #Windows #开源工具
-```
+发布文案模板统一维护在 [release-templates.md](release-templates.md) 中，每次发版时在该文件顶部新增一条即可。
 
 ---
 
