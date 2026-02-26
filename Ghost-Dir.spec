@@ -15,6 +15,7 @@ a = Analysis(
         'src.gui.views.library',
         'src.gui.views.help',
         'src.gui.views.settings',
+        'src.drivers.usn_journal',
     ],
     hookspath=[],
     hooksconfig={},

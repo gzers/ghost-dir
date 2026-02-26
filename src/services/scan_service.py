@@ -6,6 +6,7 @@ import uuid
 from typing import List, Callable, Optional, Set
 from src.models.template import Template
 from src.drivers.fs import get_real_path, is_junction
+from src.drivers.usn_journal import is_usn_available, scan_reparse_points
 
 class SmartScanner:
     """智能扫描引擎"""
@@ -144,21 +145,25 @@ class SmartScanner:
 
         drives = self._get_local_fixed_drives()
 
-        # 尝试 USN Journal 快速扫描
-        from src.drivers.usn_journal import is_usn_available, scan_reparse_points
-
         # 取第一个盘检测权限
         first_letter = drives[0][0] if drives else 'C'
-        if is_usn_available(first_letter):
-            return self._scan_via_usn(drives, exclude_srcs, protected_prefixes)
+        usn_ok = is_usn_available(first_letter)
+
+        if self.progress_callback:
+            self.progress_callback(f"USN Journal {'可用' if usn_ok else '不可用'}，磁盘: {[d[0]+':' for d in drives]}")
+
+        if usn_ok:
+            try:
+                return self._scan_via_usn(drives, exclude_srcs, protected_prefixes)
+            except Exception as e:
+                if self.progress_callback:
+                    self.progress_callback(f"USN 异常: {e}，降级到目录遍历")
+                return self._scan_via_walk(drives, exclude_srcs, protected_prefixes)
         else:
-            print("[SCAN] USN Journal 不可用（权限不足），降级到目录遍历模式")
             return self._scan_via_walk(drives, exclude_srcs, protected_prefixes)
 
     def _scan_via_usn(self, drives: List[str], exclude_srcs: Set[str], protected_prefixes: set) -> List[Template]:
         """通过 USN Journal 快速扫描全盘链接（无深度限制）"""
-        from src.drivers.usn_journal import scan_reparse_points
-
         found = []
         for drive in drives:
             letter = drive[0]

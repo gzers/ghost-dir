@@ -117,9 +117,11 @@ windows sidebar       — Windows 侧边栏组件
 |------|---------|------|
 | `src/drivers/usn_journal.py` | **NEW** | USN Journal MFT 枚举驱动 |
 | `src/services/scan_service.py` | MODIFY | 全盘 Junction 探测 + 过滤规则 |
+| `src/main.py` | MODIFY | 添加管理员权限请求（exe 入口） |
 | `src/gui/views/wizard/widgets/scan_result_card.py` | MODIFY | 非模板链接显示分类选择器 + 路径文本省略 |
 | `src/gui/dialogs/scan_wizard/scan_flow_dialog.py` | MODIFY | 传入 category_manager |
 | `src/gui/components/category_selector.py` | MODIFY | 下拉面板禁用水平滚动条 |
+| `Ghost-Dir.spec` | MODIFY | hiddenimports 添加 usn_journal |
 
 ---
 
@@ -133,6 +135,7 @@ windows sidebar       — Windows 侧边栏组件
 | 过滤保守性 | 宁可多扫不可误杀 | 用户利益优先 |
 | 分类默认值 | `None`（未分类） | 用户不选择也不阻塞导入 |
 | 路径显示 | `ElideMiddle` + tooltip | 长路径不撑破布局 |
+| 管理员权限 | `main.py` 和 `run.py` 均请求 | USN Journal 需要管理员权限打开卷句柄 |
 
 ---
 
@@ -143,4 +146,4 @@ windows sidebar       — Windows 侧边栏组件
 
 ---
 
-**最后更新**: 2026-02-26
+**最后更新**: 2026-02-27
