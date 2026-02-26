@@ -21,16 +21,11 @@
 ### 版本信息更新
 
 - [ ] 更新 `src/__init__.py` 中的 `__version__`
-- [ ] 更新 `README.md` 中的版本徽章
+- [ ] 更新 `src/common/config.py` 中的 `APP_VERSION`
+- [ ] 更新 `README.md` 中的版本徽章和版本历史
 - [ ] 创建或更新 `CHANGELOG.md`
-- [ ] 创建 `notes/vX.Y.Z.md`（针对当前版本）
-
-### 构建和测试
-
-- [ ] 本地构建可执行文件
-- [ ] 测试可执行文件在干净环境中运行
-- [ ] 验证所有功能正常工作
-- [ ] 检查文件大小和依赖完整性
+- [ ] 创建 `docs/release/notes/vX.Y.Z.md`（针对当前版本）
+- [ ] 在 `docs/release/release-templates.md` 顶部插入新版本发布文案模板
 
 ### 发布资源准备
 
