@@ -365,7 +365,6 @@ class LinksView(BasePageView):
             if not link:
                 return
                 
-            from qfluentwidgets import MessageBox
             
             # 创建自定义对话框
             w = MessageBox(
@@ -454,7 +453,6 @@ class LinksView(BasePageView):
         link = self.user_manager.get_link_by_id(link_id)
         if not link: return
 
-        from qfluentwidgets import MessageBox
         
         # 展开环境变量
         source_real = os.path.expandvars(link.source_path)  # 软件路径
