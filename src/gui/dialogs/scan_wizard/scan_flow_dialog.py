@@ -204,7 +204,11 @@ class ScanFlowDialog(MessageBoxBase):
                 # 直接读取模板中的分类全路径名称
                 display_cat_name = template.category_path_name or "未分类"
 
-                card = ScanResultCard(template, category_name=display_cat_name)
+                card = ScanResultCard(
+                    template,
+                    category_name=display_cat_name,
+                    category_manager=self.category_manager,
+                )
                 card.selected_changed.connect(self._update_selection_count)
 
                 self.list_layout.insertWidget(self.list_layout.count() - 1, card)

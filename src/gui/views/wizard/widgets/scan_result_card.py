@@ -24,10 +24,12 @@ class ScanResultCard(Card):
     ignore_requested = Signal(str)  # template_id
     import_requested = Signal(str)  # template_id
 
-    def __init__(self, template, category_name: str = "未分类", parent=None):
+    def __init__(self, template, category_name: str = "未分类", category_manager=None, parent=None):
         super().__init__(parent)
         self.template = template
         self.category_name = category_name
+        self.category_manager = category_manager
+        self._category_selector = None  # 非模板链接用的分类选择器
         self._init_ui()
         self._refresh_content_styles()
 
@@ -65,10 +67,23 @@ class ScanResultCard(Card):
 
         self.main_layout.addLayout(info_layout, stretch=1)
 
-        # 分类标签
-        display_name = self.category_name
-        self.category_badge = BodyLabel(display_name)
-        self.main_layout.addWidget(self.category_badge)
+        # 分类区域：模板链接用静态标签，非模板链接用下拉选择器
+        if self.template.category_id is not None:
+            # 模板链接：静态分类标签
+            display_name = self.category_name
+            self.category_badge = BodyLabel(display_name)
+            self.main_layout.addWidget(self.category_badge)
+        else:
+            # 非模板链接（Junction 探测）：分类下拉选择器
+            from src.gui.components.category_selector import CategorySelector
+            self._category_selector = CategorySelector(self, only_leaf=True)
+            self._category_selector.setFixedWidth(140)
+            if self.category_manager:
+                self._category_selector.set_manager(self.category_manager)
+            # 默认显示"未分类"
+            self._category_selector.lineEdit.setPlaceholderText("未分类")
+            self.category_badge = None  # 无静态标签
+            self.main_layout.addWidget(self._category_selector)
 
         # 操作按钮
         self.import_button = ToolButton(FluentIcon.DOWNLOAD, self)
@@ -88,7 +103,8 @@ class ScanResultCard(Card):
         """刷新文字样式"""
         apply_font_style(self.name_label, weight="semibold")
         apply_muted_text_style(self.path_label, size="sm")
-        apply_accent_badge_style(self.category_badge)
+        if self.category_badge:
+            apply_accent_badge_style(self.category_badge)
 
     def _on_ignore_clicked(self):
         """忽略按钮点击"""
@@ -107,6 +123,16 @@ class ScanResultCard(Card):
         """获取选中状态"""
         return self.checkbox.isChecked()
 
+    def get_category_id(self):
+        """获取用户选择的分类 ID（非模板链接适用）"""
+        if self._category_selector:
+            return self._category_selector.get_value()
+        return self.template.category_id
+
     def get_template(self):
-        """获取关联的模版"""
+        """获取关联的模版（自动同步分类选择）"""
+        # 将用户选择的分类同步到 Template 对象
+        if self._category_selector:
+            self.template.category_id = self._category_selector.get_value()
         return self.template
+

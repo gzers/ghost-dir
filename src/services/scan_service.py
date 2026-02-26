@@ -2,9 +2,10 @@
 """智能扫描服务"""
 import os
 import re
-from typing import List, Callable, Optional
+import uuid
+from typing import List, Callable, Optional, Set
 from src.models.template import Template
-from src.drivers.fs import get_real_path
+from src.drivers.fs import get_real_path, is_junction
 
 class SmartScanner:
     """智能扫描引擎"""
@@ -21,10 +22,11 @@ class SmartScanner:
     def scan(self) -> List[Template]:
         """
         全量扫描本机应用
-        使用三级探测机制：
+        使用四级探测机制：
         1. 默认路径检查
         2. 注册表安装信息探测
         3. 磁盘关键词深度匹配
+        4. 全盘 Junction/Symlink 探测
         """
         discovered = []
         
@@ -101,7 +103,104 @@ class SmartScanner:
                             break
                     if task['found']: break
 
+        # 4. 全盘 Junction/Symlink 探测（发现非模板的已有链接）
+        # 收集模板阶段已发现的路径，用于去重
+        discovered_srcs = set()
+        for tpl in discovered:
+            norm = os.path.normpath(os.path.expandvars(tpl.default_src)).lower()
+            discovered_srcs.add(norm)
+
+        junction_templates = self._scan_disk_junctions(existing_srcs | discovered_srcs)
+        discovered.extend(junction_templates)
+
         return discovered
+
+    def _scan_disk_junctions(self, exclude_srcs: Set[str]) -> List[Template]:
+        """
+        全盘 Junction/Symlink 探测
+        扫描所有逻辑磁盘的常见应用安装路径，发现已有链接
+        """
+        found = []
+
+        # 系统保护路径（小写），跳过不扫描
+        protected_names = {
+            'windows', 'programdata', '$recycle.bin', 'system volume information',
+            'recovery', 'boot', 'msocache', 'config.msi', 'documents and settings',
+            'perflogs', 'intel', 'amd', 'nvidia',
+        }
+
+        # 获取所有逻辑磁盘
+        drives = [f"{d}:\\" for d in "CDEFGHIJKLMNOPQRSTUVWXYZ" if os.path.exists(f"{d}:\\")]
+
+        for drive in drives:
+            if self.progress_callback:
+                self.progress_callback(f"正在扫描磁盘链接: {drive}")
+
+            try:
+                entries = os.listdir(drive)
+            except PermissionError:
+                continue
+
+            for entry in entries:
+                entry_lower = entry.lower()
+                if entry_lower in protected_names:
+                    continue
+
+                full_path = os.path.join(drive, entry)
+
+                # 一级目录：直接检测 Junction
+                if is_junction(full_path):
+                    tpl = self._junction_to_template(full_path, exclude_srcs)
+                    if tpl:
+                        found.append(tpl)
+                        exclude_srcs.add(os.path.normpath(full_path).lower())
+                    continue
+
+                # 二级目录：仅对目录递归一层
+                if not os.path.isdir(full_path):
+                    continue
+                try:
+                    sub_entries = os.listdir(full_path)
+                except PermissionError:
+                    continue
+
+                for sub_entry in sub_entries:
+                    sub_path = os.path.join(full_path, sub_entry)
+                    if is_junction(sub_path):
+                        tpl = self._junction_to_template(sub_path, exclude_srcs)
+                        if tpl:
+                            found.append(tpl)
+                            exclude_srcs.add(os.path.normpath(sub_path).lower())
+
+        return found
+
+    def _junction_to_template(self, junction_path: str, exclude_srcs: Set[str]) -> Optional[Template]:
+        """将发现的 Junction 路径转换为伪 Template 对象"""
+        norm_path = os.path.normpath(junction_path).lower()
+        if norm_path in exclude_srcs:
+            return None
+
+        # 获取链接指向的真实路径
+        real_target = get_real_path(junction_path)
+        if not real_target:
+            return None
+
+        # 如果解析结果与原始路径相同，说明不是真正的链接
+        if os.path.normcase(real_target) == os.path.normcase(os.path.normpath(junction_path)):
+            return None
+
+        # 构造伪 Template：用目录名作为名称
+        dir_name = os.path.basename(junction_path)
+        tpl = Template(
+            id=f"junction_{uuid.uuid4().hex[:8]}",
+            name=dir_name,
+            default_src=junction_path,
+            default_target=real_target,
+            category_id=None,
+            category_path_name=None,
+            is_custom=True
+        )
+        return tpl
 
     def _get_registry_installations(self) -> dict:
         """从注册表获取已安装程序的列表"""
@@ -151,7 +250,6 @@ class SmartScanner:
             print("ERROR: LinkService not configured for SmartScanner")
             return 0
 
-        import uuid
         from src.models.link import UserLink, LinkStatus
 
         count = 0
