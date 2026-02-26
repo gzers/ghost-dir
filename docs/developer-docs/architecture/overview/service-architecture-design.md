@@ -28,7 +28,7 @@ GUI (views/dialogs/components)
 - `CategoryService`: 分类查询与增删改编排
 - `TemplateService`: 模板查询、过滤与增删改
 - `LinkService`: 链接状态、扫描并发、体积统计等流程
-- `SmartScanner`（`scan_service.py`）: 扫描发现流程
+- `SmartScanner`（`scan_service.py`）: 扫描发现流程（模板匹配 + 全盘 Junction 探测）
 - `ConfigService`: 配置读写封装
 - `MigrationService`: 迁移流程服务
 - `OccupancyService`: 占用/空间相关服务

@@ -88,31 +88,38 @@ sequenceDiagram
     participant TM as TemplateManager
     participant UM as UserManager
     participant FS as FileSystem
-    
+
     User->>WizardView: 点击扫描按钮
     WizardView->>ScanWorker: 启动扫描线程
     ScanWorker->>Scanner: scan()
-    
+
     Scanner->>TM: get_all_templates()
     TM-->>Scanner: 所有模板列表
-    
+
     Scanner->>UM: get_all_links()
     UM-->>Scanner: 已有链接列表
-    
+
     Scanner->>UM: get_ignored_templates()
     UM-->>Scanner: 忽略列表
-    
-    loop 遍历每个模板
+
+    loop 阶段1-3: 遍历每个模板
         Scanner->>TM: expand_path(template.default_src)
         TM-->>Scanner: 展开后的路径
         Scanner->>FS: 检查路径是否存在
         FS-->>Scanner: 存在性结果
         Scanner->>Scanner: 过滤已忽略/已添加/不存在
     end
-    
-    Scanner-->>ScanWorker: 发现的模板列表
+
+    loop 阶段4: 全盘 Junction 探测
+        Scanner->>FS: is_junction() / get_real_path()
+        FS-->>Scanner: Junction 检测结果
+        Scanner->>Scanner: 构造伪 Template (is_custom=True)
+    end
+
+    Scanner-->>ScanWorker: 发现的模板列表(含伪Template)
     ScanWorker-->>WizardView: finished信号(discovered)
     WizardView->>WizardView: 显示扫描结果
+    Note over WizardView: 非模板链接显示 CategorySelector
 ```
 
 ### 3. 导入模板流程
