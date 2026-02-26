@@ -26,9 +26,9 @@ class NameValidator(BaseValidator):
             return False, f"名称长度不能超过 {self.max_len} 个字符"
 
         if not self.allow_special:
-            # 只允许字母、数字、中文、下划线、空格和短横线
-            if not re.match(r'^[\u4e00-\u9fa5a-zA-Z0-9_\s\-]+$', text):
-                return False, "名称包含非法字符 (仅限中文, 字母, 数字, _, -, 空格)"
+            # 只允许字母、数字、中文、下划线、空格、短横线、点号和括号
+            if not re.match(r'^[\u4e00-\u9fa5a-zA-Z0-9_\s\-\.\(\)]+$', text):
+                return False, "名称包含非法字符 (仅限中文, 字母, 数字, _, -, ., 空格, 括号)"
 
         return True, ""
 
