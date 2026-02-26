@@ -105,7 +105,21 @@ class ScanFlowDialog(MessageBoxBase):
         result_layout.setContentsMargins(0, 0, 0, 0)
         result_layout.setSpacing(12)
 
+        # 标题行：左侧标题 + 右侧全选按钮
+        from PySide6.QtWidgets import QHBoxLayout
+        from qfluentwidgets import HyperlinkButton
+
+        title_row = QHBoxLayout()
+        title_row.setContentsMargins(0, 0, 0, 0)
+
         self.result_title = SubtitleLabel(t("wizard.scan_complete"))
+        title_row.addWidget(self.result_title)
+        title_row.addStretch(1)
+
+        self.select_all_btn = HyperlinkButton("", "取消全选")
+        self.select_all_btn.clicked.connect(self._on_toggle_select_all)
+        title_row.addWidget(self.select_all_btn)
+
         self.result_subtitle = BodyLabel("")
         apply_font_style(self.result_subtitle, size="sm", color="secondary")
 
@@ -125,7 +139,7 @@ class ScanFlowDialog(MessageBoxBase):
 
         self.scroll_area.setWidget(self.list_container)
 
-        result_layout.addWidget(self.result_title)
+        result_layout.addLayout(title_row)
         result_layout.addWidget(self.result_subtitle)
         result_layout.addWidget(self.scroll_area)
 
@@ -203,11 +217,24 @@ class ScanFlowDialog(MessageBoxBase):
             self.list_layout.insertWidget(0, no_result)
             self.yesButton.setEnabled(False)
 
+    def _on_toggle_select_all(self):
+        """全选/取消全选切换"""
+        total = len(self.result_cards)
+        selected = sum(1 for c in self.result_cards.values() if c.is_selected())
+        # 当前全选 → 取消全选；否则 → 全选
+        new_state = selected < total
+        for card in self.result_cards.values():
+            card.set_selected(new_state)
+        self._update_selection_count()
+
     def _update_selection_count(self):
-        """实时刷新导入按钮上的数量统计"""
+        """实时刷新导入按钮上的数量统计 & 全选按钮文字"""
         selected_count = sum(1 for card in self.result_cards.values() if card.is_selected())
         self.yesButton.setText(f"导入选中项 ({selected_count})")
         self.yesButton.setEnabled(selected_count > 0)
+        # 同步全选按钮文字
+        all_selected = selected_count == len(self.result_cards) and selected_count > 0
+        self.select_all_btn.setText("取消全选" if all_selected else "全选")
 
     def get_selected_templates(self) -> List:
         """获取所有最终被勾选的模版"""
