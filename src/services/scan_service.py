@@ -133,20 +133,88 @@ class SmartScanner:
     def _scan_disk_junctions(self, exclude_srcs: Set[str]) -> List[Template]:
         """
         全盘 Junction/Symlink 探测
-        仅扫描本地固定磁盘的常见应用安装路径，发现已有链接
+        优先使用 USN Journal（极速，无深度限制），权限不足时降级到目录遍历
         """
-        found = []
-
-        # 系统保护路径（小写），跳过不扫描
-        protected_names = {
+        # 系统保护路径（小写），跳过不纳入结果
+        protected_prefixes = {
             'windows', 'programdata', '$recycle.bin', 'system volume information',
             'recovery', 'boot', 'msocache', 'config.msi', 'documents and settings',
             'perflogs', 'intel', 'amd', 'nvidia',
         }
 
-        # 仅扫描本地固定磁盘
         drives = self._get_local_fixed_drives()
 
+        # 尝试 USN Journal 快速扫描
+        from src.drivers.usn_journal import is_usn_available, scan_reparse_points
+
+        # 取第一个盘检测权限
+        first_letter = drives[0][0] if drives else 'C'
+        if is_usn_available(first_letter):
+            return self._scan_via_usn(drives, exclude_srcs, protected_prefixes)
+        else:
+            print("[SCAN] USN Journal 不可用（权限不足），降级到目录遍历模式")
+            return self._scan_via_walk(drives, exclude_srcs, protected_prefixes)
+
+    def _scan_via_usn(self, drives: List[str], exclude_srcs: Set[str], protected_prefixes: set) -> List[Template]:
+        """通过 USN Journal 快速扫描全盘链接（无深度限制）"""
+        from src.drivers.usn_journal import scan_reparse_points
+
+        found = []
+        for drive in drives:
+            letter = drive[0]
+            if self.progress_callback:
+                self.progress_callback(f"正在通过 USN Journal 扫描: {letter}:")
+
+            reparse_items = scan_reparse_points(letter)
+            for item in reparse_items:
+                path = item["path"]
+
+                if self._is_system_junction(path, protected_prefixes):
+                    continue
+
+                tpl = self._junction_to_template(path, exclude_srcs)
+                if tpl:
+                    found.append(tpl)
+                    exclude_srcs.add(os.path.normpath(path).lower())
+
+        return found
+
+    @staticmethod
+    def _is_system_junction(path: str, protected_prefixes: set) -> bool:
+        """
+        判断链接是否为系统/软件自动创建的（非用户主动行为）
+        返回 True 表示应该排除
+        """
+        # 全小写路径段列表（去掉盘符）
+        rel_path = path[3:]  # 去掉 "C:\"
+        segments = rel_path.lower().split(os.sep) if rel_path else []
+        if not segments:
+            return True
+
+        first_segment = segments[0]
+
+        # 1. 顶级系统保护路径
+        if first_segment in protected_prefixes:
+            return True
+
+        # 2. 路径中包含已知的驱动/系统内部组件目录名 → 排除
+        #    注意：只排除明确由系统/驱动自动创建的，不排除用户可能迁移的路径
+        system_internal_names = {
+            # 硬件厂商驱动（内部组件链接）
+            'nvidia corporation', 'realtek',
+            # Windows 内部组件（非用户操作目标）
+            'windowsapps', 'winsxs', 'assembly',
+            'windows kits', 'windows sidebar',
+        }
+        for seg in segments:
+            if seg in system_internal_names:
+                return True
+
+        return False
+
+    def _scan_via_walk(self, drives: List[str], exclude_srcs: Set[str], protected_prefixes: set) -> List[Template]:
+        """目录遍历降级方案（最大 2 级深度）"""
+        found = []
         for drive in drives:
             if self.progress_callback:
                 self.progress_callback(f"正在扫描磁盘链接: {drive}")
@@ -157,8 +225,7 @@ class SmartScanner:
                 continue
 
             for entry in entries:
-                entry_lower = entry.lower()
-                if entry_lower in protected_names:
+                if entry.lower() in protected_prefixes:
                     continue
 
                 full_path = os.path.join(drive, entry)

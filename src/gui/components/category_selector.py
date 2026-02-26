@@ -55,7 +55,9 @@ class CategoryTreeDropdown(QFrame):
         self.tree.setAnimated(True)
         self.tree.setIndentation(20)
         self.tree.setFixedHeight(300)
-        # 移除硬编码宽度，由 _show_dropdown 动态控制
+        # 禁用水平滚动条，文字超出部分裁剪（tooltip 已设置全路径名称）
+        from PySide6.QtCore import Qt as QtCore_Qt
+        self.tree.setHorizontalScrollBarPolicy(QtCore_Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
         # 核心：设置统一行高，并遵循 selectRows 行为
         self.tree.setUniformRowHeights(True)
@@ -279,7 +281,7 @@ class CategorySelector(QWidget):
         if not self.dropdown:
             return
 
-        # 1. 同步宽度：下拉框总宽度与当前组件一致
+        # 1. 同步宽度：下拉框宽度与组件一致
         self.dropdown.setFixedWidth(self.width())
         # 同步内部树视图宽度 (减去布局边距左右各1, 共2)
         self.dropdown.tree.setFixedWidth(self.width() - 2)

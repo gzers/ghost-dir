@@ -4,6 +4,7 @@
 """
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QMenu
 from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QFontMetrics
 from qfluentwidgets import (
     CardWidget, CheckBox, BodyLabel, PushButton,
     ToolButton, FluentIcon
@@ -61,8 +62,11 @@ class ScanResultCard(Card):
         self.name_label = BodyLabel(self.template.name)
         info_layout.addWidget(self.name_label)
 
-        self.path_label = BodyLabel(self.template.default_src)
-        self.path_label.setWordWrap(True)
+        self._full_path_text = self.template.default_src
+        self.path_label = BodyLabel(self._full_path_text)
+        self.path_label.setWordWrap(False)
+        self.path_label.setToolTip(self._full_path_text)
+        self.path_label.setMinimumWidth(0)
         info_layout.addWidget(self.path_label)
 
         self.main_layout.addLayout(info_layout, stretch=1)
@@ -98,6 +102,18 @@ class ScanResultCard(Card):
         self.ignore_button.setToolTip("永久忽略此软件")
         self.ignore_button.clicked.connect(self._on_ignore_clicked)
         self.main_layout.addWidget(self.ignore_button)
+
+    def resizeEvent(self, event):
+        """动态更新路径文本省略"""
+        super().resizeEvent(event)
+        # 用路径标签的实际可用宽度计算省略文本
+        metrics = QFontMetrics(self.path_label.font())
+        elided = metrics.elidedText(
+            self._full_path_text,
+            Qt.TextElideMode.ElideMiddle,
+            self.path_label.width()
+        )
+        self.path_label.setText(elided)
 
     def _refresh_content_styles(self):
         """刷新文字样式"""
