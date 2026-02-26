@@ -86,8 +86,8 @@ class SmartScanner:
             path_parts = path.replace("\\", "/").rstrip("/").split("/")
             if len(path_parts) >= 2:
                 feature = os.path.join(path_parts[-2], path_parts[-1])
-                # 获取系统所有逻辑盘
-                drives = [f"{d}:\\" for d in "CDEFGHIJKLMNOPQRSTUVWXYZ" if os.path.exists(f"{d}:\\")]
+                # 仅扫描本地固定磁盘
+                drives = self._get_local_fixed_drives()
                 
                 # 常见软件安装根目录
                 common_roots = ["", "Games", "Software", "Program Files", "Program Files (x86)"]
@@ -115,10 +115,25 @@ class SmartScanner:
 
         return discovered
 
+    @staticmethod
+    def _get_local_fixed_drives() -> List[str]:
+        """
+        获取本地固定磁盘列表
+        仅返回 DRIVE_FIXED 类型，排除网络驱动器、U 盘、移动硬盘、光驱等
+        """
+        import ctypes
+        DRIVE_FIXED = 3
+        drives = []
+        for letter in "CDEFGHIJKLMNOPQRSTUVWXYZ":
+            root = f"{letter}:\\"
+            if os.path.exists(root) and ctypes.windll.kernel32.GetDriveTypeW(root) == DRIVE_FIXED:
+                drives.append(root)
+        return drives
+
     def _scan_disk_junctions(self, exclude_srcs: Set[str]) -> List[Template]:
         """
         全盘 Junction/Symlink 探测
-        扫描所有逻辑磁盘的常见应用安装路径，发现已有链接
+        仅扫描本地固定磁盘的常见应用安装路径，发现已有链接
         """
         found = []
 
@@ -129,8 +144,8 @@ class SmartScanner:
             'perflogs', 'intel', 'amd', 'nvidia',
         }
 
-        # 获取所有逻辑磁盘
-        drives = [f"{d}:\\" for d in "CDEFGHIJKLMNOPQRSTUVWXYZ" if os.path.exists(f"{d}:\\")]
+        # 仅扫描本地固定磁盘
+        drives = self._get_local_fixed_drives()
 
         for drive in drives:
             if self.progress_callback:
