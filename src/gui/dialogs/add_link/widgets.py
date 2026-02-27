@@ -1,3 +1,6 @@
+import os
+import logging
+
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QListWidgetItem, QFormLayout
 from PySide6.QtCore import Qt, Signal
 from qfluentwidgets import (
@@ -8,6 +11,8 @@ from src.common.managers import TemplateManager, CategoryManager, UserManager  #
 from src.gui.components import CategorySelector, ValidatedLineEdit
 from src.gui.i18n import get_category_text
 from src.common.validators import PathValidator, NameValidator
+
+logger = logging.getLogger(__name__)
 from src.gui.styles import get_spacing, get_layout_margins, format_required_label
 
 class TemplateTabWidget(QWidget):
@@ -153,18 +158,25 @@ class TemplateTabWidget(QWidget):
         template = item.data(Qt.ItemDataRole.UserRole)
         self.template_selected_signal.emit(template)
 
-        self.nameEdit.setText(template.name)
-        source_path = self.template_manager.expand_path(template.default_src)
-        source_path = PathValidator().normalize(source_path)
-        self.sourceEdit.setText(source_path)
+        try:
+            self.nameEdit.setText(template.name)
 
-        # 默认推断逻辑
-        target_path = "D:\\" + source_path[3:]
-        target_path = PathValidator().normalize(target_path)
-        self.targetEdit.setText(target_path)
+            # 展开环境变量 (如 %LOCALAPPDATA%) 并标准化路径
+            source_path = os.path.expandvars(template.default_src)
+            source_path = PathValidator().normalize(source_path)
+            self.sourceEdit.setText(source_path)
 
-        cat_id = getattr(template, 'category_id', getattr(template, 'category', 'uncategorized'))
-        self.categorySelector.set_value(cat_id)
+            # 目标路径推断：使用库根目录 + 原始盘符后的相对路径
+            library_root = self.user_manager.get_library_root() if hasattr(self.user_manager, 'get_library_root') else "D:\\"
+            target_path = library_root + source_path[3:]
+            target_path = PathValidator().normalize(target_path)
+            self.targetEdit.setText(target_path)
+
+            # 设置分类
+            cat_id = getattr(template, 'category_id', getattr(template, 'category', 'uncategorized'))
+            self.categorySelector.set_value(cat_id)
+        except Exception as e:
+            logger.error(f"填充模板表单失败: {e}", exc_info=True)
 
     def refresh_categories(self):
         self.categoryFilter.refresh()

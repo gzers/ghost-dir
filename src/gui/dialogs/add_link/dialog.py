@@ -1,6 +1,7 @@
 """
 新增连接对话框
 """
+import os
 from PySide6.QtCore import Signal, Qt
 from qfluentwidgets import MessageBoxBase, InfoBar
 # TODO: 通过 app 实例访问 Service,而不是 service_bus
@@ -119,6 +120,16 @@ class AddLinkDialog(MessageBoxBase):
         success, msg = self.connection_service.validate_and_add_link(data, self.selected_template)
 
         if success:
+            # 如果目标路径（库路径）是自动创建的，给出友好提示
+            if msg == "AUTO_CREATED_TARGET":
+                InfoBar.info(
+                    title="提示",
+                    content="目标路径（库路径）目录不存在，已为您自动创建",
+                    orient=Qt.Orientation.Horizontal,
+                    position='TopCenter',
+                    duration=3000,
+                    parent=self.parent() if self.parent() else self
+                )
             self._finalize_addition(data)
             return True
         elif msg == "TARGET_EXISTS":

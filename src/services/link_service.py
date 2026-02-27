@@ -338,25 +338,42 @@ class LinkService:
         target_path = ServiceWorker._full_path(target_path)
         
         # 5. 业务逻辑验证：检查源路径与目标路径的配合情况
-        target_exists = os.path.exists(target_path)
+        target_path_exists = os.path.exists(target_path)
         source_exists = os.path.exists(source_path)
+        auto_created_target = False
 
-        if target_exists:
-            # 这种情况触发由前端处理的 TARGET_EXISTS 迁移流
+        # 核心判定：目标路径"存在"且"包含数据"才算真正冲突
+        # 空目录不构成冲突，可以直接复用
+        def _dir_has_data(path):
+            """判断目录是否包含实际数据（非空目录）"""
+            try:
+                return os.path.isdir(path) and any(os.scandir(path))
+            except OSError:
+                return False
+
+        target_has_data = target_path_exists and _dir_has_data(target_path)
+
+        if target_has_data:
+            # 目标路径存在真实数据，触发 TARGET_EXISTS 迁移流
             pass
-        else:
-            # 如果目标路径不存在，那么源路径必须存在，否则没东西可以链接
-            if not source_exists:
-                return False, f"源路径不存在（请确认文件夹已创建）"
+        elif not target_path_exists:
+            # 目标路径（库路径/真实数据位置）完全不存在，自动创建
+            # 注意：源路径是链接位置，由 create_junction 在建立连接时自动生成，无需预创建
+            try:
+                os.makedirs(target_path, exist_ok=True)
+                auto_created_target = True
+            except OSError as e:
+                return False, f"无法自动创建目标路径目录: {e}"
+        # else: 目标路径存在但是空目录 → 直接复用，不算冲突
 
-        # 6. 如果目标路径存在数据且源路径也存在数据，这将是致命冲突
-        if target_exists and source_exists:
+        # 6. 如果目标路径有数据且源路径也存在数据，这将是致命冲突
+        if target_has_data and source_exists:
             from src.drivers.fs import is_junction
             # 如果目标是真实文件夹且源非空，禁止自动合并
             if not is_junction(target_path) and any(os.scandir(source_path)):
                  return False, "源路径与目标路径均存在非空数据，无法执行自动合并，请手动清理一处后再试"
 
-        if target_exists:
+        if target_has_data:
             return False, "TARGET_EXISTS"
 
         # 7. 业务逻辑验证：检查是否已存在相同的链接
@@ -365,7 +382,7 @@ class LinkService:
             if link.source_path.lower() == source_path.lower():
                 return False, f"源路径已存在于链接 '{link.name}' 中"
         
-        # 7. 创建链接对象
+        # 8. 创建链接对象
         link = UserLink(
             id=str(uuid.uuid4()),
             name=name_validator.normalize(data.get("name", "")),
@@ -375,12 +392,13 @@ class LinkService:
             status=LinkStatus.READY
         )
         
-        # 8. 保存到数据库
+        # 9. 保存到数据库
         success = self.dao.add(link)
         if not success:
             return False, "保存链接失败"
         
-        return True, ""
+        # 返回成功，附带自动创建目标路径（库路径）的标记
+        return True, "AUTO_CREATED_TARGET" if auto_created_target else ""
 
     def validate_and_update_link(self, link_id: str, data: dict) -> tuple[bool, str]:
         """验证并更新链接"""
