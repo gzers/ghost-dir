@@ -441,29 +441,25 @@ class LinkService:
             if original_source_path != source_path or original_target_path != target_path:
                 return False, "已连接的链接不允许修改路径"
         
-        # 8. 业务逻辑验证：如果修改了源路径，检查新路径是否存在
-        if original_source_path != source_path and not os.path.exists(source_path):
-            return False, "源路径不存在"
-        
-        # 9. 业务逻辑验证：如果修改了源路径，检查是否与其他链接冲突
+        # 8. 业务逻辑验证：如果修改了源路径，检查是否与其他链接冲突
         if original_source_path != source_path:
             existing_links = self.dao.get_all()
             for existing_link in existing_links:
                 if existing_link.id != link_id and existing_link.source_path.lower() == source_path.lower():
                     return False, f"源路径已存在于链接 '{existing_link.name}' 中"
         
-        # 10. 更新链接对象
+        # 9. 更新链接对象
         link.name = name_validator.normalize(data.get("name", ""))
         link.source_path = source_path
         link.target_path = target_path
         link.category = data.get("category_id")
         
-        # 11. 如果路径发生变化，重新检测状态
+        # 10. 如果路径发生变化，重新检测状态
         if original_source_path != source_path or original_target_path != target_path:
             worker = ServiceWorker()
             link.status = worker._check_single_link(link)
         
-        # 12. 保存到数据库
+        # 11. 保存到数据库
         success = self.dao.update(link)
         if not success:
             return False, "更新链接失败"
