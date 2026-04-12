@@ -65,3 +65,6 @@ dist/
 
 # Debug scripts
 debug_*.py
+
+# Test data (本地测试产物，不进版本库)
+test_migration_data/
