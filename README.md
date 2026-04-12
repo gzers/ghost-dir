@@ -1,4 +1,4 @@
-﻿<div align="center">
+<div align="center">
 
 <img src="assets/icon.png" alt="Ghost-Dir" width="128" height="128">
 
@@ -326,6 +326,49 @@ if is_process_running("steam.exe"):
 1. **仅支持 Windows**: 连接点（Junction）是 Windows 特有功能
 2. **需要 NTFS**: 目标驱动器必须是 NTFS 文件系统
 3. **不支持跨驱动器**: 连接点只能在同一物理驱动器内工作（符号链接可以，但本项目使用 Junction）
+
+## ❓ 常见问题（FAQ）
+
+### Q1：启动报错 "no Qt platform plugin could be initialized"
+
+**完整错误信息**：
+> This application failed to start because no Qt platform plugin could be initialized. Reinstalling the application may fix this problem.
+
+**根因分析**：
+
+此错误与 Qt 的 platform plugin（`qwindows.dll`）加载失败有关，通常由以下原因触发：
+
+| 原因 | 概率 | 识别方式 |
+|------|------|----------|
+| 缺少 Visual C++ 运行库 | ⭐⭐⭐ 最高 | 新电脑/精简系统首次运行 |
+| 部署不完整（仅复制了 `.exe`） | ⭐⭐⭐ 次高 | `_internal` 文件夹不在 `.exe` 同级目录 |
+| 杀毒软件拦截 DLL 加载 | ⭐⭐ 偶发 | 添加白名单后恢复正常 |
+
+**解决步骤**：
+
+**步骤一：确认部署完整性（最先检查）**
+
+`Ghost-Dir.exe` 必须与 `_internal` 文件夹**放在同一目录**下，缺少该文件夹程序无法运行：
+
+```
+Ghost-Dir/
+├── Ghost-Dir.exe   ← 可执行文件
+└── _internal/      ← ⚠️ 必须存在，不可单独复制 .exe
+```
+
+**步骤二：安装 Visual C++ 运行库（最常见修复方案）**
+
+前往微软官网下载并安装 **Visual C++ 2015-2022 Redistributable (x64)**：
+
+👉 [https://aka.ms/vs/17/release/vc_redist.x64.exe](https://aka.ms/vs/17/release/vc_redist.x64.exe)
+
+安装完成后**重启电脑**，再运行 Ghost-Dir。
+
+**步骤三：检查杀毒软件**
+
+将 `Ghost-Dir` 整个目录加入杀毒软件白名单，或临时关闭实时防护后再次尝试。
+
+---
 
 ## 📝 版本历史
 
