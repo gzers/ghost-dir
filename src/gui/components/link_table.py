@@ -12,6 +12,16 @@ from src.common.config import format_size
 from src.gui.i18n import get_status_text, get_category_text
 
 
+class _StatusSortItem(QTableWidgetItem):
+    """状态列专用排序 Item：视觉上不显示任何文本，排序依据为 UserRole 存储的整数优先级"""
+
+    def __lt__(self, other: QTableWidgetItem) -> bool:
+        # 重写比较，使列排序按整数 key 而不是 DisplayRole 文本进行
+        self_key = self.data(Qt.ItemDataRole.UserRole) or 99
+        other_key = other.data(Qt.ItemDataRole.UserRole) or 99
+        return self_key < other_key
+
+
 class LinkTable(BaseTableWidget):
     """连接表格组件 - 统一视觉版本"""
 
@@ -115,6 +125,20 @@ class LinkTable(BaseTableWidget):
             
         container.layout().addWidget(badge)
         self.setCellWidget(row, 3, container)
+
+        # setCellWidget 无法参与 Qt 列排序，需额外设置一个携带排序 key 的 Item
+        # 用 _StatusSortItem 重写 __lt__，排序走 UserRole 整数，DisplayRole 为空不显示文字
+        # 排序优先级：ERROR(0) > INVALID(1) > DISCONNECTED(2) > READY(3) > CONNECTED(4)
+        _STATUS_SORT_ORDER = {
+            LinkStatus.ERROR: 0,
+            LinkStatus.INVALID: 1,
+            LinkStatus.DISCONNECTED: 2,
+            LinkStatus.READY: 3,
+            LinkStatus.CONNECTED: 4,
+        }
+        sort_item = _StatusSortItem()
+        sort_item.setData(Qt.ItemDataRole.UserRole, _STATUS_SORT_ORDER.get(link.status, 99))
+        self.setItem(row, 3, sort_item)
 
         # 4. 占用空间
         size_text = format_size(link.last_known_size) if link.last_known_size > 0 else "未计算"
