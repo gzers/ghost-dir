@@ -72,15 +72,56 @@ python run.py
 
 ### 打包为 exe
 
-```bash
+> ⚠️ **重要**：必须使用项目 `.venv` 虚拟环境内的 `pyinstaller` 进行打包。  
+> 若使用系统全局的 `pyinstaller`，打出的包将缺少 `PySide6` / `shiboken6` 等依赖，在其他机器上运行时报错。
+
+#### 第一步：初始化虚拟环境（新机首次操作）
+
+```powershell
+# 在项目根目录创建 venv
+python -m venv .venv
+
+# 激活 venv
+.\.venv\Scripts\Activate.ps1
+
+# 安装项目全部依赖（推荐使用清华镜像加速）
+pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+
 # 安装 PyInstaller
 pip install pyinstaller
-
-# 使用 .spec 文件打包
-pyinstaller Ghost-Dir.spec
 ```
 
-打包完成后，可执行文件位于 `dist/Ghost-Dir/Ghost-Dir.exe`。
+#### 第二步：验证环境（打包前必做）
+
+```powershell
+.\.venv\Scripts\python.exe -c "import PySide6; import shiboken6; print('环境OK，可以打包')"
+```
+
+输出 `环境OK，可以打包` 才继续，否则检查依赖安装是否完整。
+
+#### 第三步：执行打包
+
+```powershell
+.\.venv\Scripts\pyinstaller.exe Ghost-Dir.spec --clean --noconfirm
+```
+
+#### 打包产物说明
+
+打包完成后，产物位于 `dist/Ghost-Dir/`，结构如下：
+
+```
+dist/Ghost-Dir/
+├── Ghost-Dir.exe   ← 可执行文件
+└── _internal/      ← Qt 运行库、Python 解释器等（缺少则无法启动）
+```
+
+> ⚠️ **部署时必须将整个 `Ghost-Dir` 文件夹一起发送**，不可只复制 `Ghost-Dir.exe`。
+
+如需生成正式发布压缩包，使用发布脚本（会自动完成打包 + 压缩 + Git 打标签）：
+
+```powershell
+.\scripts\release.ps1 -Version "1.0.x"
+```
 
 ## 📖 使用指南
 

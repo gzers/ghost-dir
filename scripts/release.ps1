@@ -48,10 +48,19 @@ if (Test-Path $changelogFile) {
 
 # 4. 构建可执行文件
 Write-Host "[4/6] 构建可执行文件..." -ForegroundColor Yellow
+
+# 强制使用项目 venv 内的 PyInstaller，避免全局环境缺少 PySide6 导致打包产物不完整
+$venvPyInstaller = ".\.venv\Scripts\pyinstaller.exe"
+if (-not (Test-Path $venvPyInstaller)) {
+    Write-Host "  ✗ 未找到 $venvPyInstaller，请先执行：pip install pyinstaller" -ForegroundColor Red
+    Write-Host "     激活 venv：.\.venv\Scripts\Activate.ps1" -ForegroundColor Yellow
+    exit 1
+}
+
 if (Test-Path "dist") {
     Remove-Item -Recurse -Force "dist"
 }
-pyinstaller Ghost-Dir.spec --clean
+& $venvPyInstaller Ghost-Dir.spec --clean
 if ($LASTEXITCODE -ne 0) {
     Write-Host "  ✗ 构建失败" -ForegroundColor Red
     exit 1
