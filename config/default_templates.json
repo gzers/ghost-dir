@@ -1,6 +1,6 @@
 {
   "version": "1.1.0",
-  "last_updated": "2026-02-04T15:53:00Z",
+  "last_updated": "2026-05-10T00:00:00Z",
   "description": "内置默认模板配置文件（已扩展：通用缓存、IDE、视频剪辑、AI 模型等）",
   "templates": [
     {
@@ -824,6 +824,28 @@
       "category_id": "games.platforms",
       "default_target": "D:\\Ghost_Library\\Games\\Leigod",
       "description": "加速器用户配置文件",
+      "category_path_code": "games/platforms",
+      "category_path_name": "游戏/游戏平台",
+      "is_custom": false
+    },
+    {
+      "id": "parsec_user_data",
+      "name": "Parsec 用户数据",
+      "default_src": "%APPDATA%\\Parsec",
+      "category_id": "games.platforms",
+      "default_target": "D:\\Ghost_Library\\Games\\Parsec",
+      "description": "Parsec 配置与用户数据",
+      "category_path_code": "games/platforms",
+      "category_path_name": "游戏/游戏平台",
+      "is_custom": false
+    },
+    {
+      "id": "parsec_program",
+      "name": "Parsec 主程序",
+      "default_src": "C:\\Program Files\\Parsec",
+      "category_id": "games.platforms",
+      "default_target": "D:\\Ghost_Library\\Games\\Parsec\\Program",
+      "description": "Parsec 主程序安装目录",
       "category_path_code": "games/platforms",
       "category_path_name": "游戏/游戏平台",
       "is_custom": false
